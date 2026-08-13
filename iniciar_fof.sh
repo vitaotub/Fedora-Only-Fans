@@ -1,9 +1,45 @@
 #!/bin/bash
 
-# Se o script NÃO estiver rodando dentro do Konsole, ele se reinicia abrindo uma janela visual
+# Função inteligente para abrir o script no terminal nativo de cada interface
+abrir_no_terminal_nativo() {
+    local script_path="$1"
+    local titulo="Servidor de Automação Fedora"
+    
+    # 1. Tenta o xdg-terminal-exec (Padrão moderno Freedesktop / Fedora recente)
+    if command -v xdg-terminal-exec &> /dev/null; then
+        exec xdg-terminal-exec bash "$script_path" --no-fork
+    
+    # 2. KDE Plasma
+    elif command -v konsole &> /dev/null; then
+        exec konsole --title "$titulo" -e bash "$script_path" --no-fork
+        
+    # 3. GNOME (Fedora Workstation - Ptyxis ou Gnome-Terminal)
+    elif command -v ptyxis &> /dev/null; then
+        exec ptyxis --title "$titulo" -- bash "$script_path" --no-fork
+    elif command -v gnome-terminal &> /dev/null; then
+        exec gnome-terminal --title="$titulo" -- bash "$script_path" --no-fork
+        
+    # 4. XFCE
+    elif command -v xfce4-terminal &> /dev/null; then
+        exec xfce4-terminal --title="$titulo" -e "bash \"$script_path\" --no-fork"
+        
+    # 5. Fallbacks genéricos para outras Spins/Interfaces
+    else
+        for term in tilix alacritty kitty xterm x-terminal-emulator; do
+            if command -v $term &> /dev/null; then
+                exec $term -e bash "$script_path" --no-fork
+            fi
+        done
+        
+        echo "[ERRO]: Nenhum emulador de terminal compatível foi encontrado."
+        exit 1
+    fi
+}
+
+# Se o script NÃO estiver rodando dentro de uma janela separada, ele se reinicia no terminal nativo
 if [ "$1" != "--no-fork" ]; then
     SCRIPT_PATH="$(realpath "${BASH_SOURCE}")"
-    exec konsole --title "Servidor de Automação Fedora" -e bash "$SCRIPT_PATH" --no-fork
+    abrir_no_terminal_nativo "$SCRIPT_PATH"
     exit 0
 fi
 
@@ -49,7 +85,7 @@ limpar_tudo() {
     exit 0
 }
 
-# Garante que a limpeza rode mesmo se o usuário fechar o Konsole no "X" manualmente
+# Garante que a limpeza rode mesmo se o usuário fechar a janela no "X" manualmente
 trap limpar_tudo EXIT
 
 # Aguarda 2 segundos para o Node.js estabilizar e subir na porta 3000
@@ -60,7 +96,7 @@ echo "Configurando renderizador de interface..."
 
 URL_ALVO="file://$DIR/fof.html"
 
-# Função adaptada ao KDE Plasma 6 + Wayland para forçar o ícone customizado
+# Função adaptada para forçar o ícone customizado de forma compatível
 abrir_modo_app() {
     PATH_ICONE="$DIR/icone_app.png"
     PERFIL_DIR="$DIR/.perfil_app"
@@ -94,7 +130,6 @@ MimeType=text/html;
 EOF
 
     update-desktop-database ~/.local/share/applications/ &>/dev/null
-    kbuildsycoca6 &>/dev/null 2>&1
 
     $BINARIO --ozone-platform-hint=auto --user-data-dir="$PERFIL_DIR" --app="$URL_ALVO" --window-size=950,850
 }

@@ -42,35 +42,47 @@ function removerProgresso(idComando) {
 }
 
 function verificarSeVersaoExiste(versao, callback) {
-    // Validação real apontando para o espelho público do Fedora para verificar se a release alvo já existe
     const urlCheck = `https://mirrors.fedoraproject.org/mirrorlist?repo=fedora-${versao}&arch=x86_64`;
     exec(`curl -s --max-time 4 -o /dev/null -w "%{http_code}" "${urlCheck}"`, (err, stdout) => {
         const statusCode = parseInt(stdout.trim(), 10);
-        // Se retornar 200, a versão já está nos servidores oficiais
         if (!err && statusCode === 200) callback(true);
         else callback(false);
     });
 }
 
+// Função dinamicamente adaptada para qualquer Desktop Environment (KDE, GNOME, XFCE, etc.)
+function obterComandoPromptSenha() {
+    const desktop = (process.env.XDG_CURRENT_DESKTOP || '').toUpperCase();
+    
+    // Se estiver no GNOME ou ferramentas GTK preferíveis
+    if (desktop.includes('GNOME') || desktop.includes('XFCE') || desktop.includes('PANEL')) {
+        return `zenity --password --title="Autenticação do Sistema" --text="Este ajuste requer privilégios de administrador. Digite sua senha:"`;
+    } 
+    // Se estiver no KDE Plasma
+    else if (desktop.includes('KDE')) {
+        return `kdialog --password "Este ajuste requer privilégios de administrador. Digite sua senha:" --title "Autenticação do Sistema"`;
+    } 
+    // Fallbacks para caso o ambiente não declare ou a ferramenta principal não esteja disponível
+    return `zenity --password --title="Autenticação do Sistema" --text="Digite sua senha de administrador:" 2>/dev/null || kdialog --password "Digite sua senha de administrador:" --title "Autenticação do Sistema" 2>/dev/null`;
+}
+
 function executarComSudoGrafico(comandoOriginal, idComando, isReversao, callback) {
     const envGrafico = { env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' } };
-    const comandoPrompt = `kdialog --password "Este ajuste requer privilégios de administrador. Digite sua senha:" --title "Autenticação do Sistema"`;
+    const comandoPrompt = obterComandoPromptSenha();
 
     exec(comandoPrompt, envGrafico, (errPrompt, senha, stderrPrompt) => {
         if (errPrompt || !senha) {
             return callback(new Error("Autenticação cancelada pelo usuário."), "", "Operação abortada.");
         }
 
-        const senhaLimpa = senha.trim().replace(/'/g, "'\\''"); // Sanitiza aspas da senha
+        const senhaLimpa = senha.trim().replace(/'/g, "'\\''");
 
-        // Remove "sudo" redundantes
         const comandoSemSudoRepetido = comandoOriginal.replace(/sudo /g, '');
 
-        // CORREÇÃO CRUCIAL: Escapa de forma segura tanto aspas duplas quanto simples para rodar dentro do sh -c sem engasgar
         const comandoEscapado = comandoSemSudoRepetido
-        .replace(/\\/g, '\\\\')
-        .replace(/"/g, '\\"')
-        .replace(/\$/g, '\\$');
+            .replace(/\\/g, '\\\\')
+            .replace(/"/g, '\\"')
+            .replace(/\$/g, '\\$');
 
         const comandoComSudoS = `echo '${senhaLimpa}' | sudo -S sh -c "${comandoEscapado}"`;
 

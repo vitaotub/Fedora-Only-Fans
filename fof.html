@@ -272,9 +272,9 @@
 
                 <div class="bloco-comando">
                     <div class="comando-info">
-                        <h3>Habilitar Suporte Completo ao Flatpak (Flathub) no KDE</h3>
-                        <p>Adiciona o repositório global Flathub, garante a instalação da engine do Flatpak e integra o suporte visual diretamente à loja Discover.</p>
-                        <button class="btn-executar" onclick="executarComando('flatpak-setup', 'flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && sudo dnf install flatpak plasma-discover-flatpak -y')">Configurar Flatpak</button>
+                        <h3>Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
+                        <p>Adiciona o repositório global Flathub e garante a instalação do gerenciador de pacotes Flatpak no sistema.</p>
+                        <button class="btn-executar" onclick="executarComando('flatpak-setup', 'flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && sudo dnf install flatpak -y')">Configurar Flatpak</button>
                     </div>
                     <div class="terminal-log" id="log-flatpak-setup"></div>
                 </div>
@@ -378,10 +378,10 @@
             <div id="comandos-etapa-5">
                 <div class="bloco-comando" style="border-left: 4px solid var(--text-muted);">
                     <div class="comando-info">
-                        <h3>Instalação de Aplicativos Recomendados (Via Discover)</h3>
-                        <p>Abra a central de software para gerenciar os apps de forma independente:</p>
+                        <h3>Instalação de Aplicativos Recomendados (Via Central de Apps)</h3>
+                        <p>Abra a central de software do seu sistema para gerenciar os apps de forma independente:</p>
                         <div style="margin-bottom: 1.25rem;">
-                            <button class="btn-executar" style="background-color: #357a38;" onclick="executarComando('abrir-discover', 'plasma-discover &')">🛍️ Abrir Central Discover</button>
+                            <button class="btn-executar" style="background-color: #357a38;" onclick="executarComando('abrir-discover', 'gnome-software &>/dev/null || plasma-discover &>/dev/null || xfce4-appfinder &')">🛍️ Abrir Central de Apps</button>
                         </div>
                         <ul style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin: 0 0 0 1rem; padding: 0;">
                             <li><strong>Haruna</strong> (Player de vídeo moderno)</li>
