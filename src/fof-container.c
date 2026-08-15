@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
     data.webview = webkit_web_view_new_with_settings(settings);
     g_object_unref(settings);
 
-    // Conecta os sinais
+    // Conecta os sinais (API corrigida)
     g_signal_connect(data.webview, "load-started", G_CALLBACK(on_load_started), &data);
     g_signal_connect(data.webview, "load-finished", G_CALLBACK(on_load_finished), &data);
 
