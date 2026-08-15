@@ -306,6 +306,33 @@ function procederComExecucao(comando, idComando, isReversao, res) {
     });
 }
 
+// ============ SERVER ARQUIVOS ESTÁTICOS ============
+
+function servirArquivoEstatico(req, res, filePath) {
+    const fullPath = path.join(__dirname, filePath);
+
+    if (fs.existsSync(fullPath)) {
+        const ext = path.extname(fullPath).toLowerCase();
+        const mimeTypes = {
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.ico': 'image/x-icon',
+            '.css': 'text/css',
+            '.js': 'application/javascript'
+        };
+
+        const mimeType = mimeTypes[ext] || 'application/octet-stream';
+        res.writeHead(200, { 'Content-Type': mimeType });
+        fs.createReadStream(fullPath).pipe(res);
+    } else {
+        res.writeHead(404);
+        res.end('Arquivo não encontrado');
+    }
+}
+
 // ============ SERVIDOR HTTP ============
 
 const server = http.createServer((req, res) => {
@@ -365,6 +392,12 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // GET /icone_app.png - Serve o ícone (NOVO)
+    if (req.method === 'GET' && req.url === '/icone_app.png') {
+        servirArquivoEstatico(req, res, 'icone_app.png');
+        return;
+    }
+
     // GET /status - Retorna progresso
     if (req.method === 'GET' && req.url === '/status') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -386,7 +419,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // GET /security - Informações de segurança (removido)
+    // GET /security - Informações de segurança
     if (req.method === 'GET' && req.url === '/security') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -490,5 +523,6 @@ server.listen(PORT, () => {
     console.log(` 🔐 Autenticação: ${metodo.descricao}`);
     console.log(` 📡 SSE: Ativo (logs em tempo real)`);
     console.log(` 🛡️  Whitelist: Removida (todos os comandos são permitidos)`);
+    console.log(` 📁 Arquivos estáticos: Ativo (ícone, etc)`);
     console.log(`====================================================`);
 });
