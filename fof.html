@@ -1162,28 +1162,27 @@ async function executarAjusteDNF() {
     const idComando = 'dnf-speed';
     const comandoMontado = `sudo dnf config-manager setopt max_parallel_downloads=${conexoes} && sudo dnf config-manager setopt fastestmirror=True`;
 
-    // Pega o botão
     const btn = document.querySelector("button[onclick='executarAjusteDNF()']");
     const textoOriginal = btn.textContent;
 
-    // Desabilita o botão durante a execução
     btn.disabled = true;
     btn.textContent = '⏳ Aplicando...';
     btn.style.opacity = '0.6';
 
     try {
-        // Executa o comando
         await executarComando(idComando, comandoMontado, true);
     } catch (e) {
         console.error('Erro ao executar ajuste:', e);
     }
 
-    // Mostra "✅ Aplicado!" por 3 segundos
+    // Aguarda um pequeno delay para garantir que o SSE já processou o 'end'
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Restaura o botão
     btn.textContent = '✅ Aplicado!';
     btn.style.backgroundColor = '#4b5563';
     btn.style.opacity = '1';
 
-    // Reativa o botão após 3 segundos
     setTimeout(() => {
         btn.disabled = false;
         btn.textContent = textoOriginal || 'Aplicar Ajuste';
@@ -1205,93 +1204,101 @@ async function executarAjusteDNF() {
 
         let sseConnections = {};
 
-        function conectarSSE(idComando, logBox) {
-            if (sseConnections[idComando]) {
-                sseConnections[idComando].close();
-                delete sseConnections[idComando];
-            }
+function conectarSSE(idComando, logBox) {
+    if (sseConnections[idComando]) {
+        sseConnections[idComando].close();
+        delete sseConnections[idComando];
+    }
 
+    try {
+        const eventSource = new EventSource(`http://localhost:3000/stream?id=${idComando}`);
+        sseConnections[idComando] = eventSource;
+
+        let linhas = 0;
+        const MAX_LINHAS = 100;
+
+        eventSource.onmessage = (event) => {
             try {
-                const eventSource = new EventSource(`http://localhost:3000/stream?id=${idComando}`);
-                sseConnections[idComando] = eventSource;
+                const dados = JSON.parse(event.data);
 
-                let linhas = 0;
-                const MAX_LINHAS = 100;
+                if (dados.tipo === 'end') {
+                    eventSource.close();
+                    delete sseConnections[idComando];
 
-                eventSource.onmessage = (event) => {
-                    try {
-                        const dados = JSON.parse(event.data);
-
-                        if (dados.tipo === 'end') {
-                            eventSource.close();
-                            delete sseConnections[idComando];
-
-                            const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
-                                document.querySelector(`button[onclick*="${idComando}"]`);
-                            if (btn) {
-                                btn.disabled = false;
-                                btn.innerHTML = "✅ Concluído";
-                                btn.style.backgroundColor = "#4b5563";
-                                btn.style.cursor = "default";
-                                btn.style.opacity = '1';
-                            }
-
-                            completarProgresso(idComando, true);
-                            return;
+                    // ============================================================
+                    // CORREÇÃO: Não desabilita o botão se for o comando dnf-speed
+                    // ============================================================
+                    if (idComando !== 'dnf-speed') {
+                        const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
+                                    document.querySelector(`button[onclick*="${idComando}"]`);
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = "✅ Concluído";
+                            btn.style.backgroundColor = "#4b5563";
+                            btn.style.cursor = "default";
+                            btn.style.opacity = '1';
                         }
-
-                        let mensagem = dados.mensagem;
-                        mensagem = mensagem.replace(/\x1b\]3008;[^\x1b]*\x1b\\/g, '');
-                        mensagem = mensagem.replace(/\x1b\[[0-9;]*m/g, '');
-                        mensagem = mensagem.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-
-                        const lines = mensagem.split('\n');
-                        for (const line of lines) {
-                            if (line.trim() === '') continue;
-                            if (line.includes('org.kde.plasma.libdiscover')) continue;
-                            if (line.includes('QML Shortcut')) continue;
-                            if (line.includes('qt.qpa.services')) continue;
-                            if (line.includes('WARNING **: Found icon of unknown type')) continue;
-                            if (line.includes('QIODevice::read')) continue;
-                            if (line.includes('adding empty sources model')) continue;
-
-                            const lineElement = document.createElement('div');
-                            lineElement.className = `log-line ${dados.tipo}`;
-                            lineElement.textContent = line;
-                            logBox.appendChild(lineElement);
-                            linhas++;
-                        }
-
-                        if (linhas > MAX_LINHAS) {
-                            const children = logBox.children;
-                            for (let i = 0; i < linhas - MAX_LINHAS; i++) {
-                                if (children[i]) children[i].remove();
-                            }
-                            linhas = MAX_LINHAS;
-                        }
-
-                        logBox.scrollTop = logBox.scrollHeight;
-
-                    } catch (e) {
-                        console.error('[SSE] Erro ao processar mensagem:', e);
-                    }
-                };
-
-                eventSource.onerror = (event) => {
-                    if (eventSource.readyState === EventSource.CLOSED) {
-                        console.log('[SSE] Conexão fechada para:', idComando);
                     } else {
-                        console.warn('[SSE] Erro na conexão:', event);
+                        // Para dnf-speed, NÃO faz nada - o botão será restaurado pelo executarAjusteDNF()
+                        console.log('[SSE] Comando dnf-speed finalizado, aguardando restauração do botão');
                     }
-                };
+
+                    completarProgresso(idComando, true);
+                    return;
+                }
+
+                let mensagem = dados.mensagem;
+                mensagem = mensagem.replace(/\x1b\]3008;[^\x1b]*\x1b\\/g, '');
+                mensagem = mensagem.replace(/\x1b\[[0-9;]*m/g, '');
+                mensagem = mensagem.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+                const lines = mensagem.split('\n');
+                for (const line of lines) {
+                    if (line.trim() === '') continue;
+                    if (line.includes('org.kde.plasma.libdiscover')) continue;
+                    if (line.includes('QML Shortcut')) continue;
+                    if (line.includes('qt.qpa.services')) continue;
+                    if (line.includes('WARNING **: Found icon of unknown type')) continue;
+                    if (line.includes('QIODevice::read')) continue;
+                    if (line.includes('adding empty sources model')) continue;
+
+                    const lineElement = document.createElement('div');
+                    lineElement.className = `log-line ${dados.tipo}`;
+                    lineElement.textContent = line;
+                    logBox.appendChild(lineElement);
+                    linhas++;
+                }
+
+                if (linhas > MAX_LINHAS) {
+                    const children = logBox.children;
+                    for (let i = 0; i < linhas - MAX_LINHAS; i++) {
+                        if (children[i]) children[i].remove();
+                    }
+                    linhas = MAX_LINHAS;
+                }
+
+                logBox.scrollTop = logBox.scrollHeight;
+
             } catch (e) {
-                console.error('[SSE] Erro ao criar conexão:', e);
-                const errorLine = document.createElement('div');
-                errorLine.className = 'log-line error';
-                errorLine.textContent = `❌ Erro ao conectar SSE: ${e.message}`;
-                logBox.appendChild(errorLine);
+                console.error('[SSE] Erro ao processar mensagem:', e);
             }
-        }
+        };
+
+        eventSource.onerror = (event) => {
+            if (eventSource.readyState === EventSource.CLOSED) {
+                console.log('[SSE] Conexão fechada para:', idComando);
+            } else {
+                console.warn('[SSE] Erro na conexão:', event);
+            }
+        };
+    } catch (e) {
+        console.error('[SSE] Erro ao criar conexão:', e);
+        const errorLine = document.createElement('div');
+        errorLine.className = 'log-line error';
+        errorLine.textContent = `❌ Erro ao conectar SSE: ${e.message}`;
+        logBox.appendChild(errorLine);
+    }
+}
 
         // ============ DETECÇÃO DE DESKTOP PARA CENTRAL DE APPS ============
 
