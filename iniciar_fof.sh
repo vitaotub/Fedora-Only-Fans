@@ -91,29 +91,25 @@ trap limpar_tudo EXIT
 # Aguarda 2 segundos para o Node.js estabilizar e subir na porta 3000
 sleep 2
 
-# 3. Garante a renderização em Modo App Nativo (Isolado e limpo)
+# 3. Garante a renderização e ordem dos navegadores
 echo "Configurando renderizador de interface..."
 
 URL_ALVO="file://$DIR/fof.html"
 
-# Função adaptada para forçar o ícone customizado de forma compatível
-abrir_modo_app() {
+# Função para abrir em navegadores baseados no Chromium em Modo App
+abrir_modo_chromium() {
     PATH_ICONE="$DIR/icone_app.png"
     PERFIL_DIR="$DIR/.perfil_app"
     mkdir -p "$PERFIL_DIR"
 
-    if command -v chromium-browser &> /dev/null; then
-        BINARIO="chromium-browser"
-    elif command -v google-chrome &> /dev/null; then
-        BINARIO="google-chrome"
-    elif command -v brave &> /dev/null; then
-        BINARIO="brave"
-    elif command -v microsoft-edge &> /dev/null; then
-        BINARIO="microsoft-edge"
-    elif command -v opera &> /dev/null; then
-        BINARIO="opera"
-    elif command -v vivaldi &> /dev/null; then
-        BINARIO="vivaldi"
+    local BINARIO=""
+    if command -v chromium &> /dev/null; then BINARIO="chromium";
+    elif command -v chromium-browser &> /dev/null; then BINARIO="chromium-browser";
+    elif command -v google-chrome &> /dev/null; then BINARIO="google-chrome";
+    elif command -v brave &> /dev/null; then BINARIO="brave";
+    elif command -v microsoft-edge &> /dev/null; then BINARIO="microsoft-edge";
+    elif command -v opera &> /dev/null; then BINARIO="opera";
+    elif command -v vivaldi &> /dev/null; then BINARIO="vivaldi";
     fi
 
     mkdir -p ~/.local/share/applications
@@ -134,36 +130,42 @@ EOF
     $BINARIO --ozone-platform-hint=auto --user-data-dir="$PERFIL_DIR" --app="$URL_ALVO" --window-size=950,850
 }
 
-if command -v chromium-browser &> /dev/null || \
-   command -v google-chrome &> /dev/null || \
-   command -v brave &> /dev/null || \
-   command -v microsoft-edge &> /dev/null || \
-   command -v opera &> /dev/null || \
-   command -v vivaldi &> /dev/null; then
+# --- HIERARQUIA DE VERIFICAÇÃO ---
 
-    abrir_modo_app
+# TESTE 1: Verificar se existe o FIREFOX instalado
+if command -v firefox &> /dev/null; then
+    echo "[INFO]: Firefox detectado! Executando Fedora Only Fans no Firefox..."
+    firefox --new-window "$URL_ALVO"
+
+# TESTE 2: Se não tiver Firefox, verifica navegadores baseados no CHROMIUM
+elif command -v chromium &> /dev/null || \
+     command -v chromium-browser &> /dev/null || \
+     command -v google-chrome &> /dev/null || \
+     command -v brave &> /dev/null || \
+     command -v microsoft-edge &> /dev/null || \
+     command -v opera &> /dev/null || \
+     command -v vivaldi &> /dev/null; then
+
+    echo "[INFO]: Navegador Chromium detectado! Executando em modo App..."
+    abrir_modo_chromium
+
+# TESTE 3: Sem Firefox e sem Chromium -> Instala a base do Chromium e executa
 else
     echo "----------------------------------------------------"
-    echo "[AVISO]: Para abrir como uma janela independente limpa "
-    echo "sem barras de navegação, precisamos de um motor Chromium."
+    echo "[AVISO]: Nenhum navegador suportado foi encontrado."
+    echo "Instalando a base do Chromium para executar o app..."
     echo "----------------------------------------------------"
-    echo -n "Nenhum navegador compatível achado. Instalar o Chromium agora? (s/n): "
-    read -n 1 resposta
-    echo ""
+    
+    sudo dnf install chromium -y
 
-    if [[ "$resposta" =~ ^[Ss]$ ]]; then
-        echo "Instalando Chromium..."
-        sudo dnf install chromium -y
-        if [ $? -eq 0 ]; then
-            echo "[SUCESSO]: Motor instalado!"
-            abrir_modo_app
-        else
-            echo "[ERRO]: Falha na instalação. Abrindo no Firefox com barras..."
-            firefox --new-window "$URL_ALVO"
-        fi
+    if [ $? -eq 0 ]; then
+        echo "[SUCESSO]: Chromium instalado com sucesso!"
+        abrir_modo_chromium
     else
-        echo "Abrindo no navegador padrão com barras por limitação do sistema..."
-        firefox --new-window "$URL_ALVO"
+        echo "[ERRO]: Falha ao instalar o Chromium via DNF."
+        echo "Pressione qualquer tecla para sair..."
+        read -n 1
+        exit 1
     fi
 fi
 

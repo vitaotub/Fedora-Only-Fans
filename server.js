@@ -5,6 +5,7 @@ const path = require('path');
 
 const PORT = 3000;
 const ARQUIVO_PROGRESSO = path.join(__dirname, '.progresso.json');
+const HTML_FILE = path.join(__dirname, 'fof.html');
 
 function lerProgresso() {
     try {
@@ -70,7 +71,7 @@ function executarComSudoGrafico(comandoOriginal, idComando, isReversao, callback
     const envGrafico = { env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' } };
     const comandoPrompt = obterComandoPromptSenha();
 
-    exec(comandoPrompt, envGrafico, (errPrompt, senha, stderrPrompt) => {
+    exec(comandoPrompt, envGrafico, (errPrompt, senha) => {
         if (errPrompt || !senha) {
             return callback(new Error("Autenticação cancelada pelo usuário."), "", "Operação abortada.");
         }
@@ -135,6 +136,18 @@ const server = http.createServer((req, res) => {
         res.writeHead(200); res.end(); return;
     }
 
+    // Serve a interface HTML na raiz "/" caso seja acessado via http://localhost:3000
+    if (req.method === 'GET' && (req.url === '/' || req.url === '/fof.html')) {
+        if (fs.existsSync(HTML_FILE)) {
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+            fs.createReadStream(HTML_FILE).pipe(res);
+        } else {
+            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('Arquivo fof.html não encontrado.');
+        }
+        return;
+    }
+
     if (req.method === 'GET' && req.url === '/status') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ executados: lerProgresso() }));
@@ -182,6 +195,14 @@ const server = http.createServer((req, res) => {
         });
     } else {
         res.writeHead(404); res.end();
+    }
+});
+
+server.on('error', (e) => {
+    if (e.code === 'EADDRINUSE') {
+        console.error(`[ERRO]: A porta ${PORT} já está em uso.`);
+    } else {
+        console.error('[Erro do servidor]:', e.message);
     }
 });
 
