@@ -1602,6 +1602,53 @@
                 }
             }, 10000);
         }
+        // ============ CORREÇÃO FORÇADA PARA SELECTS ============
+function corrigirSelects() {
+    // Seleciona todos os elementos select da página
+    const selects = document.querySelectorAll('select');
+
+    selects.forEach(select => {
+        // Força o estilo diretamente no elemento
+        select.style.backgroundColor = '#1a2236';
+        select.style.color = '#ffffff';
+        select.style.border = '1px solid #3c67e3';
+        select.style.borderRadius = '6px';
+        select.style.padding = '0.4rem 0.8rem';
+        select.style.fontSize = '0.9rem';
+        select.style.fontWeight = '500';
+        select.style.cursor = 'pointer';
+        select.style.outline = 'none';
+        select.style.appearance = 'auto';
+        select.style.WebkitAppearance = 'auto';
+
+        // Corrige as opções
+        const options = select.querySelectorAll('option');
+        options.forEach(option => {
+            option.style.backgroundColor = '#0b111e';
+            option.style.color = '#ffffff';
+            option.style.padding = '0.3rem 0.5rem';
+        });
+
+        // Adiciona evento para quando o select for aberto
+        select.addEventListener('focus', function() {
+            this.style.borderColor = '#527bee';
+            this.style.boxShadow = '0 0 0 2px rgba(60, 103, 227, 0.3)';
+        });
+
+        select.addEventListener('blur', function() {
+            this.style.borderColor = '#3c67e3';
+            this.style.boxShadow = 'none';
+        });
+    });
+}
+
+// Executa a correção quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    corrigirSelects();
+});
+
+// Também executa após um pequeno atraso (para garantir que o DOM esteja pronto)
+setTimeout(corrigirSelects, 100);
     </script>
 </body>
 </html>
