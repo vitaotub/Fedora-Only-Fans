@@ -1158,11 +1158,32 @@
         // ============ AJUSTE DNF ============
 
         async function executarAjusteDNF() {
-            const conexoes = document.getElementById('select-downloads').value;
-            const idComando = 'dnf-speed';
-            const comandoMontado = `sudo dnf config-manager setopt max_parallel_downloads=${conexoes} && sudo dnf config-manager setopt fastestmirror=True`;
-            await executarComando(idComando, comandoMontado);
-        }
+    const conexoes = document.getElementById('select-downloads').value;
+    const idComando = 'dnf-speed';
+    const comandoMontado = `sudo dnf config-manager setopt max_parallel_downloads=${conexoes} && sudo dnf config-manager setopt fastestmirror=True`;
+
+    // Pega o botão
+    const btn = document.querySelector("button[onclick='executarAjusteDNF()']");
+    const textoOriginal = btn.textContent;
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Aplicando...';
+    btn.style.opacity = '0.6';
+
+    // Chama executarComando com manterHabilitado = true
+    await executarComando(idComando, comandoMontado, true);
+
+    btn.textContent = '✅ Aplicado!';
+    btn.style.backgroundColor = '#4b5563';
+    btn.style.opacity = '1';
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = textoOriginal || 'Aplicar Ajuste';
+        btn.style.backgroundColor = 'var(--accent)';
+        btn.style.opacity = '1';
+    }, 3000);
+}
 
         // ============ UPGRADE FEDORA ============
 
@@ -1496,71 +1517,62 @@
 
         // ============ FUNÇÃO EXECUTAR COMANDO ============
 
-        const executarComando = async function(idComando, scriptComando) {
-            const logBox = document.getElementById(`log-${idComando}`);
-            if (!logBox) {
-                console.error(`Log box não encontrado: log-${idComando}`);
-                return;
-            }
+        const executarComando = async function(idComando, scriptComando, manterHabilitado = false) {
+    const logBox = document.getElementById(`log-${idComando}`);
+    if (!logBox) {
+        console.error(`Log box não encontrado: log-${idComando}`);
+        return;
+    }
 
-            iniciarProgresso(idComando);
+    iniciarProgresso(idComando);
 
-            logBox.innerHTML = '';
-            logBox.style.display = 'block';
-            logBox.style.height = '100px';
-            logBox.style.maxHeight = '100px';
+    logBox.innerHTML = '';
+    logBox.style.display = 'block';
+    logBox.style.height = '100px';
+    logBox.style.maxHeight = '100px';
 
-            const header = document.createElement('div');
-            header.className = 'log-line info';
-            header.textContent = `🚀 Iniciando... (${new Date().toLocaleTimeString()})`;
-            logBox.appendChild(header);
+    const header = document.createElement('div');
+    header.className = 'log-line info';
+    header.textContent = `🚀 Iniciando... (${new Date().toLocaleTimeString()})`;
+    logBox.appendChild(header);
 
-            conectarSSE(idComando, logBox);
+    conectarSSE(idComando, logBox);
 
-            const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
-                document.querySelector(`button[onclick*="${idComando}"]`);
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = '⏳ Executando...';
-                btn.style.opacity = '0.6';
-            }
+    // Só desabilita o botão se manterHabilitado for false
+    if (!manterHabilitado) {
+        const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
+                    document.querySelector(`button[onclick*="${idComando}"]`);
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ Executando...';
+            btn.style.opacity = '0.6';
+        }
+    }
 
-            try {
-                const response = await fetch('http://localhost:3000/executar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ comando: scriptComando, idComando: idComando })
-                });
+    try {
+        const response = await fetch('http://localhost:3000/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ comando: scriptComando, idComando: idComando })
+        });
 
-                if (!response.ok) {
-                    const errorLine = document.createElement('div');
-                    errorLine.className = 'log-line error';
-                    errorLine.textContent = `❌ Erro HTTP: ${response.status} - ${response.statusText}`;
-                    logBox.appendChild(errorLine);
-                    completarProgresso(idComando, false);
+        if (!response.ok) {
+            const errorLine = document.createElement('div');
+            errorLine.className = 'log-line error';
+            errorLine.textContent = `❌ Erro HTTP: ${response.status} - ${response.statusText}`;
+            logBox.appendChild(errorLine);
+            completarProgresso(idComando, false);
+        }
+    } catch (e) {
+        const errorLine = document.createElement('div');
+        errorLine.className = 'log-line error';
+        errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
+        logBox.appendChild(errorLine);
+        completarProgresso(idComando, false);
+    }
+};
 
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.textContent = btn.getAttribute('data-texto-original') || 'Executar';
-                        btn.style.opacity = '1';
-                    }
-                }
-            } catch (e) {
-                const errorLine = document.createElement('div');
-                errorLine.className = 'log-line error';
-                errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
-                logBox.appendChild(errorLine);
-                completarProgresso(idComando, false);
-
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = btn.getAttribute('data-texto-original') || 'Executar';
-                    btn.style.opacity = '1';
-                }
-            }
-        };
-
-        window.executarComando = executarComando;
+window.executarComando = executarComando;
 
         // ============ MANUTENÇÃO DO FOF ============
 
