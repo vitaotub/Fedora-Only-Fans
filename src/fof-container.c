@@ -35,15 +35,6 @@ typedef struct {
 } AppData;
 
 // ============================================================
-// TRATAMENTO DE SINAL (Ctrl+C)
-// ============================================================
-
-static gboolean sigint_handler(gpointer data) {
-    gtk_main_quit();
-    return G_SOURCE_REMOVE;
-}
-
-// ============================================================
 // FUNÇÕES AUXILIARES
 // ============================================================
 
@@ -67,15 +58,15 @@ void set_app_icon(GtkWindow *window, const char *icon_path) {
 // CALLBACKS
 // ============================================================
 
-// Quando a página termina de carregar
-void on_load_finished(WebKitWebView *webview, WebKitLoadResult result, gpointer user_data) {
+// Quando a página termina de carregar (API corrigida)
+void on_load_finished(WebKitWebView *webview, WebKitLoadEvent load_event, gpointer user_data) {
     AppData *data = (AppData*)user_data;
 
     if (data->spinner) {
         gtk_widget_hide(data->spinner);
     }
 
-    if (result == WEBKIT_LOAD_FINISHED) {
+    if (load_event == WEBKIT_LOAD_FINISHED) {
         g_print("[FOF] ✅ Página carregada com sucesso!\n");
     } else {
         g_print("[FOF] ❌ Erro ao carregar a página!\n");
@@ -188,7 +179,8 @@ int main(int argc, char *argv[]) {
     WebKitSettings *settings = webkit_settings_new();
     webkit_settings_set_enable_developer_extras(settings, TRUE);
     webkit_settings_set_enable_javascript(settings, TRUE);
-    webkit_settings_set_enable_plugins(settings, FALSE);
+    // Nota: webkit_settings_set_enable_plugins está deprecated
+    // webkit_settings_set_enable_plugins(settings, FALSE);
     webkit_settings_set_enable_webaudio(settings, FALSE);
     webkit_settings_set_allow_file_access_from_file_urls(settings, TRUE);
     webkit_settings_set_enable_media_stream(settings, TRUE);
