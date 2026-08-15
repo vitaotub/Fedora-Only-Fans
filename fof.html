@@ -17,6 +17,12 @@
             --warning-border: #f59e0b;
         }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-primary);
@@ -25,6 +31,7 @@
             padding: 2rem;
             display: flex;
             justify-content: center;
+            min-height: 100vh;
         }
 
         .container {
@@ -41,8 +48,8 @@
         }
 
         .logo-header {
-            width: 200px;
-            height: 200px;
+            width: 120px;
+            height: 120px;
             object-fit: contain;
             margin-bottom: 1rem;
             border-radius: 50%;
@@ -56,7 +63,7 @@
 
         header h1 {
             margin: 0 0 0.5rem 0;
-            font-size: 2.2rem;
+            font-size: 2rem;
             color: #fff;
         }
 
@@ -172,87 +179,87 @@
         }
 
         /* ===== SELECT PERSONALIZADO ===== */
-.custom-select {
-    position: relative;
-    display: inline-block;
-    width: 180px;
-    user-select: none;
-    font-size: 0.9rem;
-}
+        .custom-select {
+            position: relative;
+            display: inline-block;
+            width: 180px;
+            user-select: none;
+            font-size: 0.9rem;
+        }
 
-.custom-select-trigger {
-    background-color: #1a2236;
-    color: #ffffff;
-    border: 1px solid #3c67e3;
-    border-radius: 6px;
-    padding: 0.4rem 0.8rem;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
+        .custom-select-trigger {
+            background-color: #1a2236;
+            color: #ffffff;
+            border: 1px solid #3c67e3;
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
 
-.custom-select-trigger:hover {
-    border-color: #527bee;
-}
+        .custom-select-trigger:hover {
+            border-color: #527bee;
+        }
 
-.custom-select-trigger.open {
-    border-color: #527bee;
-    box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
-}
+        .custom-select-trigger.open {
+            border-color: #527bee;
+            box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
+        }
 
-.custom-select-arrow {
-    font-size: 0.6rem;
-    transition: transform 0.2s ease;
-    color: #60a5fa;
-}
+        .custom-select-arrow {
+            font-size: 0.6rem;
+            transition: transform 0.2s ease;
+            color: #60a5fa;
+        }
 
-.custom-select-trigger.open .custom-select-arrow {
-    transform: rotate(180deg);
-}
+        .custom-select-trigger.open .custom-select-arrow {
+            transform: rotate(180deg);
+        }
 
-.custom-select-options {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 4px;
-    background-color: #0b111e;
-    border: 1px solid #3c67e3;
-    border-radius: 6px;
-    padding: 0.2rem 0;
-    list-style: none;
-    display: none;
-    z-index: 1000;
-    max-height: 200px;
-    overflow-y: auto;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-}
+        .custom-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 4px;
+            background-color: #0b111e;
+            border: 1px solid #3c67e3;
+            border-radius: 6px;
+            padding: 0.2rem 0;
+            list-style: none;
+            display: none;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
 
-.custom-select-options.open {
-    display: block;
-}
+        .custom-select-options.open {
+            display: block;
+        }
 
-.custom-select-options li {
-    padding: 0.4rem 0.8rem;
-    color: #9ca3af;
-    cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
-}
+        .custom-select-options li {
+            padding: 0.4rem 0.8rem;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
 
-.custom-select-options li:hover {
-    background-color: #1a2236;
-    color: #ffffff;
-}
+        .custom-select-options li:hover {
+            background-color: #1a2236;
+            color: #ffffff;
+        }
 
-.custom-select-options li.selected {
-    background-color: #1a2236;
-    color: #ffffff;
-    font-weight: 500;
-}
+        .custom-select-options li.selected {
+            background-color: #1a2236;
+            color: #ffffff;
+            font-weight: 500;
+        }
 
-        /* ===== LOGS CORRIGIDOS (5 LINHAS) ===== */
+        /* ===== LOGS ===== */
         .terminal-log {
             background-color: #050811;
             border: 1px solid var(--border);
@@ -414,7 +421,7 @@
             color: #ef4444;
         }
 
-        /* ===== SELECT CORRIGIDO ===== */
+        /* ===== SELECT CORRIGIDO (fallback) ===== */
         .select-corrigido {
             background-color: #1a2236;
             color: #ffffff;
@@ -442,13 +449,12 @@
     </style>
 </head>
 <body>
-
     <div class="container">
+        <!-- HEADER -->
         <header>
             <img src="icone_app.png" alt="Fedora Only Fans" class="logo-header">
             <h1>Painel de Configurações do Fedora</h1>
             <p>Gerencie e automatize o Fedora Linux</p>
-
             <div style="margin-top: 1.2rem; display: flex; justify-content: center; gap: 0.75rem; font-size: 0.85rem; flex-wrap: wrap;">
                 <a href="#" onclick="event.preventDefault(); window.open('https://www.vitaotub.com', '_blank', 'noopener,noreferrer');" style="text-decoration: none; background-color: var(--border); padding: 0.35rem 0.75rem; border-radius: 6px; color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.05); display: inline-flex; align-items: center; gap: 0.4rem; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent)'" onmouseout="this.style.backgroundColor='var(--border)'">
                     👤 Criador: <strong>VitãoTub</strong>
@@ -506,26 +512,25 @@
                         <p>Configura os downloads paralelos simultâneos e ativa a busca automática pelo espelho de servidor mais rápido.</p>
                         <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             <label for="select-downloads" style="font-size: 0.9rem; color: var(--text-muted);">Conexões simultâneas:</label>
-     <!-- SELECT PERSONALIZADO -->
-    <div class="custom-select" id="custom-select-container">
-        <div class="custom-select-trigger" id="custom-select-trigger">
-            <span id="custom-select-value">5 (Recomendado)</span>
-            <span class="custom-select-arrow">▼</span>
-        </div>
-        <ul class="custom-select-options" id="custom-select-options">
-            <li data-value="2">2</li>
-            <li data-value="3">3</li>
-            <li data-value="4">4</li>
-            <li data-value="5" class="selected">5 (Recomendado)</li>
-            <li data-value="6">6</li>
-            <li data-value="7">7</li>
-            <li data-value="8">8</li>
-            <li data-value="9">9</li>
-            <li data-value="10">10</li>
-        </ul>
-        <input type="hidden" id="select-downloads" value="5">
-    </div>
-</div>
+                            <!-- SELECT PERSONALIZADO -->
+                            <div class="custom-select" id="custom-select-container">
+                                <div class="custom-select-trigger" id="custom-select-trigger">
+                                    <span id="custom-select-value">5 (Recomendado)</span>
+                                    <span class="custom-select-arrow">▼</span>
+                                </div>
+                                <ul class="custom-select-options" id="custom-select-options">
+                                    <li data-value="2">2</li>
+                                    <li data-value="3">3</li>
+                                    <li data-value="4">4</li>
+                                    <li data-value="5" class="selected">5 (Recomendado)</li>
+                                    <li data-value="6">6</li>
+                                    <li data-value="7">7</li>
+                                    <li data-value="8">8</li>
+                                    <li data-value="9">9</li>
+                                    <li data-value="10">10</li>
+                                </ul>
+                                <input type="hidden" id="select-downloads" value="5">
+                            </div>
                         </div>
                         <div class="grupo-botoes">
                             <button class="btn-executar" onclick="executarAjusteDNF()">Executar Ajuste</button>
@@ -543,6 +548,7 @@
                     <div class="terminal-log" id="log-dnf-speed"></div>
                 </div>
 
+                <!-- IDIOMA -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Configuração de Idioma e Localidade (PT-BR)</h3>
@@ -586,6 +592,7 @@
                     <div class="terminal-log" id="log-idioma-localectl"></div>
                 </div>
 
+                <!-- DUAL-BOOT -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Corrigir problemas de data/hora em Dual-Boot (Windows/Linux)</h3>
@@ -612,6 +619,7 @@
         <section class="etapa-card" id="etapa-2">
             <div class="etapa-titulo">📦 Etapa 2: Repositórios, Codecs e Aceleração Gráfica</div>
             <div id="comandos-etapa-2">
+                <!-- RPM Fusion -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
@@ -630,6 +638,7 @@
                     <div class="terminal-log" id="log-rpm-fusion"></div>
                 </div>
 
+                <!-- Flatpak -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
@@ -648,6 +657,7 @@
                     <div class="terminal-log" id="log-flatpak-setup"></div>
                 </div>
 
+                <!-- Arquivos Compactados -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Instalar Suporte a Arquivos Compactados (7z, RAR e ZIP)</h3>
@@ -666,6 +676,7 @@
                     <div class="terminal-log" id="log-arquivos-compactados"></div>
                 </div>
 
+                <!-- Codecs -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Instalar Codecs Multimídia Essenciais</h3>
@@ -684,6 +695,7 @@
                     <div class="terminal-log" id="log-codecs-essenciais"></div>
                 </div>
 
+                <!-- Firmware -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Atualizar Firmwares de Hardware</h3>
@@ -702,6 +714,7 @@
                     <div class="terminal-log" id="log-firmware-update"></div>
                 </div>
 
+                <!-- Extras Tainted -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Extras e DVD Play (Repositórios Tainted)</h3>
@@ -720,6 +733,7 @@
                     <div class="terminal-log" id="log-extras-tainted"></div>
                 </div>
 
+                <!-- VA-API -->
                 <div class="bloco-comando" style="border-left: 4px solid var(--accent);">
                     <div class="comando-info">
                         <h3>VA-API e Codecs para Aceleração Gráfica</h3>
@@ -1684,54 +1698,46 @@
                 }
             }, 10000);
         }
-// ============ SELECT PERSONALIZADO ============
-function initCustomSelect() {
-    const trigger = document.getElementById('custom-select-trigger');
-    const options = document.getElementById('custom-select-options');
-    const hiddenInput = document.getElementById('select-downloads');
-    const displayValue = document.getElementById('custom-select-value');
 
-    if (!trigger || !options || !hiddenInput) return;
+        // ============ SELECT PERSONALIZADO ============
+        function initCustomSelect() {
+            const trigger = document.getElementById('custom-select-trigger');
+            const options = document.getElementById('custom-select-options');
+            const hiddenInput = document.getElementById('select-downloads');
+            const displayValue = document.getElementById('custom-select-value');
 
-    // Abre/fecha a lista
-    trigger.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const isOpen = this.classList.toggle('open');
-        options.classList.toggle('open');
-        this.setAttribute('aria-expanded', isOpen);
-    });
+            if (!trigger || !options || !hiddenInput) return;
 
-    // Seleciona uma opção
-    options.querySelectorAll('li').forEach(li => {
-        li.addEventListener('click', function() {
-            const value = this.getAttribute('data-value');
-            const text = this.textContent;
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isOpen = this.classList.toggle('open');
+                options.classList.toggle('open');
+                this.setAttribute('aria-expanded', isOpen);
+            });
 
-            // Atualiza o valor exibido
-            displayValue.textContent = text;
+            options.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const text = this.textContent;
 
-            // Atualiza o hidden input
-            hiddenInput.value = value;
+                    displayValue.textContent = text;
+                    hiddenInput.value = value;
 
-            // Atualiza a classe 'selected'
-            options.querySelectorAll('li').forEach(item => item.classList.remove('selected'));
-            this.classList.add('selected');
+                    options.querySelectorAll('li').forEach(item => item.classList.remove('selected'));
+                    this.classList.add('selected');
 
-            // Fecha a lista
-            trigger.classList.remove('open');
-            options.classList.remove('open');
-        });
-    });
+                    trigger.classList.remove('open');
+                    options.classList.remove('open');
+                });
+            });
 
-    // Fecha a lista ao clicar fora
-    document.addEventListener('click', function() {
-        trigger.classList.remove('open');
-        options.classList.remove('open');
-    });
-}
+            document.addEventListener('click', function() {
+                trigger.classList.remove('open');
+                options.classList.remove('open');
+            });
+        }
 
-// Executa quando a página carregar
-document.addEventListener('DOMContentLoaded', initCustomSelect);
+        document.addEventListener('DOMContentLoaded', initCustomSelect);
     </script>
 </body>
 </html>
