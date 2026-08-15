@@ -40,6 +40,20 @@
             padding-bottom: 1.5rem;
         }
 
+        .logo-header {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(60, 103, 227, 0.25);
+            transition: transform 0.3s ease;
+        }
+
+        .logo-header:hover {
+            transform: scale(1.05);
+        }
+
         header h1 {
             margin: 0 0 0.5rem 0;
             font-size: 2.2rem;
@@ -169,8 +183,11 @@
 
     <div class="container">
         <header>
-            <h1>Painel de Configuração Fedora</h1>
-            <p>Gerencie e automatize as instalações do seu sistema de forma visual</p>
+            <!-- Logo do projeto inserido aqui -->
+            <img src="icone_app.png" alt="Fedora Only Fans" class="logo-header">
+            
+            <h1>Painel de Configurações do Fedora</h1>
+            <p>Gerencie e automatize o Fedora Linux</p>
 
             <div style="margin-top: 1.2rem; display: flex; justify-content: center; gap: 0.75rem; font-size: 0.85rem;">
                 <a href="#" onclick="event.preventDefault(); window.open('https://www.vitaotub.com', '_blank', 'noopener,noreferrer');" style="text-decoration: none; background-color: var(--border); padding: 0.35rem 0.75rem; border-radius: 6px; color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.05); display: inline-flex; align-items: center; gap: 0.4rem; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent)'" onmouseout="this.style.backgroundColor='var(--border)'">
