@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Função inteligente para abrir o script no terminal nativo de cada interface
 abrir_no_terminal_nativo() {
@@ -96,6 +96,15 @@ echo "Configurando renderizador de interface..."
 
 URL_ALVO="file://$DIR/fof.html"
 
+# Função para abrir o Firefox em modo janela/app sem barras nativas
+abrir_modo_firefox() {
+    PERFIL_DIR_FF="$DIR/.perfil_firefox"
+    mkdir -p "$PERFIL_DIR_FF"
+    
+    # Cria janela autônoma com tamanho definido
+    firefox --profile "$PERFIL_DIR_FF" --window-size 950,850 --new-window "$URL_ALVO"
+}
+
 # Função para abrir em navegadores baseados no Chromium em Modo App
 abrir_modo_chromium() {
     PATH_ICONE="$DIR/icone_app.png"
@@ -135,7 +144,7 @@ EOF
 # TESTE 1: Verificar se existe o FIREFOX instalado
 if command -v firefox &> /dev/null; then
     echo "[INFO]: Firefox detectado! Executando Fedora Only Fans no Firefox..."
-    firefox --new-window "$URL_ALVO"
+    abrir_modo_firefox
 
 # TESTE 2: Se não tiver Firefox, verifica navegadores baseados no CHROMIUM
 elif command -v chromium &> /dev/null || \
