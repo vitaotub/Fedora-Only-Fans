@@ -171,6 +171,87 @@
             cursor: not-allowed;
         }
 
+        /* ===== SELECT PERSONALIZADO ===== */
+.custom-select {
+    position: relative;
+    display: inline-block;
+    width: 180px;
+    user-select: none;
+    font-size: 0.9rem;
+}
+
+.custom-select-trigger {
+    background-color: #1a2236;
+    color: #ffffff;
+    border: 1px solid #3c67e3;
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-select-trigger:hover {
+    border-color: #527bee;
+}
+
+.custom-select-trigger.open {
+    border-color: #527bee;
+    box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
+}
+
+.custom-select-arrow {
+    font-size: 0.6rem;
+    transition: transform 0.2s ease;
+    color: #60a5fa;
+}
+
+.custom-select-trigger.open .custom-select-arrow {
+    transform: rotate(180deg);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background-color: #0b111e;
+    border: 1px solid #3c67e3;
+    border-radius: 6px;
+    padding: 0.2rem 0;
+    list-style: none;
+    display: none;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.custom-select-options.open {
+    display: block;
+}
+
+.custom-select-options li {
+    padding: 0.4rem 0.8rem;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.custom-select-options li:hover {
+    background-color: #1a2236;
+    color: #ffffff;
+}
+
+.custom-select-options li.selected {
+    background-color: #1a2236;
+    color: #ffffff;
+    font-weight: 500;
+}
+
         /* ===== LOGS CORRIGIDOS (5 LINHAS) ===== */
         .terminal-log {
             background-color: #050811;
@@ -425,25 +506,26 @@
                         <p>Configura os downloads paralelos simultâneos e ativa a busca automática pelo espelho de servidor mais rápido.</p>
                         <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             <label for="select-downloads" style="font-size: 0.9rem; color: var(--text-muted);">Conexões simultâneas:</label>
-                            <select id="select-downloads" style="
-    background-color: #1a2236 !important;
-    color: #ffffff !important;
-    border: 1px solid #3c67e3 !important;
-    padding: 0.4rem 0.8rem !important;
-    border-radius: 6px !important;
-    font-size: 0.9rem !important;
-    cursor: pointer !important;
-">
-    <option value="2" style="background-color: #0b111e; color: #ffffff;">2</option>
-    <option value="3" style="background-color: #0b111e; color: #ffffff;">3</option>
-    <option value="4" style="background-color: #0b111e; color: #ffffff;">4</option>
-    <option value="5" selected style="background-color: #0b111e; color: #ffffff;">5 (Recomendado)</option>
-    <option value="6" style="background-color: #0b111e; color: #ffffff;">6</option>
-    <option value="7" style="background-color: #0b111e; color: #ffffff;">7</option>
-    <option value="8" style="background-color: #0b111e; color: #ffffff;">8</option>
-    <option value="9" style="background-color: #0b111e; color: #ffffff;">9</option>
-    <option value="10" style="background-color: #0b111e; color: #ffffff;">10</option>
-</select>
+     <!-- SELECT PERSONALIZADO -->
+    <div class="custom-select" id="custom-select-container">
+        <div class="custom-select-trigger" id="custom-select-trigger">
+            <span id="custom-select-value">5 (Recomendado)</span>
+            <span class="custom-select-arrow">▼</span>
+        </div>
+        <ul class="custom-select-options" id="custom-select-options">
+            <li data-value="2">2</li>
+            <li data-value="3">3</li>
+            <li data-value="4">4</li>
+            <li data-value="5" class="selected">5 (Recomendado)</li>
+            <li data-value="6">6</li>
+            <li data-value="7">7</li>
+            <li data-value="8">8</li>
+            <li data-value="9">9</li>
+            <li data-value="10">10</li>
+        </ul>
+        <input type="hidden" id="select-downloads" value="5">
+    </div>
+</div>
                         </div>
                         <div class="grupo-botoes">
                             <button class="btn-executar" onclick="executarAjusteDNF()">Executar Ajuste</button>
@@ -1602,53 +1684,54 @@
                 }
             }, 10000);
         }
-        // ============ CORREÇÃO FORÇADA PARA SELECTS ============
-function corrigirSelects() {
-    // Seleciona todos os elementos select da página
-    const selects = document.querySelectorAll('select');
+// ============ SELECT PERSONALIZADO ============
+function initCustomSelect() {
+    const trigger = document.getElementById('custom-select-trigger');
+    const options = document.getElementById('custom-select-options');
+    const hiddenInput = document.getElementById('select-downloads');
+    const displayValue = document.getElementById('custom-select-value');
 
-    selects.forEach(select => {
-        // Força o estilo diretamente no elemento
-        select.style.backgroundColor = '#1a2236';
-        select.style.color = '#ffffff';
-        select.style.border = '1px solid #3c67e3';
-        select.style.borderRadius = '6px';
-        select.style.padding = '0.4rem 0.8rem';
-        select.style.fontSize = '0.9rem';
-        select.style.fontWeight = '500';
-        select.style.cursor = 'pointer';
-        select.style.outline = 'none';
-        select.style.appearance = 'auto';
-        select.style.WebkitAppearance = 'auto';
+    if (!trigger || !options || !hiddenInput) return;
 
-        // Corrige as opções
-        const options = select.querySelectorAll('option');
-        options.forEach(option => {
-            option.style.backgroundColor = '#0b111e';
-            option.style.color = '#ffffff';
-            option.style.padding = '0.3rem 0.5rem';
+    // Abre/fecha a lista
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isOpen = this.classList.toggle('open');
+        options.classList.toggle('open');
+        this.setAttribute('aria-expanded', isOpen);
+    });
+
+    // Seleciona uma opção
+    options.querySelectorAll('li').forEach(li => {
+        li.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            const text = this.textContent;
+
+            // Atualiza o valor exibido
+            displayValue.textContent = text;
+
+            // Atualiza o hidden input
+            hiddenInput.value = value;
+
+            // Atualiza a classe 'selected'
+            options.querySelectorAll('li').forEach(item => item.classList.remove('selected'));
+            this.classList.add('selected');
+
+            // Fecha a lista
+            trigger.classList.remove('open');
+            options.classList.remove('open');
         });
+    });
 
-        // Adiciona evento para quando o select for aberto
-        select.addEventListener('focus', function() {
-            this.style.borderColor = '#527bee';
-            this.style.boxShadow = '0 0 0 2px rgba(60, 103, 227, 0.3)';
-        });
-
-        select.addEventListener('blur', function() {
-            this.style.borderColor = '#3c67e3';
-            this.style.boxShadow = 'none';
-        });
+    // Fecha a lista ao clicar fora
+    document.addEventListener('click', function() {
+        trigger.classList.remove('open');
+        options.classList.remove('open');
     });
 }
 
-// Executa a correção quando a página carregar
-document.addEventListener('DOMContentLoaded', function() {
-    corrigirSelects();
-});
-
-// Também executa após um pequeno atraso (para garantir que o DOM esteja pronto)
-setTimeout(corrigirSelects, 100);
+// Executa quando a página carregar
+document.addEventListener('DOMContentLoaded', initCustomSelect);
     </script>
 </body>
 </html>
