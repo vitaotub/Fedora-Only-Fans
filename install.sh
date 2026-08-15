@@ -75,6 +75,46 @@ log() {
 }
 
 # ============================================================
+# FUNÇÃO PARA REAPLICAR PERMISSÕES
+# ============================================================
+
+re aplicar_permissoes() {
+    print_step "Reaplicando permissões dos arquivos..."
+
+    # Dá permissão para o script principal
+    if [ -f "$INSTALL_DIR/iniciar_fof.sh" ]; then
+        chmod +x "$INSTALL_DIR/iniciar_fof.sh"
+        print_info "Permissão aplicada: iniciar_fof.sh"
+    fi
+
+    # Dá permissão para o link no PATH
+    if [ -f "$BIN_DIR/fof" ]; then
+        chmod +x "$BIN_DIR/fof"
+        print_info "Permissão aplicada: fof (link)"
+    fi
+
+    # Dá permissão para o container
+    if [ -f "$INSTALL_DIR/fof-container" ]; then
+        chmod +x "$INSTALL_DIR/fof-container"
+        print_info "Permissão aplicada: fof-container"
+    fi
+
+    # Dá permissão para o script de build
+    if [ -f "$INSTALL_DIR/build-container.sh" ]; then
+        chmod +x "$INSTALL_DIR/build-container.sh"
+        print_info "Permissão aplicada: build-container.sh"
+    fi
+
+    # Dá permissão para o link do container
+    if [ -f "$BIN_DIR/fof-container" ]; then
+        chmod +x "$BIN_DIR/fof-container"
+        print_info "Permissão aplicada: fof-container (link)"
+    fi
+
+    print_success "Permissões reaplicadas com sucesso!"
+}
+
+# ============================================================
 # INSTALAÇÃO DO CONTAINER
 # ============================================================
 
@@ -395,7 +435,8 @@ desinstalar() {
 
     read -p "Tem certeza? (s/N): " -n 1 -r
     echo
-    if [[ ! $REPLY =~ ^[Ss]$ ]]; then        print_info "Desinstalação cancelada"
+    if [[ ! $REPLY =~ ^[Ss]$ ]]; then
+        print_info "Desinstalação cancelada"
         exit 0
     fi
 
@@ -411,6 +452,11 @@ desinstalar() {
         print_success "Link removido: $BIN_DIR/fof"
     fi
 
+    if [ -f "$BIN_DIR/fof-container" ]; then
+        rm -f "$BIN_DIR/fof-container"
+        print_success "Link removido: $BIN_DIR/fof-container"
+    fi
+
     if [ -f "$DESKTOP_FILE" ]; then
         rm -f "$DESKTOP_FILE"
         print_success "Atalho removido: $DESKTOP_FILE"
@@ -422,7 +468,7 @@ desinstalar() {
 }
 
 # ============================================================
-# ATUALIZAÇÃO
+# ATUALIZAÇÃO (CORRIGIDA COM REAPLICAÇÃO DE PERMISSÕES)
 # ============================================================
 
 atualizar() {
@@ -438,7 +484,10 @@ atualizar() {
 
     cd "$INSTALL_DIR"
 
+    # Salva alterações locais temporariamente
     git stash save "Backup automático antes da atualização" 2>/dev/null
+
+    # Baixa as atualizações
     git pull origin main
 
     if [ $? -ne 0 ]; then
@@ -446,10 +495,37 @@ atualizar() {
         exit 1
     fi
 
+    # Reaplica o stash se houver alterações salvas
+    git stash pop 2>/dev/null
+
+    # Atualiza dependências
+    print_step "Atualizando dependências do Node.js..."
     npm install --no-audit --no-fund --silent
 
-    print_success "FOF atualizado para a versão mais recente!"
-    print_success "Versão atual: $(git describe --tags 2>/dev/null || echo 'development')"
+    if [ $? -ne 0 ]; then
+        print_warning "Falha ao atualizar dependências, continuando..."
+    fi
+
+    # Recompila o container
+    print_step "Recompilando container..."
+    if [ -f "$INSTALL_DIR/build-container.sh" ]; then
+        chmod +x "$INSTALL_DIR/build-container.sh"
+        "$INSTALL_DIR/build-container.sh" 2>/dev/null
+    fi
+
+    # ============================================================
+    # REAPLICA PERMISSÕES (CORREÇÃO IMPORTANTE)
+    # ============================================================
+    reaplicar_permissoes
+
+    # Atualiza o atalho do menu
+    criar_atalho
+
+    # Tenta fixar na barra de tarefas novamente
+    fixar_na_barra
+
+    print_success "✅ FOF atualizado para a versão mais recente!"
+    print_info "Versão atual: $(git describe --tags 2>/dev/null || echo 'development')"
 }
 
 # ============================================================
@@ -515,6 +591,7 @@ main() {
     criar_atalho
     fixar_na_barra
     configurar_path
+    reaplicar_permissoes
 
     echo ""
     print_success "🎉 Fedora Only Fans instalado com sucesso!"
