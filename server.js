@@ -213,7 +213,7 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
         }
 
         enviarLog(idComando, '─'.repeat(50) + '\n', 'info');
-        enviarLog(idComando, '[FIM] Pressione "Concluído" para fechar este log.\n', 'info');
+        enviarLog(idComando, '✅ Tarefa concluída!\n', 'success');
         enviarLog(idComando, '__END__', 'end');
 
         callback(code === 0 ? null : new Error(`Código de saída: ${code}`), saidaCompleta, erros);
@@ -225,14 +225,90 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
     });
 }
 
+// ============================================================
+// EXECUÇÃO COM AUTENTICAÇÃO SEGURA (COM SCRIPT WRAPPER)
+// ============================================================
+
 function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, callback) {
     const desktop = detectarDesktop();
     const metodo = obterMetodoAutenticacao();
 
-    enviarLog(idComando, `🔐 Autenticando usando: ${metodo.descricao}\n`, 'info');
+    // Mapeia comandos para descrições amigáveis
+    const descricoesComandos = {
+        'dnf upgrade': 'Atualizar o sistema Fedora',
+        'dnf install': 'Instalar pacotes',
+        'dnf remove': 'Remover pacotes',
+        'dnf autoremove': 'Remover dependências não utilizadas',
+        'dnf clean': 'Limpar cache do sistema',
+        'dnf config-manager': 'Configurar gerenciador de pacotes',
+        'dnf distro-sync': 'Sincronizar pacotes com o canal estável',
+        'dnf system-upgrade': 'Atualizar versão do Fedora',
+        'dnf swap': 'Substituir pacotes',
+        'dnf groupinstall': 'Instalar grupo de pacotes',
+        'flatpak install': 'Instalar aplicativo Flatpak',
+        'flatpak uninstall': 'Remover aplicativo Flatpak',
+        'flatpak update': 'Atualizar aplicativos Flatpak',
+        'flatpak remote-add': 'Adicionar repositório Flatpak',
+        'localectl': 'Alterar configurações de localidade',
+        'timedatectl': 'Alterar data e hora do sistema',
+        'fwupdmgr': 'Atualizar firmware do hardware',
+        'rpm -q': 'Consultar pacotes RPM',
+        'rpm -E': 'Obter informações do RPM',
+        'steam': 'Instalar Steam',
+        'vulkan': 'Instalar drivers Vulkan',
+        'mesa': 'Instalar drivers Mesa',
+        'unzip': 'Instalar ferramentas de compactação',
+        '7zip': 'Instalar suporte a 7z',
+        'unrar': 'Instalar suporte a RAR',
+        'gstreamer': 'Instalar codecs multimídia',
+        'ffmpeg': 'Instalar codecs de vídeo',
+        'v4l2loopback': 'Instalar câmera virtual'
+    };
+
+    // Gera uma descrição amigável
+    let descricao = 'Executar comando administrativo';
+    for (const [key, value] of Object.entries(descricoesComandos)) {
+        if (comandoOriginal.includes(key)) {
+            descricao = value;
+            break;
+        }
+    }
+
+    // Verifica se a descrição é genérica
+    if (descricao === 'Executar comando administrativo' && idComando) {
+        const descricoesPorId = {
+            'atualizacao-inicial': 'Atualizar o sistema Fedora',
+            'dnf-speed': 'Ajustar velocidade de download do DNF',
+            'idioma-packs': 'Instalar pacotes de idioma PT-BR',
+            'idioma-hunspell': 'Instalar corretor ortográfico PT-BR',
+            'idioma-localectl': 'Configurar localidade PT-BR',
+            'dual-boot-time': 'Corrigir relógio para dual-boot',
+            'rpm-fusion': 'Ativar repositórios RPM Fusion',
+            'flatpak-setup': 'Configurar Flatpak e Flathub',
+            'arquivos-compactados': 'Instalar suporte a arquivos compactados',
+            'codecs-essenciais': 'Instalar codecs multimídia',
+            'firmware-update': 'Atualizar firmware do hardware',
+            'extras-tainted': 'Instalar extras e suporte a DVD',
+            'vaapi-amd': 'Instalar aceleração gráfica VA-API',
+            'vaapi-swap': 'Substituir drivers de aceleração gráfica',
+            'fontes-ms-all': 'Instalar fontes Microsoft',
+            'vulkan-amd': 'Instalar drivers Vulkan para AMD',
+            'steam-install': 'Instalar Steam e dispositivos',
+            'obs-cam': 'Instalar câmera virtual para OBS',
+            'instalar-easyeffects': 'Instalar EasyEffects',
+            'limpeza-sistema': 'Limpar arquivos temporários e cache',
+            'listar-kernels': 'Listar kernels instalados',
+            'system-upgrade': 'Baixar atualização de versão do Fedora',
+            'distro-sync': 'Sincronizar pacotes com o canal estável'
+        };
+        if (descricoesPorId[idComando]) {
+            descricao = descricoesPorId[idComando];
+        }
+    }
+
+    enviarLog(idComando, `🔐 Autenticando para: ${descricao}\n`, 'info');
 
     const comandoSemSudo = comandoOriginal.replace(/sudo\s+/g, '');
-
     const comandoEscapado = comandoSemSudo
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
@@ -243,11 +319,52 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
     switch (metodo.tipo) {
         case 'kdesu':
-            comandoFinal = `kdesu -c "${comandoEscapado}" 2>/dev/null`;
+            // kdesu com descrição amigável
+            comandoFinal = `kdesu -c "${comandoEscapado}" --comment "${descricao}" 2>/dev/null`;
             break;
 
         case 'pkexec':
-            comandoFinal = `pkexec sh -c "${comandoEscapado}"`;
+            // ============================================================
+            // MÉTODO DO SCRIPT WRAPPER - MAIS CONFIÁVEL
+            // ============================================================
+
+            // Cria um nome único para o script temporário
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(7);
+            const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
+
+            // Conteúdo do script com descrição
+            const scriptContent = `#!/bin/bash
+            # Fedora Only Fans - ${descricao}
+            # Executado em: $(date '+%d/%m/%Y %H:%M:%S')
+
+            ${comandoEscapado}
+            `;
+
+            // Escreve o script no disco
+            try {
+                fs.writeFileSync(scriptTemp, scriptContent, { mode: 0o755 });
+                console.log(`[PKEXEC] Script criado: ${scriptTemp}`);
+            } catch (err) {
+                enviarLog(idComando, `❌ Erro ao criar script temporário: ${err.message}\n`, 'error');
+                return callback(err, "", "");
+            }
+
+            // Executa o script com pkexec e depois remove
+            comandoFinal = `pkexec ${scriptTemp} && rm -f ${scriptTemp}`;
+
+            // Limpeza forçada em caso de falha (60 segundos)
+            setTimeout(() => {
+                if (fs.existsSync(scriptTemp)) {
+                    try {
+                        fs.unlinkSync(scriptTemp);
+                        console.log(`[PKEXEC] Limpeza forçada: ${scriptTemp} removido`);
+                    } catch(e) {
+                        // Ignora erros na limpeza
+                    }
+                }
+            }, 60000);
+
             break;
 
         case 'sudo_fallback':
@@ -255,9 +372,9 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
             let promptSenha;
             if (desktop === 'KDE' || desktop === 'LXQT') {
-                promptSenha = `kdialog --password "Digite sua senha de administrador:" --title "Fedora Only Fans - Autenticação" 2>/dev/null`;
+                promptSenha = `kdialog --password "Digite sua senha de administrador:" --title "Fedora Only Fans - ${descricao}" 2>/dev/null`;
             } else {
-                promptSenha = `zenity --password --title="Fedora Only Fans" --text="Digite sua senha de administrador:" 2>/dev/null`;
+                promptSenha = `zenity --password --title="Fedora Only Fans" --text="🔐 ${descricao}" 2>/dev/null`;
             }
 
             const comandoPrompt = `${promptSenha} || ${desktop === 'KDE' ? 'zenity' : 'kdialog'} --password --title="Fedora Only Fans" 2>/dev/null`;
@@ -272,7 +389,9 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
                 const senhaLimpa = senha.trim().replace(/'/g, "'\\''");
                 comandoFinal = `echo '${senhaLimpa}' | sudo -S sh -c "${comandoEscapado}"`;
-                executarComandoComStream(comandoFinal, idComando, isReversao, callback);
+                executarComandoComStream(comandoFinal, idComando, isReversao, (error, stdout, stderr) => {
+                    callback(error, stdout, stderr);
+                });
             });
             return;
     }
@@ -283,8 +402,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 // ============ FUNÇÃO PRINCIPAL DE EXECUÇÃO (SEM WHITELIST) ============
 
 function procederComExecucao(comando, idComando, isReversao, res) {
-    // Remove qualquer validação de whitelist - executa diretamente
-
     // Responde imediatamente que o comando foi aceito
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -524,5 +641,6 @@ server.listen(PORT, () => {
     console.log(` 📡 SSE: Ativo (logs em tempo real)`);
     console.log(` 🛡️  Whitelist: Removida (todos os comandos são permitidos)`);
     console.log(` 📁 Arquivos estáticos: Ativo (ícone, etc)`);
+    console.log(` 📝 Script Wrapper: Ativo (pkexec)`);
     console.log(`====================================================`);
 });

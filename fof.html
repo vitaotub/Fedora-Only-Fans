@@ -171,24 +171,31 @@
             cursor: not-allowed;
         }
 
-        /* ===== LOGS MELHORADOS ===== */
+        /* ===== LOGS CORRIGIDOS (5 LINHAS) ===== */
         .terminal-log {
             background-color: #050811;
             border: 1px solid var(--border);
             border-radius: 6px;
             font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
             font-size: 0.85rem;
-            padding: 1rem;
-            margin-top: 1rem;
-            height: 200px;
-            max-height: 400px;
+            padding: 0.6rem 0.8rem;
+            margin-top: 0.75rem;
+            height: 100px;
+            max-height: 100px;
             overflow-y: auto;
             overflow-x: hidden;
             white-space: pre-wrap;
             display: none;
             scroll-behavior: smooth;
-            line-height: 1.5;
-            transition: height 0.3s ease, max-height 0.3s ease;
+            line-height: 1.4;
+            transition: height 0.3s ease;
+        }
+
+        /* Expansão ao passar o mouse */
+        .terminal-log:hover {
+            max-height: 300px;
+            height: auto;
+            min-height: 100px;
         }
 
         .terminal-log .log-line {
@@ -236,7 +243,7 @@
 
         /* Barra de rolagem personalizada */
         .terminal-log::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         .terminal-log::-webkit-scrollbar-track {
@@ -253,51 +260,20 @@
             background: #3c67e3;
         }
 
-        /* ===== BOTÃO DE FECHAR LOG ===== */
-        .btn-fechar-log {
-            background-color: #374151;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 0.2rem 0.6rem;
-            font-size: 0.7rem;
-            cursor: pointer;
-            float: right;
-            margin-top: -0.5rem;
-            transition: background-color 0.2s ease;
-        }
-
-        .btn-fechar-log:hover {
-            background-color: #ef4444;
-        }
-
-        /* ===== HEADER LOG ===== */
-        .log-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.25rem;
-        }
-
-        .log-header span {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
         /* ===== BARRA DE PROGRESSO ===== */
         .progress-container {
-            margin-top: 0.75rem;
-            margin-bottom: 0.75rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
             display: none;
             background-color: #0a0e1a;
             border-radius: 8px;
-            padding: 0.5rem 0.75rem;
+            padding: 0.4rem 0.7rem;
             border: 1px solid var(--border);
         }
 
         .progress-bar {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background-color: #1a2236;
             border-radius: 4px;
             overflow: hidden;
@@ -332,9 +308,9 @@
         .progress-text {
             display: flex;
             justify-content: space-between;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
-            margin-top: 0.25rem;
+            margin-top: 0.15rem;
         }
 
         .progress-text .percentage {
@@ -357,6 +333,32 @@
 
         .progress-text .status.error {
             color: #ef4444;
+        }
+
+        /* ===== SELECT CORRIGIDO ===== */
+        .select-corrigido {
+            background-color: #1a2236;
+            color: #ffffff;
+            border: 1px solid var(--border);
+            padding: 0.4rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .select-corrigido:hover {
+            border-color: var(--accent);
+        }
+
+        .select-corrigido:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
+        }
+
+        .select-corrigido option {
+            background-color: #0b111e;
+            color: #ffffff;
         }
     </style>
 </head>
@@ -399,7 +401,7 @@
                     <button class="btn-executar" style="background-color: #d97706;" onclick="executarComando('atualizacao-inicial', 'sudo dnf upgrade --refresh -y')">
                         🔄 Atualizar Fedora Completamente
                     </button>
-                    <button class="btn-fechar-log" onclick="fecharLog('atualizacao-inicial')" style="display: none;" id="btn-fechar-atualizacao-inicial">✕ Fechar</button>
+                    <!-- Botão de fechar removido - será controlado pelo JavaScript -->
                 </div>
                 <!-- BARRA DE PROGRESSO -->
                 <div class="progress-container" id="progress-atualizacao-inicial">
@@ -428,7 +430,8 @@
                         <p>Configura os downloads paralelos simultâneos e ativa a busca automática pelo espelho de servidor mais rápido.</p>
                         <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             <label for="select-downloads" style="font-size: 0.9rem; color: var(--text-muted);">Conexões simultâneas:</label>
-                            <select id="select-downloads" style="background-color: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border); padding: 0.4rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer;">
+                            <!-- SELECT CORRIGIDO -->
+                            <select id="select-downloads" class="select-corrigido">
                                 <option value="2">2</option>
                                 <option value="3">3</option>
                                 <option value="4">4</option>
@@ -442,8 +445,7 @@
                         </div>
                         <div class="grupo-botoes">
                             <button class="btn-executar" onclick="executarAjusteDNF()">Executar Ajuste</button>
-                            <button class="btn-reverter" onclick="reverterComando('dnf-speed', 'sudo dnf config-manager unsetopt max_parallel_downloads && sudo dnf config-manager unsetopt fastestmirror')">Reverter Ajuste</button>
-                            <button class="btn-fechar-log" onclick="fecharLog('dnf-speed')" style="display: none;" id="btn-fechar-dnf-speed">✕ Fechar</button>
+                            <!-- Botão de reverter REMOVIDO -->
                         </div>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
@@ -512,7 +514,6 @@
                         <h3>Corrigir problemas de data/hora em Dual-Boot (Windows/Linux)</h3>
                         <p>Configura o relógio do hardware para usar o padrão UTC, evitando bagunça nos horários ao alternar sistemas.</p>
                         <button class="btn-executar" onclick="executarComando('dual-boot-time', 'sudo timedatectl set-local-rtc 0')">Corrigir Relógio</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('dual-boot-time')" style="display: none;" id="btn-fechar-dual-boot-time">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-dual-boot-time">
@@ -541,7 +542,6 @@
                         <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
                         <p>Instala e sincroniza os repositórios oficiais RPM Fusion, adiciona suporte a metadados do AppStream e executa um ajuste de segurança para garantir que o canal de desenvolvimento (Rawhide) não seja ativado por engano.</p>
                         <button class="btn-executar" onclick="executarComando('rpm-fusion', 'sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y && sudo dnf update @core -y && sudo dnf install rpmfusion-*-appstream-data -y && sudo dnf repolist --all | grep -i fusion && sudo dnf config-manager setopt rpmfusion-free.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-updates.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-rawhide.enabled=0')">Ativar RPM Fusion</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('rpm-fusion')" style="display: none;" id="btn-fechar-rpm-fusion">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-rpm-fusion">
@@ -562,7 +562,6 @@
                         <h3>Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
                         <p>Adiciona o repositório global Flathub e garante a instalação do gerenciador de pacotes Flatpak no sistema.</p>
                         <button class="btn-executar" onclick="executarComando('flatpak-setup', 'flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && sudo dnf install flatpak -y')">Configurar Flatpak</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('flatpak-setup')" style="display: none;" id="btn-fechar-flatpak-setup">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-flatpak-setup">
@@ -583,7 +582,6 @@
                         <h3>Instalar Suporte a Arquivos Compactados (7z, RAR e ZIP)</h3>
                         <p>Instala as ferramentas e bibliotecas necessárias para extrair e compactar arquivos nos principais formatos.</p>
                         <button class="btn-executar" onclick="executarComando('arquivos-compactados', 'sudo dnf install unzip 7zip unrar -y')">Instalar Compactadores</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('arquivos-compactados')" style="display: none;" id="btn-fechar-arquivos-compactados">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-arquivos-compactados">
@@ -604,7 +602,6 @@
                         <h3>Instalar Codecs Multimídia Essenciais</h3>
                         <p>Substitui o ffmpeg-free pela versão completa sem restrições, instala plugins gstreamer essenciais e habilita o Cisco OpenH264.</p>
                         <button class="btn-executar" onclick="executarComando('codecs-essenciais', 'sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y && sudo dnf install --setopt=\'install_weak_deps=False\' gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-plugins-ugly-free gstreamer1-plugin-openh264 gstreamer1-plugin-libav --exclude=PackageKit-gstreamer-plugin -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1')">Instalar Codecs</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('codecs-essenciais')" style="display: none;" id="btn-fechar-codecs-essenciais">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-codecs-essenciais">
@@ -625,7 +622,6 @@
                         <h3>Atualizar Firmwares de Hardware</h3>
                         <p>Força a atualização dos índices do gerenciador de firmwares e aplica patches de estabilidade.</p>
                         <button class="btn-executar" onclick="executarComando('firmware-update', 'fwupdmgr refresh --force && fwupdmgr get-devices && fwupdmgr get-updates && fwupdmgr update -y && sudo dnf install linux-firmware -y')">Atualizar Hardware</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('firmware-update')" style="display: none;" id="btn-fechar-firmware-update">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-firmware-update">
@@ -646,7 +642,6 @@
                         <h3>Extras e DVD Play (Repositórios Tainted)</h3>
                         <p>Habilita sub-repositórios restritos para habilitar reprodução de DVDs comerciais e firmware proprietário.</p>
                         <button class="btn-executar" onclick="executarComando('extras-tainted', 'sudo dnf install rpmfusion-free-release-tainted -y && sudo dnf install rpmfusion-nonfree-release-tainted -y && sudo dnf install libdvdcss -y && sudo dnf --repo=rpmfusion-nonfree-tainted install \'*-firmware\' -y')">Instalar Extras</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('extras-tainted')" style="display: none;" id="btn-fechar-extras-tainted">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-extras-tainted">
@@ -708,7 +703,6 @@
                         <h3>Instalar fontes Microsoft para compatibilidade</h3>
                         <p>Instala o instalador de fontes Microsoft do SourceForge para obter Arial, Times, Calibri, etc.</p>
                         <button class="btn-executar" onclick="executarComando('fontes-ms-all', 'sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig && sudo dnf install -y https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm --nogpgcheck')">Instalar Fontes MS</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('fontes-ms-all')" style="display: none;" id="btn-fechar-fontes-ms-all">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-fontes-ms-all">
@@ -736,7 +730,6 @@
                         <h3>Drivers Vulkan Completos (Para GPUs AMD)</h3>
                         <p>Instala as ferramentas e bibliotecas Vulkan em versões de 32 e 64 bits para suporte nativo ao Proton.</p>
                         <button class="btn-executar" onclick="executarComando('vulkan-amd', 'sudo dnf install vulkan-tools mesa-vulkan-drivers mesa-vulkan-drivers.i686 libva.i686 mesa-dri-drivers.i686 -y')">Instalar Drivers Vulkan</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('vulkan-amd')" style="display: none;" id="btn-fechar-vulkan-amd">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-vulkan-amd">
@@ -758,7 +751,6 @@
                         <div class="grupo-botoes">
                             <button class="btn-executar" onclick="executarComando('steam-install', 'sudo dnf install steam steam-devices -y')">Instalar Steam</button>
                             <button class="btn-reverter" onclick="reverterComando('steam-install', 'sudo dnf remove steam steam-devices -y && sudo dnf autoremove -y')">Desinstalar Steam</button>
-                            <button class="btn-fechar-log" onclick="fecharLog('steam-install')" style="display: none;" id="btn-fechar-steam-install">✕ Fechar</button>
                         </div>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
@@ -787,10 +779,10 @@
                         <h3>Instalação de Aplicativos Recomendados (Via Central de Apps)</h3>
                         <p>Abra a central de software do seu sistema para gerenciar os apps de forma independente:</p>
                         <div style="margin-bottom: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                            <!-- BOTÃO CORRIGIDO: SEM BARRA DE PROGRESSO -->
                             <button class="btn-executar" style="background-color: #357a38;" onclick="abrirCentralApps()">
                                 🛍️ Abrir Central de Apps
                             </button>
-                            <button class="btn-fechar-log" onclick="fecharLog('abrir-central')" style="display: none;" id="btn-fechar-abrir-central">✕ Fechar</button>
                         </div>
                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
                             🖥️ Desktop detectado: <span id="desktop-detectado" style="color: #60a5fa;">carregando...</span>
@@ -804,16 +796,7 @@
                             <li><strong>Kdenlive</strong> (Editor de vídeo profissional)</li>
                         </ul>
                     </div>
-                    <!-- BARRA DE PROGRESSO -->
-                    <div class="progress-container" id="progress-abrir-central">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progress-fill-abrir-central"></div>
-                        </div>
-                        <div class="progress-text">
-                            <span class="status" id="progress-status-abrir-central">⏳ Iniciando...</span>
-                            <span class="percentage" id="progress-percent-abrir-central">0%</span>
-                        </div>
-                    </div>
+                    <!-- SEM BARRA DE PROGRESSO - este botão apenas abre o Discover -->
                     <div class="terminal-log" id="log-abrir-central"></div>
                 </div>
 
@@ -823,7 +806,6 @@
                         <p>Instala o v4l2loopback do kernel para que o OBS gere webcams virtuais para chamadas de vídeo.</p>
                         <div class="aviso-caixa">⚠️ Exige que o Secure Boot esteja configurado corretamente ou desativado.</div>
                         <button class="btn-executar" onclick="executarComando('obs-cam', 'sudo dnf install v4l2loopback v4l-utils -y')">Instalar Câmera Virtual</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('obs-cam')" style="display: none;" id="btn-fechar-obs-cam">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-obs-cam">
@@ -845,7 +827,6 @@
                         <div class="grupo-botoes">
                             <button class="btn-executar" onclick="executarComando('instalar-easyeffects', 'flatpak install flathub com.github.wwmm.easyeffects -y')">Instalar EasyEffects</button>
                             <button class="btn-reverter" onclick="reverterComando('instalar-easyeffects', 'flatpak uninstall com.github.wwmm.easyeffects -y')">Desinstalar EasyEffects</button>
-                            <button class="btn-fechar-log" onclick="fecharLog('instalar-easyeffects')" style="display: none;" id="btn-fechar-instalar-easyeffects">✕ Fechar</button>
                         </div>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
@@ -874,7 +855,6 @@
                         <h3>Limpar Arquivos Temporários e Resíduos</h3>
                         <p>Limpa o cache do DNF, dependências órfãs e runtimes de flatpak não utilizados.</p>
                         <button class="btn-executar" onclick="executarComando('limpeza-sistema', 'sudo dnf clean all && sudo dnf autoremove -y && flatpak uninstall --unused -y')">Executar Limpeza</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('limpeza-sistema')" style="display: none;" id="btn-fechar-limpeza-sistema">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-limpeza-sistema">
@@ -894,7 +874,6 @@
                         <h3>Gerenciamento de Kernels Antigos (Opcional)</h3>
                         <p>Lista os kernels atualmente instalados no seu sistema.</p>
                         <button class="btn-executar" onclick="executarComando('listar-kernels', 'rpm -q kernel-core')">Listar Kernels Instalados</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('listar-kernels')" style="display: none;" id="btn-fechar-listar-kernels">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-listar-kernels">
@@ -915,7 +894,7 @@
                         <p>Prepara e baixa os pacotes para a próxima grande versão do Fedora.</p>
                         <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             <label for="select-fedora-version" style="font-size: 0.9rem; color: var(--text-muted);">Versão de destino:</label>
-                            <select id="select-fedora-version" style="background-color: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border); padding: 0.4rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer;">
+                            <select id="select-fedora-version" class="select-corrigido">
                                 <option value="45">Fedora 45</option>
                                 <option value="46">Fedora 46</option>
                                 <option value="47">Fedora 47</option>
@@ -923,7 +902,6 @@
                             </select>
                         </div>
                         <button class="btn-executar" onclick="executarUpgradeFedora()">Baixar Nova Versão</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('system-upgrade')" style="display: none;" id="btn-fechar-system-upgrade">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-system-upgrade">
@@ -943,7 +921,6 @@
                         <h3>Migrar do Canal Beta para o Estável (Release)</h3>
                         <p>Sincroniza os pacotes locais com a release estável de produção.</p>
                         <button class="btn-executar" onclick="executarComando('distro-sync', 'sudo dnf upgrade --refresh -y && sudo dnf distro-sync -y')">Sincronizar Canal Estável</button>
-                        <button class="btn-fechar-log" onclick="fecharLog('distro-sync')" style="display: none;" id="btn-fechar-distro-sync">✕ Fechar</button>
                     </div>
                     <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container" id="progress-distro-sync">
@@ -996,11 +973,6 @@
                 btnReverter.style.backgroundColor = "#ef4444";
                 btnReverter.disabled = false;
             }
-
-            const btnFechar = document.getElementById(`btn-fechar-${idComando}`);
-            if (btnFechar) {
-                btnFechar.style.display = 'inline-block';
-            }
         }
 
         function restaurarBotaoOriginal(idComando) {
@@ -1015,11 +987,6 @@
                 btnReverter.innerHTML = "Revertido com Sucesso";
                 btnReverter.style.backgroundColor = "#374151";
                 btnReverter.disabled = true;
-            }
-
-            const btnFechar = document.getElementById(`btn-fechar-${idComando}`);
-            if (btnFechar) {
-                btnFechar.style.display = 'none';
             }
         }
 
@@ -1044,16 +1011,13 @@
             if (logBox) {
                 logBox.innerHTML = '';
                 logBox.style.display = 'block';
-                logBox.style.height = '200px';
-                logBox.style.maxHeight = '400px';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
 
                 const header = document.createElement('div');
                 header.className = 'log-line info';
                 header.textContent = `🔄 Revertendo... (${new Date().toLocaleTimeString()})`;
                 logBox.appendChild(header);
-
-                const btnFechar = document.getElementById(`btn-fechar-${idComando}`);
-                if (btnFechar) btnFechar.style.display = 'inline-block';
 
                 conectarSSE(idComando, logBox);
             }
@@ -1113,7 +1077,7 @@
                 sseConnections[idComando] = eventSource;
 
                 let linhas = 0;
-                const MAX_LINHAS = 1000;
+                const MAX_LINHAS = 100;
 
                 eventSource.onmessage = (event) => {
                     try {
@@ -1122,13 +1086,45 @@
                         if (dados.tipo === 'end') {
                             eventSource.close();
                             delete sseConnections[idComando];
-                            marcarBotaoComoExecutado(idComando);
+
+                            // Restaura o botão
+                            const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
+                                document.querySelector(`button[onclick*="${idComando}"]`);
+                            if (btn) {
+                                btn.disabled = false;
+                                btn.innerHTML = "✅ Concluído";
+                                btn.style.backgroundColor = "#4b5563";
+                                btn.style.cursor = "default";
+                                btn.style.opacity = '1';
+                            }
+
+                            // Marca o progresso como concluído
+                            completarProgresso(idComando, true);
                             return;
                         }
 
-                        const lines = dados.mensagem.split('\n');
+                        // FILTRA CÓDIGOS ANSI E MENSAGENS ESTRANHAS
+                        let mensagem = dados.mensagem;
+
+                        // Remove códigos ANSI (ex: ]3008;...)
+                        mensagem = mensagem.replace(/\x1b\]3008;[^\x1b]*\x1b\\/g, '');
+                        mensagem = mensagem.replace(/\x1b\[[0-9;]*m/g, '');
+
+                        // Remove caracteres de controle não imprimíveis
+                        mensagem = mensagem.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+                        // Filtra linhas vazias
+                        const lines = mensagem.split('\n');
                         for (const line of lines) {
                             if (line.trim() === '') continue;
+
+                            // Filtra mensagens específicas do Discover
+                            if (line.includes('org.kde.plasma.libdiscover')) continue;
+                            if (line.includes('QML Shortcut')) continue;
+                            if (line.includes('qt.qpa.services')) continue;
+                            if (line.includes('WARNING **: Found icon of unknown type')) continue;
+                            if (line.includes('QIODevice::read')) continue;
+                            if (line.includes('adding empty sources model')) continue;
 
                             const lineElement = document.createElement('div');
                             lineElement.className = `log-line ${dados.tipo}`;
@@ -1137,6 +1133,7 @@
                             linhas++;
                         }
 
+                        // Limita o número de linhas
                         if (linhas > MAX_LINHAS) {
                             const children = logBox.children;
                             for (let i = 0; i < linhas - MAX_LINHAS; i++) {
@@ -1155,7 +1152,6 @@
                 eventSource.onerror = (event) => {
                     if (eventSource.readyState === EventSource.CLOSED) {
                         console.log('[SSE] Conexão fechada para:', idComando);
-                        marcarBotaoComoExecutado(idComando);
                     } else {
                         console.warn('[SSE] Erro na conexão:', event);
                     }
@@ -1187,7 +1183,7 @@
             return 'UNKNOWN';
         }
 
-        // ============ ABRIR CENTRAL DE APPS ============
+        // ============ ABRIR CENTRAL DE APPS (CORRIGIDO) ============
 
         function abrirCentralApps() {
             const desktop = detectarDesktopFrontend();
@@ -1254,15 +1250,13 @@
                     break;
             }
 
+            // Exibe apenas uma mensagem simples no log
             const logBox = document.getElementById('log-abrir-central');
             if (logBox) {
                 logBox.innerHTML = '';
                 logBox.style.display = 'block';
-                logBox.style.height = '120px';
-                logBox.style.maxHeight = '180px';
-
-                const btnFechar = document.getElementById('btn-fechar-abrir-central');
-                if (btnFechar) btnFechar.style.display = 'inline-block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
 
                 const info1 = document.createElement('div');
                 info1.className = 'log-line info';
@@ -1270,24 +1264,24 @@
                 logBox.appendChild(info1);
 
                 const info2 = document.createElement('div');
-                info2.className = 'log-line info';
+                info2.className = 'log-line output';
                 info2.textContent = `📦 Abrindo: ${nomeCentral}`;
                 logBox.appendChild(info2);
 
                 const info3 = document.createElement('div');
-                info3.className = 'log-line output';
-                info3.textContent = `$ ${comando}`;
+                info3.className = 'log-line success';
+                info3.textContent = `✅ Central aberta!`;
                 logBox.appendChild(info3);
-
-                const info4 = document.createElement('div');
-                info4.className = 'log-line success';
-                info4.textContent = `✅ Central aberta com sucesso!`;
-                logBox.appendChild(info4);
 
                 logBox.scrollTop = logBox.scrollHeight;
             }
 
-            executarComando('abrir-central', comando);
+            // Executa o comando e não desabilita o botão
+            fetch('http://localhost:3000/executar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comando: comando, idComando: 'abrir-central' })
+            }).catch(e => console.error('Erro ao abrir central:', e));
         }
 
         // ============ INICIALIZAR DETECÇÃO DE DESKTOP ============
@@ -1402,9 +1396,9 @@
             }
         }
 
-        // ============ FUNÇÃO EXECUTAR COMANDO ATUALIZADA ============
+        // ============ FUNÇÃO EXECUTAR COMANDO CORRIGIDA ============
 
-        const executarComandoComProgresso = async function(idComando, scriptComando) {
+        const executarComando = async function(idComando, scriptComando) {
             const logBox = document.getElementById(`log-${idComando}`);
             if (!logBox) {
                 console.error(`Log box não encontrado: log-${idComando}`);
@@ -1415,15 +1409,12 @@
 
             logBox.innerHTML = '';
             logBox.style.display = 'block';
-            logBox.style.height = '200px';
-            logBox.style.maxHeight = '400px';
-
-            const btnFechar = document.getElementById(`btn-fechar-${idComando}`);
-            if (btnFechar) btnFechar.style.display = 'inline-block';
+            logBox.style.height = '100px';
+            logBox.style.maxHeight = '100px';
 
             const header = document.createElement('div');
             header.className = 'log-line info';
-            header.textContent = `🚀 Iniciando execução... (${new Date().toLocaleTimeString()})`;
+            header.textContent = `🚀 Iniciando... (${new Date().toLocaleTimeString()})`;
             logBox.appendChild(header);
 
             conectarSSE(idComando, logBox);
@@ -1449,6 +1440,13 @@
                     errorLine.textContent = `❌ Erro HTTP: ${response.status} - ${response.statusText}`;
                     logBox.appendChild(errorLine);
                     completarProgresso(idComando, false);
+
+                    // Restaura o botão em caso de erro
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = btn.getAttribute('data-texto-original') || 'Executar';
+                        btn.style.opacity = '1';
+                    }
                 }
             } catch (e) {
                 const errorLine = document.createElement('div');
@@ -1456,119 +1454,22 @@
                 errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
                 logBox.appendChild(errorLine);
                 completarProgresso(idComando, false);
+
+                // Restaura o botão em caso de erro
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = btn.getAttribute('data-texto-original') || 'Executar';
+                    btn.style.opacity = '1';
+                }
             }
         };
 
-        window.executarComando = executarComandoComProgresso;
+        window.executarComando = executarComando;
 
-        // ============ ATUALIZAR FUNÇÃO CONECTAR SSE ============
+        // ============ FUNÇÃO FECHAR LOG (REMOVIDA - não usamos mais) ============
 
-        const conectarSSEOriginal = conectarSSE;
-        conectarSSE = function(idComando, logBox) {
-            if (sseConnections[idComando]) {
-                sseConnections[idComando].close();
-                delete sseConnections[idComando];
-            }
-
-            try {
-                const eventSource = new EventSource(`http://localhost:3000/stream?id=${idComando}`);
-                sseConnections[idComando] = eventSource;
-
-                let linhas = 0;
-                const MAX_LINHAS = 1000;
-                let comandoConcluido = false;
-
-                eventSource.onmessage = (event) => {
-                    try {
-                        const dados = JSON.parse(event.data);
-
-                        if (dados.tipo === 'end') {
-                            eventSource.close();
-                            delete sseConnections[idComando];
-                            comandoConcluido = true;
-
-                            completarProgresso(idComando, true);
-                            marcarBotaoComoExecutado(idComando);
-
-                            const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
-                                document.querySelector(`button[onclick*="${idComando}"]`);
-                            if (btn) {
-                                btn.disabled = false;
-                                btn.textContent = btn.getAttribute('data-texto-original') || 'Executar';
-                                btn.style.opacity = '1';
-                            }
-                            return;
-                        }
-
-                        const lines = dados.mensagem.split('\n');
-                        for (const line of lines) {
-                            if (line.trim() === '') continue;
-
-                            const lineElement = document.createElement('div');
-                            lineElement.className = `log-line ${dados.tipo}`;
-                            lineElement.textContent = line;
-                            logBox.appendChild(lineElement);
-                            linhas++;
-                        }
-
-                        if (linhas > MAX_LINHAS) {
-                            const children = logBox.children;
-                            for (let i = 0; i < linhas - MAX_LINHAS; i++) {
-                                if (children[i]) children[i].remove();
-                            }
-                            linhas = MAX_LINHAS;
-                        }
-
-                        logBox.scrollTop = logBox.scrollHeight;
-
-                    } catch (e) {
-                        console.error('[SSE] Erro ao processar mensagem:', e);
-                    }
-                };
-
-                eventSource.onerror = (event) => {
-                    if (eventSource.readyState === EventSource.CLOSED) {
-                        console.log('[SSE] Conexão fechada para:', idComando);
-                        if (!comandoConcluido) {
-                            completarProgresso(idComando, false);
-                            marcarBotaoComoExecutado(idComando);
-                        }
-                    } else {
-                        console.warn('[SSE] Erro na conexão:', event);
-                    }
-                };
-            } catch (e) {
-                console.error('[SSE] Erro ao criar conexão:', e);
-                const errorLine = document.createElement('div');
-                errorLine.className = 'log-line error';
-                errorLine.textContent = `❌ Erro ao conectar SSE: ${e.message}`;
-                logBox.appendChild(errorLine);
-                completarProgresso(idComando, false);
-            }
-        };
-
-        // ============ ATUALIZAR FUNÇÃO FECHAR LOG ============
-
-        const fecharLogOriginal = fecharLog;
-        fecharLog = function(idComando) {
-            const logBox = document.getElementById(`log-${idComando}`);
-            if (logBox) {
-                logBox.style.display = 'none';
-                logBox.innerHTML = '';
-                logBox.style.height = '80px';
-                logBox.style.maxHeight = '120px';
-            }
-
-            const btnFechar = document.getElementById(`btn-fechar-${idComando}`);
-            if (btnFechar) btnFechar.style.display = 'none';
-
-            resetarProgresso(idComando);
-
-            if (sseConnections[idComando]) {
-                sseConnections[idComando].close();
-                delete sseConnections[idComando];
-            }
-        };
+        // A função fecharLog foi removida porque o botão "✕ Fechar" foi removido.
+        // O log agora é controlado automaticamente pelo SSE.
     </script>
 </body>
 </html>
