@@ -75,6 +75,63 @@ log() {
 }
 
 # ============================================================
+# INSTALAÇÃO DO CONTAINER
+# ============================================================
+
+instalar_dependencias_container() {
+    print_step "Instalando dependências do container nativo..."
+
+    local pacotes=(
+        "webkit2gtk4.1-devel"
+        "gtk3-devel"
+        "gcc"
+        "make"
+        "pkgconfig"
+    )
+
+    local instalar=()
+
+    for pkg in "${pacotes[@]}"; do
+        if ! rpm -q $pkg &> /dev/null; then
+            instalar+=($pkg)
+        fi
+    done
+
+    if [ ${#instalar[@]} -gt 0 ]; then
+        print_info "Instalando: ${instalar[*]}"
+        sudo dnf install -y "${instalar[@]}"
+        if [ $? -eq 0 ]; then
+            print_success "Dependências instaladas"
+        else
+            print_warning "Algumas dependências podem não ter sido instaladas"
+        fi
+    else
+        print_success "Todas as dependências já estão instaladas"
+    fi
+}
+
+compilar_container_install() {
+    print_step "Compilando container nativo..."
+
+    cd "$INSTALL_DIR"
+
+    if [ -f "$INSTALL_DIR/build-container.sh" ]; then
+        chmod +x "$INSTALL_DIR/build-container.sh"
+        "$INSTALL_DIR/build-container.sh"
+        if [ $? -eq 0 ] && [ -f "$INSTALL_DIR/fof-container" ]; then
+            # Cria link simbólico para o container
+            ln -sf "$INSTALL_DIR/fof-container" "$BIN_DIR/fof-container"
+            chmod +x "$BIN_DIR/fof-container"
+            print_success "Container compilado e instalado"
+            return 0
+        fi
+    fi
+
+    print_warning "Não foi possível compilar o container"
+    return 1
+}
+
+# ============================================================
 # VERIFICAÇÕES
 # ============================================================
 
@@ -486,8 +543,10 @@ main() {
 
     # Instalação
     instalar_fof
+    instalar_dependencias_container    # <-- NOVO
+    compilar_container_install         # <-- NOVO
     criar_atalho
-    fixar_na_barra      # <-- NOVA FUNÇÃO ADICIONADA
+    fixar_na_barra
     configurar_path
 
     # Finalização

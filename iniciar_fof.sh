@@ -133,6 +133,48 @@ if [ "$1" != "--no-fork" ] && [ "$1" != "--debug" ] && [ "$1" != "--no-clean" ] 
 fi
 
 # ============================================================
+# CONTAINER WEBKITGTK
+# ============================================================
+
+abrir_container() {
+    local url="$1"
+    local icone="$DIR/icone_app.png"
+
+    # Verifica se o container existe no diretório atual
+    if [ -f "$DIR/fof-container" ]; then
+        print_info "📦 Abrindo no container nativo (WebKitGTK)..."
+        "$DIR/fof-container" --url "$url" --icon "$icone" --name "Fedora Only Fans" &
+        return 0
+    fi
+
+    # Verifica se está instalado no sistema
+    if command -v fof-container &> /dev/null; then
+        print_info "📦 Abrindo no container nativo (WebKitGTK)..."
+        fof-container --url "$url" --icon "$icone" --name "Fedora Only Fans" &
+        return 0
+    fi
+
+    return 1
+}
+
+compilar_container() {
+    print_info "🔧 Compilando container nativo..."
+
+    # Verifica se o script de build existe
+    if [ -f "$DIR/build-container.sh" ]; then
+        chmod +x "$DIR/build-container.sh"
+        "$DIR/build-container.sh"
+        if [ $? -eq 0 ] && [ -f "$DIR/fof-container" ]; then
+            print_success "Container compilado com sucesso!"
+            return 0
+        fi
+    fi
+
+    print_warning "Não foi possível compilar o container"
+    return 1
+}
+
+# ============================================================
 # VERIFICAÇÕES
 # ============================================================
 
@@ -368,42 +410,51 @@ abrir_chromium() {
 }
 
 abrir_navegador() {
-    local url="file://$DIR/fof.html"
-    
-    log_info "Abrindo interface..."
-    
-    # Tenta Firefox primeiro
+    local url="http://localhost:3000"
+
+    # ============================================================
+    # TENTA O CONTAINER PRIMEIRO
+    # ============================================================
+
+    # Tenta abrir com o container nativo
+    if abrir_container "$url"; then
+        return 0
+    fi
+
+    # Tenta compilar o container
+    if compilar_container; then
+        if abrir_container "$url"; then
+            return 0
+        fi
+    fi
+
+    # ============================================================
+    # FALLBACK: NAVEGADORES
+    # ============================================================
+
+    print_warning "Container não disponível. Usando navegador..."
+
+    # Fallback: Firefox
     if command -v firefox &> /dev/null; then
-        abrir_firefox "$url"
+        abrir_firefox "file://$DIR/fof.html"
         return 0
     fi
-    
-    # Tenta Chromium/Chrome
-    if command -v chromium &> /dev/null || command -v chromium-browser &> /dev/null || \
-       command -v google-chrome &> /dev/null || command -v brave &> /dev/null || \
-       command -v microsoft-edge &> /dev/null || command -v opera &> /dev/null || \
-       command -v vivaldi &> /dev/null; then
-        abrir_chromium "$url"
+
+    # Fallback: Chromium
+    if command -v chromium &> /dev/null || command -v chromium-browser &> /dev/null; then
+        abrir_chromium "file://$DIR/fof.html"
         return 0
     fi
-    
-    # Fallback: tenta instalar Chromium
-    log_warning "Nenhum navegador encontrado. Tentando instalar Chromium..."
-    
-    sudo dnf install -y chromium 2>&1 | while read line; do
-        log_debug "dnf: $line"
-    done
-    
+
+    # Fallback: tenta instalar
+    print_warning "Nenhum navegador encontrado. Tentando instalar Chromium..."
+    sudo dnf install -y chromium
     if [ $? -eq 0 ] && command -v chromium &> /dev/null; then
-        log_success "Chromium instalado"
-        abrir_chromium "$url"
+        abrir_chromium "file://$DIR/fof.html"
         return 0
     fi
-    
-    log_error "Não foi possível abrir o navegador"
-    log_error "Instale um navegador manualmente:"
-    log_error "  sudo dnf install firefox"
-    log_error "  sudo dnf install chromium"
+
+    print_error "Não foi possível abrir a interface"
     return 1
 }
 
