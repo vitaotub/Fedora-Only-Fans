@@ -1157,7 +1157,7 @@
 
         // ============ AJUSTE DNF ============
 
-        async function executarAjusteDNF() {
+async function executarAjusteDNF() {
     const conexoes = document.getElementById('select-downloads').value;
     const idComando = 'dnf-speed';
     const comandoMontado = `sudo dnf config-manager setopt max_parallel_downloads=${conexoes} && sudo dnf config-manager setopt fastestmirror=True`;
@@ -1166,17 +1166,24 @@
     const btn = document.querySelector("button[onclick='executarAjusteDNF()']");
     const textoOriginal = btn.textContent;
 
+    // Desabilita o botão durante a execução
     btn.disabled = true;
     btn.textContent = '⏳ Aplicando...';
     btn.style.opacity = '0.6';
 
-    // Chama executarComando com manterHabilitado = true
-    await executarComando(idComando, comandoMontado, true);
+    try {
+        // Executa o comando
+        await executarComando(idComando, comandoMontado, true);
+    } catch (e) {
+        console.error('Erro ao executar ajuste:', e);
+    }
 
+    // Mostra "✅ Aplicado!" por 3 segundos
     btn.textContent = '✅ Aplicado!';
     btn.style.backgroundColor = '#4b5563';
     btn.style.opacity = '1';
 
+    // Reativa o botão após 3 segundos
     setTimeout(() => {
         btn.disabled = false;
         btn.textContent = textoOriginal || 'Aplicar Ajuste';
@@ -1517,7 +1524,7 @@
 
         // ============ FUNÇÃO EXECUTAR COMANDO ============
 
-        const executarComando = async function(idComando, scriptComando, manterHabilitado = false) {
+const executarComando = async function(idComando, scriptComando, manterHabilitado = false) {
     const logBox = document.getElementById(`log-${idComando}`);
     if (!logBox) {
         console.error(`Log box não encontrado: log-${idComando}`);
@@ -1538,8 +1545,9 @@
 
     conectarSSE(idComando, logBox);
 
-    // Só desabilita o botão se manterHabilitado for false
-    if (!manterHabilitado) {
+    // Só desabilita o botão se NÃO for para manter habilitado
+    // E se NÃO for o comando 'dnf-speed' (que já é controlado pelo executarAjusteDNF)
+    if (!manterHabilitado && idComando !== 'dnf-speed') {
         const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
                     document.querySelector(`button[onclick*="${idComando}"]`);
         if (btn) {
@@ -1562,6 +1570,17 @@
             errorLine.textContent = `❌ Erro HTTP: ${response.status} - ${response.statusText}`;
             logBox.appendChild(errorLine);
             completarProgresso(idComando, false);
+
+            // Se falhou, restaura o botão se for o dnf-speed
+            if (idComando === 'dnf-speed') {
+                const btn = document.querySelector("button[onclick='executarAjusteDNF()']");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Aplicar Ajuste';
+                    btn.style.backgroundColor = 'var(--accent)';
+                    btn.style.opacity = '1';
+                }
+            }
         }
     } catch (e) {
         const errorLine = document.createElement('div');
@@ -1569,6 +1588,17 @@
         errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
         logBox.appendChild(errorLine);
         completarProgresso(idComando, false);
+
+        // Se falhou, restaura o botão se for o dnf-speed
+        if (idComando === 'dnf-speed') {
+            const btn = document.querySelector("button[onclick='executarAjusteDNF()']");
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Aplicar Ajuste';
+                btn.style.backgroundColor = 'var(--accent)';
+                btn.style.opacity = '1';
+            }
+        }
     }
 };
 
