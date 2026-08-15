@@ -78,7 +78,7 @@ log() {
 # FUNÇÃO PARA REAPLICAR PERMISSÕES
 # ============================================================
 
-re aplicar_permissoes() {
+reaplicar_permissoes() {
     print_step "Reaplicando permissões dos arquivos..."
 
     # Dá permissão para o script principal
