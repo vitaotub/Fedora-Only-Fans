@@ -425,17 +425,25 @@
                         <p>Configura os downloads paralelos simultâneos e ativa a busca automática pelo espelho de servidor mais rápido.</p>
                         <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             <label for="select-downloads" style="font-size: 0.9rem; color: var(--text-muted);">Conexões simultâneas:</label>
-                            <select id="select-downloads" class="select-corrigido">
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5" selected>5 (Recomendado)</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                                <option value="9">9</option>
-                                <option value="10">10</option>
-                            </select>
+                            <select id="select-downloads" style="
+    background-color: #1a2236 !important;
+    color: #ffffff !important;
+    border: 1px solid #3c67e3 !important;
+    padding: 0.4rem 0.8rem !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+">
+    <option value="2" style="background-color: #0b111e; color: #ffffff;">2</option>
+    <option value="3" style="background-color: #0b111e; color: #ffffff;">3</option>
+    <option value="4" style="background-color: #0b111e; color: #ffffff;">4</option>
+    <option value="5" selected style="background-color: #0b111e; color: #ffffff;">5 (Recomendado)</option>
+    <option value="6" style="background-color: #0b111e; color: #ffffff;">6</option>
+    <option value="7" style="background-color: #0b111e; color: #ffffff;">7</option>
+    <option value="8" style="background-color: #0b111e; color: #ffffff;">8</option>
+    <option value="9" style="background-color: #0b111e; color: #ffffff;">9</option>
+    <option value="10" style="background-color: #0b111e; color: #ffffff;">10</option>
+</select>
                         </div>
                         <div class="grupo-botoes">
                             <button class="btn-executar" onclick="executarAjusteDNF()">Executar Ajuste</button>

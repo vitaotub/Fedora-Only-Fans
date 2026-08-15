@@ -145,13 +145,14 @@ function verificarDisponibilidadeKdesu() {
 function obterMetodoAutenticacao() {
     const desktop = detectarDesktop();
 
-    if (desktop === 'KDE' && verificarDisponibilidadeKdesu()) {
-        return {
-            tipo: 'kdesu',
-            comando: 'kdesu',
-            descricao: 'kdesu (KDE)'
-        };
-    }
+    // FORÇA O USO DO PKEXEC (funciona no KDE)
+    // if (desktop === 'KDE' && verificarDisponibilidadeKdesu()) {
+    //     return {
+    //         tipo: 'kdesu',
+    //         comando: 'kdesu',
+    //         descricao: 'kdesu (KDE)'
+    //     };
+    // }
 
     if (verificarDisponibilidadePkexec()) {
         return {
@@ -320,15 +321,13 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
     switch (metodo.tipo) {
         case 'kdesu': {
             // ============================================================
-            // KDSU - COM AMBIENTE GRÁFICO FORÇADO
+            // KDSU - SEM A OPÇÃO --comment (não suportada)
             // ============================================================
 
-            // Obtém o DISPLAY e XAUTHORITY do ambiente ou usa valores padrão
             const envDisplay = process.env.DISPLAY || ':0';
             const envXauthority = process.env.XAUTHORITY || `${process.env.HOME}/.Xauthority`;
 
-            // Monta o comando com as variáveis de ambiente
-            comandoFinal = `DISPLAY=${envDisplay} XAUTHORITY=${envXauthority} kdesu -c "${comandoEscapado}" --comment "${descricao}" 2>/dev/null`;
+            comandoFinal = `DISPLAY=${envDisplay} XAUTHORITY=${envXauthority} kdesu -c "${comandoEscapado}" 2>/dev/null`;
 
             console.log(`[KDESU] Executando com DISPLAY=${envDisplay}`);
             console.log(`[KDESU] Comando: ${comandoFinal}`);
