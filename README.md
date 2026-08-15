@@ -16,7 +16,7 @@
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh)
 
----
+```
 
 Isso é tudo! O script cuida de todo o resto. 🎉
 
@@ -37,16 +37,18 @@ O instalador irá:
 
 📦 Comandos Disponíveis
 Após a instalação:
----
 # Iniciar o FOF
+```bash
 fof
-
+```
 # Atualizar para a versão mais recente
+```bash
 bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --update
-
+```
 # Desinstalar
+```bash
 bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall
----
+```
 
 ## 📖 Sobre o Projeto
 
@@ -78,8 +80,6 @@ O objetivo é transformar uma instalação limpa do Fedora em um sistema operaci
 - 🐧 **Suporte a múltiplos desktops** - KDE, GNOME, XFCE, Cinnamon, MATE, LXQt, LXDE
 - 🖱️ **100% visual** - Nunca precisa abrir o terminal
 
----
-
 ## 🖥️ Desktops Suportados
 
 | Desktop | Central de Apps | Status |
@@ -92,8 +92,6 @@ O objetivo é transformar uma instalação limpa do Fedora em um sistema operaci
 | **LXQt** | LXQt Software Center | ✅ |
 | **LXDE** | LXDE Software Center | ✅ |
 
----
-
 ## 🚀 Como funciona?
 
 Se você veio de distribuições como Linux Mint, Ubuntu ou Zorin OS, sabe que o Fedora é incrível, mas exige alguns passos iniciais (como ativar o RPM Fusion ou configurar o Flathub).
@@ -102,8 +100,6 @@ Com o FOF você:
 1. **Seleciona** visualmente o que deseja instalar ou configurar (Codecs de mídia, Drivers, Flatpaks, Otimizações do DNF).
 2. **Executa** as tarefas diretamente através da interface web integrada, digitando sua senha de administrador apenas quando solicitado pelo sistema.
 3. **Acompanha** o progresso em tempo real com logs e barra de progresso.
-
----
 
 ## 💻 Como Rodar o FOF localmente?
 
@@ -118,52 +114,52 @@ Com o FOF você:
 
 Para inicializar o painel, baixe todos os arquivos deste repositório, abra o terminal na pasta onde salvou o projeto e execute os comandos abaixo:
 
-```bash
 # Dê permissão de execução ao script
+```bash
 chmod +x iniciar_fof.sh
-
+```
 # Execute o script de inicialização
+```bash
 ./iniciar_fof.sh
 ```
 O script irá:
 
 ✅ Verificar se todos os arquivos estão presentes
-
 ✅ Instalar o Node.js (se necessário)
-
 ✅ Instalar as dependências do projeto
-
 ✅ Iniciar o servidor na porta 3000
-
 ✅ Abrir a interface no seu navegador
 
 🔧 Opções do Script
-```
 # Modo debug (logs detalhados)
+```bash
 ./iniciar_fof.sh --debug
-
+```
 # Não limpar perfis do navegador
+```bash
 ./iniciar_fof.sh --no-clean
-
+```
 # Ver ajuda
+```bash
 ./iniciar_fof.sh --help
 ```
-
 🖥️ Método Manual
-```
 # 1. Instale as dependências do sistema
+```bash
 sudo dnf install -y nodejs npm
-
+```
 # 2. Instale as dependências do Node.js
+```bash
 npm install
-
+```
 # 3. Inicie o servidor
+```bash
 node server.js
-
+```
 # 4. Abra o navegador em http://localhost:3000
+```bash
 firefox http://localhost:3000
 ```
-
 🛠️ Tecnologias Utilizadas
 Tecnologia	Finalidade
 HTML5 / CSS3	Interface responsiva e moderna
@@ -172,9 +168,9 @@ Node.js	Servidor backend local para execução segura de processos
 Server-Sent Events (SSE)	Logs em tempo real
 Bash	Script de inicialização do ambiente no Fedora
 pkexec / kdesu	Autenticação segura
-📂 Estrutura do Projeto
 
-```
+📂 Estrutura do Projeto:
+```bash
 Fedora-Only-Fans/
 ├── 📄 iniciar_fof.sh      # Script de inicialização
 ├── 📄 server.js            # Servidor Node.js
@@ -185,28 +181,24 @@ Fedora-Only-Fans/
 ├── 📄 LICENSE              # Licença GPL-3.0
 └── 📁 .perfil_firefox/     # Perfil do Firefox (criado em execução)
 └── 📁 .perfil_app/         # Perfil do Chromium (criado em execução)
+```
 
 🛡️ Segurança
 ✅ Autenticação segura - Usa pkexec/kdesu em vez de echo senha | sudo
-
 ✅ Whitelist de comandos - Apenas comandos permitidos são executados
-
 ✅ Sanitização de entrada - Proteção contra injeção de comandos
-
 ✅ Logs detalhados - Registro de todas as operações
-
 ✅ Validação de versão - Verifica se a versão do Fedora existe antes do upgrade
 
 📋 Logs
 Os logs são salvos automaticamente em:
----
+```bash
 /tmp/fof-YYYYMMDD-HHMMSS.log
----
-
+```
 Para visualizar os logs em tempo real:
----
+```bash
 tail -f /tmp/fof-*.log
----
+```
 
 🎯 Roadmap
 v0.1.2
@@ -220,19 +212,17 @@ Toda ajuda é muito bem-vinda! Se você quer sugerir novas otimizações para o 
 Faça um Fork do projeto
 
 Crie uma branch para sua modificação:
----
+```bash
 git checkout -b feature/nova-otimizacao
----
-
+```
 Commit suas mudanças:
----
+```bash
 git commit -m 'Adiciona nova otimização'
----
-
+```
 Push para a branch:
----
+```bash
 git push origin feature/nova-otimizacao
----
+```
 
 Abra um Pull Request
 
@@ -263,17 +253,10 @@ Este projeto está licenciado sob a GPL-3.0 License - veja o arquivo LICENSE par
 👤 Autor
 VitãoTub
 
-🌐 Website
-
-🐙 GitHub
-
 🙏 Agradecimentos
 Comunidade Fedora
-
 RPM Fusion
-
 Flatpak/Flathub
-
 
 ⭐ Suporte
 Se você gostou do projeto, deixe uma ⭐ no GitHub!
