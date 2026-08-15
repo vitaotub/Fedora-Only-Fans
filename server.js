@@ -318,10 +318,22 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
     let comandoFinal = '';
 
     switch (metodo.tipo) {
-        case 'kdesu':
-            // kdesu com descrição amigável
-            comandoFinal = `kdesu -c "${comandoEscapado}" --comment "${descricao}" 2>/dev/null`;
+        case 'kdesu': {
+            // ============================================================
+            // KDSU - COM AMBIENTE GRÁFICO FORÇADO
+            // ============================================================
+
+            // Obtém o DISPLAY e XAUTHORITY do ambiente ou usa valores padrão
+            const envDisplay = process.env.DISPLAY || ':0';
+            const envXauthority = process.env.XAUTHORITY || `${process.env.HOME}/.Xauthority`;
+
+            // Monta o comando com as variáveis de ambiente
+            comandoFinal = `DISPLAY=${envDisplay} XAUTHORITY=${envXauthority} kdesu -c "${comandoEscapado}" --comment "${descricao}" 2>/dev/null`;
+
+            console.log(`[KDESU] Executando com DISPLAY=${envDisplay}`);
+            console.log(`[KDESU] Comando: ${comandoFinal}`);
             break;
+        }
 
         case 'pkexec':
             // ============================================================
