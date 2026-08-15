@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Instalação
-# Versão: 0.1.1 alpha
+# Versão: 0.3.0
 # ============================================================
 #
 # Este script instala o FOF no sistema
@@ -31,7 +31,7 @@ NC='\033[0m' # No Color
 # CONFIGURAÇÕES
 # ============================================================
 
-VERSION="0.1.1-alpha"
+VERSION="0.3.0"
 INSTALL_DIR="$HOME/.local/share/fedora-only-fans"
 BIN_DIR="$HOME/.local/bin"
 DESKTOP_FILE="$HOME/.local/share/applications/fedora-only-fans.desktop"
@@ -119,7 +119,6 @@ compilar_container_install() {
         chmod +x "$INSTALL_DIR/build-container.sh"
         "$INSTALL_DIR/build-container.sh"
         if [ $? -eq 0 ] && [ -f "$INSTALL_DIR/fof-container" ]; then
-            # Cria link simbólico para o container
             ln -sf "$INSTALL_DIR/fof-container" "$BIN_DIR/fof-container"
             chmod +x "$BIN_DIR/fof-container"
             print_success "Container compilado e instalado"
@@ -161,7 +160,6 @@ verificar_dependencias() {
 
     local faltando=()
 
-    # Verifica Node.js
     if ! command -v node &> /dev/null; then
         faltando+=("nodejs")
         print_warning "Node.js não encontrado"
@@ -169,7 +167,6 @@ verificar_dependencias() {
         print_success "Node.js: $(node --version)"
     fi
 
-    # Verifica npm
     if ! command -v npm &> /dev/null; then
         faltando+=("npm")
         print_warning "npm não encontrado"
@@ -177,7 +174,6 @@ verificar_dependencias() {
         print_success "npm: $(npm --version)"
     fi
 
-    # Verifica git
     if ! command -v git &> /dev/null; then
         faltando+=("git")
         print_warning "git não encontrado"
@@ -185,7 +181,6 @@ verificar_dependencias() {
         print_success "git: $(git --version | cut -d' ' -f3)"
     fi
 
-    # Verifica curl
     if ! command -v curl &> /dev/null; then
         faltando+=("curl")
         print_warning "curl não encontrado"
@@ -218,11 +213,9 @@ verificar_dependencias() {
 instalar_fof() {
     print_step "Instalando Fedora Only Fans..."
 
-    # Cria diretórios
     mkdir -p "$INSTALL_DIR"
     mkdir -p "$BIN_DIR"
 
-    # Baixa o projeto
     if [ -d "$INSTALL_DIR/.git" ]; then
         print_info "Atualizando repositório existente..."
         cd "$INSTALL_DIR"
@@ -233,7 +226,6 @@ instalar_fof() {
         cd "$INSTALL_DIR"
     fi
 
-    # Instala dependências Node.js
     print_step "Instalando dependências do Node.js..."
     npm install --no-audit --no-fund --silent
 
@@ -242,7 +234,6 @@ instalar_fof() {
         exit 1
     fi
 
-    # Cria link simbólico para o script
     ln -sf "$INSTALL_DIR/iniciar_fof.sh" "$BIN_DIR/fof"
     chmod +x "$INSTALL_DIR/iniciar_fof.sh"
     chmod +x "$BIN_DIR/fof"
@@ -294,14 +285,12 @@ EOF
 fixar_na_barra() {
     print_step "Fixando atalho na barra de tarefas..."
 
-    # Verifica se está no KDE Plasma
     if [[ "$XDG_CURRENT_DESKTOP" != *"KDE"* ]] && [[ "$DESKTOP_SESSION" != *"plasma"* ]]; then
         print_warning "Ambiente não identificado como KDE Plasma"
         print_warning "Pule esta etapa ou fixe manualmente o atalho"
         return 0
     fi
 
-    # Verifica se o arquivo .desktop existe
     if [ ! -f "$DESKTOP_FILE" ]; then
         print_warning "Arquivo .desktop não encontrado: $DESKTOP_FILE"
         print_warning "Não foi possível fixar na barra de tarefas"
@@ -310,17 +299,14 @@ fixar_na_barra() {
 
     local fixed=false
 
-    # Método 1: Usando kwriteconfig5 (KDE Plasma 5)
     if command -v kwriteconfig5 &> /dev/null; then
         print_info "Tentando fixar com kwriteconfig5..."
 
-        # Lê a lista atual de launchers
         local current_launchers=$(kwriteconfig5 --file ~/.config/plasma-org.kde.plasma.desktop-appletsrc \
             --group Containments --group "1" --group Applets \
             --group "2" --group Configuration --group General \
             --key launcherList 2>/dev/null || echo "")
 
-        # Adiciona o FOF se não estiver na lista
         if [[ ! "$current_launchers" == *"fedora-only-fans"* ]]; then
             if [ -z "$current_launchers" ]; then
                 current_launchers="applications:fedora-only-fans.desktop"
@@ -342,7 +328,6 @@ fixar_na_barra() {
         fi
     fi
 
-    # Método 2: Usando qdbus (alternativa)
     if [ "$fixed" = false ] && command -v qdbus &> /dev/null; then
         print_info "Tentando fixar com qdbus..."
 
@@ -353,14 +338,11 @@ fixar_na_barra() {
         fi
     fi
 
-    # Força a atualização da barra de tarefas
     if [ "$fixed" = true ]; then
-        # Recarrega o Plasma
         if command -v plasma-apply-desktoptheme &> /dev/null; then
             plasma-apply-desktoptheme &> /dev/null &
         fi
 
-        # Método alternativo para recarregar
         if command -v qdbus &> /dev/null; then
             qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.reloadConfig 2>/dev/null
         fi
@@ -384,17 +366,14 @@ fixar_na_barra() {
 configurar_path() {
     print_step "Configurando PATH..."
 
-    # Verifica se ~/.local/bin está no PATH
     if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
         print_warning "~/.local/bin não está no PATH"
 
-        # Adiciona ao .bashrc
         if [ -f "$HOME/.bashrc" ]; then
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
             print_success "Adicionado ao .bashrc"
         fi
 
-        # Adiciona ao .zshrc se existir
         if [ -f "$HOME/.zshrc" ]; then
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
             print_success "Adicionado ao .zshrc"
@@ -416,32 +395,27 @@ desinstalar() {
 
     read -p "Tem certeza? (s/N): " -n 1 -r
     echo
-    if [[ ! $REPLY =~ ^[Ss]$ ]]; then
-        print_info "Desinstalação cancelada"
+    if [[ ! $REPLY =~ ^[Ss]$ ]]; then        print_info "Desinstalação cancelada"
         exit 0
     fi
 
     print_step "Removendo arquivos..."
 
-    # Remove diretório de instalação
     if [ -d "$INSTALL_DIR" ]; then
         rm -rf "$INSTALL_DIR"
         print_success "Diretório removido: $INSTALL_DIR"
     fi
 
-    # Remove link simbólico
     if [ -f "$BIN_DIR/fof" ]; then
         rm -f "$BIN_DIR/fof"
         print_success "Link removido: $BIN_DIR/fof"
     fi
 
-    # Remove atalho
     if [ -f "$DESKTOP_FILE" ]; then
         rm -f "$DESKTOP_FILE"
         print_success "Atalho removido: $DESKTOP_FILE"
     fi
 
-    # Remove do PATH (opcional)
     print_info "Para remover o PATH, edite manualmente .bashrc ou .zshrc"
 
     print_success "FOF desinstalado com sucesso!"
@@ -464,10 +438,7 @@ atualizar() {
 
     cd "$INSTALL_DIR"
 
-    # Salva estado atual
     git stash save "Backup automático antes da atualização" 2>/dev/null
-
-    # Baixa atualizações
     git pull origin main
 
     if [ $? -ne 0 ]; then
@@ -475,7 +446,6 @@ atualizar() {
         exit 1
     fi
 
-    # Atualiza dependências
     npm install --no-audit --no-fund --silent
 
     print_success "FOF atualizado para a versão mais recente!"
@@ -520,7 +490,6 @@ EOF
 # ============================================================
 
 main() {
-    # Processa argumentos
     case "$1" in
         --help|-h)
             mostrar_ajuda
@@ -537,19 +506,16 @@ main() {
 
     print_header
 
-    # Verificações
     verificar_sistema
     verificar_dependencias
 
-    # Instalação
     instalar_fof
-    instalar_dependencias_container    # <-- NOVO
-    compilar_container_install         # <-- NOVO
+    instalar_dependencias_container
+    compilar_container_install
     criar_atalho
     fixar_na_barra
     configurar_path
 
-    # Finalização
     echo ""
     print_success "🎉 Fedora Only Fans instalado com sucesso!"
     echo ""

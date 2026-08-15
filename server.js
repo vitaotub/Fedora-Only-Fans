@@ -392,7 +392,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // GET /icone_app.png - Serve o ícone (NOVO)
+    // GET /icone_app.png - Serve o ícone
     if (req.method === 'GET' && req.url === '/icone_app.png') {
         servirArquivoEstatico(req, res, 'icone_app.png');
         return;
