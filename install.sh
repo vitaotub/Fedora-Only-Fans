@@ -79,7 +79,7 @@ log() {
 # ============================================================
 
 reaplicar_permissoes() {
-    print_step "Reaplicando permissões dos arquivos..."
+print_step "Reaplicando permissões dos arquivos..."
 
     # Dá permissão para o script principal
     if [ -f "$INSTALL_DIR/iniciar_fof.sh" ]; then
