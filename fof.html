@@ -512,7 +512,7 @@
                         <p>Configura os downloads paralelos simultâneos e ativa a busca automática pelo espelho de servidor mais rápido.</p>
                         <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             <label for="select-downloads" style="font-size: 0.9rem; color: var(--text-muted);">Conexões simultâneas:</label>
-                            <!-- SELECT PERSONALIZADO -->
+                            <!-- SELECT PERSONALIZADO - DNF -->
                             <div class="custom-select" id="custom-select-container">
                                 <div class="custom-select-trigger" id="custom-select-trigger">
                                     <span id="custom-select-value">5 (Recomendado)</span>
@@ -960,12 +960,20 @@
                         <p>Prepara e baixa os pacotes para a próxima grande versão do Fedora.</p>
                         <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             <label for="select-fedora-version" style="font-size: 0.9rem; color: var(--text-muted);">Versão de destino:</label>
-                            <select id="select-fedora-version" class="select-corrigido">
-                                <option value="45">Fedora 45</option>
-                                <option value="46">Fedora 46</option>
-                                <option value="47">Fedora 47</option>
-                                <option value="48">Fedora 48</option>
-                            </select>
+                            <!-- SELECT PERSONALIZADO - VERSÃO FEDORA -->
+                            <div class="custom-select" id="custom-select-fedora-container">
+                                <div class="custom-select-trigger" id="custom-select-fedora-trigger">
+                                    <span id="custom-select-fedora-value">Fedora 47</span>
+                                    <span class="custom-select-arrow">▼</span>
+                                </div>
+                                <ul class="custom-select-options" id="custom-select-fedora-options">
+                                    <li data-value="45">Fedora 45</li>
+                                    <li data-value="46">Fedora 46</li>
+                                    <li data-value="47" class="selected">Fedora 47</li>
+                                    <li data-value="48">Fedora 48</li>
+                                </ul>
+                                <input type="hidden" id="select-fedora-version" value="47">
+                            </div>
                         </div>
                         <button class="btn-executar" onclick="executarUpgradeFedora()">Baixar Nova Versão</button>
                     </div>
@@ -1699,7 +1707,7 @@
             }, 10000);
         }
 
-        // ============ SELECT PERSONALIZADO ============
+        // ============ SELECT PERSONALIZADO - DNF ============
         function initCustomSelect() {
             const trigger = document.getElementById('custom-select-trigger');
             const options = document.getElementById('custom-select-options');
@@ -1737,7 +1745,49 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', initCustomSelect);
+        // ============ SELECT PERSONALIZADO - VERSÃO FEDORA ============
+        function initCustomSelectFedora() {
+            const trigger = document.getElementById('custom-select-fedora-trigger');
+            const options = document.getElementById('custom-select-fedora-options');
+            const hiddenInput = document.getElementById('select-fedora-version');
+            const displayValue = document.getElementById('custom-select-fedora-value');
+
+            if (!trigger || !options || !hiddenInput) return;
+
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isOpen = this.classList.toggle('open');
+                options.classList.toggle('open');
+                this.setAttribute('aria-expanded', isOpen);
+            });
+
+            options.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const text = this.textContent;
+
+                    displayValue.textContent = text;
+                    hiddenInput.value = value;
+
+                    options.querySelectorAll('li').forEach(item => item.classList.remove('selected'));
+                    this.classList.add('selected');
+
+                    trigger.classList.remove('open');
+                    options.classList.remove('open');
+                });
+            });
+
+            document.addEventListener('click', function() {
+                trigger.classList.remove('open');
+                options.classList.remove('open');
+            });
+        }
+
+        // ============ INICIALIZAÇÃO ============
+        document.addEventListener('DOMContentLoaded', function() {
+            initCustomSelect();
+            initCustomSelectFedora();
+        });
     </script>
 </body>
 </html>
