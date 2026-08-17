@@ -494,7 +494,7 @@
                     <h3>Atualização Geral do Fedora</h3>
                     <p>Atualiza o índice de repositórios, sincroniza as chaves de segurança e baixa as versões mais recentes de todos os componentes do sistema.</p>
                     <button class="btn-executar" style="background-color: #d97706;" onclick="executarComando('atualizacao-inicial', 'sudo dnf upgrade --refresh -y')">
-                        🔄 Atualizar Fedora Completamente
+                        🔄 Atualizar Fedora
                     </button>
                 </div>
                 <div class="progress-container" id="progress-atualizacao-inicial">
@@ -1122,38 +1122,40 @@
             return { btnExecutar, btnReverter };
         }
 
-        function marcarBotaoComoExecutado(idComando) {
-            const { btnExecutar, btnReverter } = obterBotoesPorId(idComando);
-            if (btnExecutar) {
-                if (!btnExecutar.hasAttribute("data-texto-original")) {
-                    btnExecutar.setAttribute("data-texto-original", btnExecutar.innerHTML);
-                }
-                btnExecutar.innerHTML = "✅ Concluído";
-                btnExecutar.style.backgroundColor = "#4b5563";
-                btnExecutar.style.cursor = "default";
-                btnExecutar.disabled = true;
-            }
-            if (btnReverter) {
-                btnReverter.innerHTML = "↩️ Desfazer Alteração";
-                btnReverter.style.backgroundColor = "#ef4444";
-                btnReverter.disabled = false;
-            }
+function marcarBotaoComoExecutado(idComando) {
+    // ============================================================
+    // SE FOR O BOTÃO DE ATUALIZAÇÃO, NÃO MARCA COMO CONCLUÍDO
+    // ============================================================
+    if (idComando === 'atualizacao-inicial') {
+        // Apenas restaura o botão
+        const { btnExecutar } = obterBotoesPorId(idComando);
+        if (btnExecutar) {
+            btnExecutar.innerHTML = "🔄 Atualizar Fedora";
+            btnExecutar.style.backgroundColor = "#d97706";
+            btnExecutar.style.cursor = "pointer";
+            btnExecutar.disabled = false;
+            btnExecutar.removeAttribute("data-texto-original");
         }
+        return;
+    }
 
-        function restaurarBotaoOriginal(idComando) {
-            const { btnExecutar, btnReverter } = obterBotoesPorId(idComando);
-            if (btnExecutar) {
-                btnExecutar.innerHTML = btnExecutar.getAttribute("data-texto-original") || "Executar Ajuste";
-                btnExecutar.style.backgroundColor = "var(--accent)";
-                btnExecutar.style.cursor = "pointer";
-                btnExecutar.disabled = false;
-            }
-            if (btnReverter) {
-                btnReverter.innerHTML = "Revertido com Sucesso";
-                btnReverter.style.backgroundColor = "#374151";
-                btnReverter.disabled = true;
-            }
+    // Código original para os outros botões
+    const { btnExecutar, btnReverter } = obterBotoesPorId(idComando);
+    if (btnExecutar) {
+        if (!btnExecutar.hasAttribute("data-texto-original")) {
+            btnExecutar.setAttribute("data-texto-original", btnExecutar.innerHTML);
         }
+        btnExecutar.innerHTML = "✅ Concluído";
+        btnExecutar.style.backgroundColor = "#4b5563";
+        btnExecutar.style.cursor = "default";
+        btnExecutar.disabled = true;
+    }
+    if (btnReverter) {
+        btnReverter.innerHTML = "↩️ Desfazer Alteração";
+        btnReverter.style.backgroundColor = "#ef4444";
+        btnReverter.disabled = false;
+    }
+}
 
         // ============ CARREGAR PROGRESSO ============
 
