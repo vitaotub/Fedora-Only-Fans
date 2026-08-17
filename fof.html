@@ -826,32 +826,31 @@
                     <div class="terminal-log" id="log-vulkan-amd"></div>
                 </div>
 
-                <div class="bloco-comando">
-                    <div class="comando-info">
-                        <h3>Instalar Launchers e Pacotes Essenciais</h3>
-                        <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
-                        <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <button class="btn-executar" onclick="executarComando('steam-install', 'sudo dnf install steam steam-devices -y')">🎮 Instalar Steam</button>
-                            <button class="btn-executar" style="background-color: #10b981;" onclick="executarComando('heroic-install', 'flatpak install flathub com.heroicgameslauncher.HeroicGamesLauncher -y')">⚡ Heroic Games Launcher</button>
-                            <button class="btn-executar" style="background-color: #8b5cf6;" onclick="executarComando('lutris-install', 'sudo dnf install lutris -y')">🎯 Lutris</button>
-                            <button class="btn-executar" style="background-color: #f59e0b;" onclick="executarComando('protonup-install', 'flatpak install flathub net.davidotek.pupgui2 -y')">🔄 ProtonUp-Qt</button>
-                        </div>
-                    </div>
-                    <div class="progress-container" id="progress-steam-install">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progress-fill-steam-install"></div>
-                        </div>
-                        <div class="progress-text">
-                            <span class="status" id="progress-status-steam-install">⏳ Iniciando...</span>
-                            <span class="percentage" id="progress-percent-steam-install">0%</span>
-                        </div>
-                    </div>
-                    <div class="terminal-log" id="log-steam-install"></div>
-                    <div class="terminal-log" id="log-heroic-install"></div>
-                    <div class="terminal-log" id="log-lutris-install"></div>
-                    <div class="terminal-log" id="log-protonup-install"></div>
-                </div>
-            </div>
+<div class="bloco-comando">
+    <div class="comando-info">
+        <h3>Instalar Launchers e Pacotes Essenciais</h3>
+        <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
+        <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button class="btn-executar" onclick="executarComando('steam-install', 'flatpak install flathub com.valvesoftware.Steam -y')">🎮 Instalar Steam (Flatpak)</button>
+            <button class="btn-executar" style="background-color: #10b981;" onclick="executarComando('heroic-install', 'flatpak install flathub com.heroicgameslauncher.HeroicGamesLauncher -y')">⚡ Heroic Games Launcher</button>
+            <button class="btn-executar" style="background-color: #8b5cf6;" onclick="executarComando('lutris-install', 'flatpak install flathub net.lutris.Lutris -y')">🎯 Lutris (Flatpak)</button>
+            <button class="btn-executar" style="background-color: #f59e0b;" onclick="executarComando('protonup-install', 'flatpak install flathub net.davidotek.pupgui2 -y')">🔄 ProtonUp-Qt</button>
+        </div>
+    </div>
+    <div class="progress-container" id="progress-steam-install">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill-steam-install"></div>
+        </div>
+        <div class="progress-text">
+            <span class="status" id="progress-status-steam-install">⏳ Iniciando...</span>
+            <span class="percentage" id="progress-percent-steam-install">0%</span>
+        </div>
+    </div>
+    <div class="terminal-log" id="log-steam-install"></div>
+    <div class="terminal-log" id="log-heroic-install"></div>
+    <div class="terminal-log" id="log-lutris-install"></div>
+    <div class="terminal-log" id="log-protonup-install"></div>
+</div>
         </section>
 
         <!-- ============================================================ -->
@@ -903,26 +902,25 @@
                     <div class="terminal-log" id="log-obs-cam"></div>
                 </div>
 
-                <div class="bloco-comando">
-                    <div class="comando-info">
-                        <h3>Melhoria de Áudio com EasyEffects</h3>
-                        <p>Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
-                        <div class="grupo-botoes">
-                            <button class="btn-executar" onclick="executarComando('instalar-easyeffects', 'flatpak install flathub com.github.wwmm.easyeffects -y')">Instalar EasyEffects</button>
-                        </div>
-                    </div>
-                    <div class="progress-container" id="progress-instalar-easyeffects">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progress-fill-instalar-easyeffects"></div>
-                        </div>
-                        <div class="progress-text">
-                            <span class="status" id="progress-status-instalar-easyeffects">⏳ Iniciando...</span>
-                            <span class="percentage" id="progress-percent-instalar-easyeffects">0%</span>
-                        </div>
-                    </div>
-                    <div class="terminal-log" id="log-instalar-easyeffects"></div>
-                </div>
-            </div>
+<div class="bloco-comando">
+    <div class="comando-info">
+        <h3>Melhoria de Áudio com EasyEffects</h3>
+        <p>Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
+        <div class="grupo-botoes">
+            <button class="btn-executar" onclick="executarComando('instalar-easyeffects', 'flatpak install flathub com.github.wwmm.easyeffects -y')">Instalar EasyEffects (Flatpak)</button>
+        </div>
+    </div>
+    <div class="progress-container" id="progress-instalar-easyeffects">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill-instalar-easyeffects"></div>
+        </div>
+        <div class="progress-text">
+            <span class="status" id="progress-status-instalar-easyeffects">⏳ Iniciando...</span>
+            <span class="percentage" id="progress-percent-instalar-easyeffects">0%</span>
+        </div>
+    </div>
+    <div class="terminal-log" id="log-instalar-easyeffects"></div>
+</div>
         </section>
 
         <!-- ============================================================ -->
