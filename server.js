@@ -145,15 +145,6 @@ function verificarDisponibilidadeKdesu() {
 function obterMetodoAutenticacao() {
     const desktop = detectarDesktop();
 
-    // FORÇA O USO DO PKEXEC (funciona no KDE)
-    // if (desktop === 'KDE' && verificarDisponibilidadeKdesu()) {
-    //     return {
-    //         tipo: 'kdesu',
-    //         comando: 'kdesu',
-    //         descricao: 'kdesu (KDE)'
-    //     };
-    // }
-
     if (verificarDisponibilidadePkexec()) {
         return {
             tipo: 'pkexec',
@@ -175,9 +166,6 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
     enviarLog(idComando, `$ ${comandoFinal}\n`, 'info');
     enviarLog(idComando, '─'.repeat(50) + '\n', 'info');
 
-    // ============================================================
-    // DETECTA COMANDOS COMPLEXOS (pipes, redirecionamentos, etc)
-    // ============================================================
     const isComplexo = comandoFinal.includes('|') || 
                        comandoFinal.includes('<(') || 
                        comandoFinal.includes('>') || 
@@ -185,9 +173,6 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
                        comandoFinal.includes(';');
 
     if (isComplexo) {
-        // ============================================================
-        // USA EXEC PARA COMANDOS COMPLEXOS
-        // ============================================================
         console.log(`[EXEC] Comando complexo detectado: ${comandoFinal}`);
         
         exec(comandoFinal, {
@@ -227,9 +212,6 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
         return;
     }
 
-    // ============================================================
-    // USA SPAWN PARA COMANDOS SIMPLES
-    // ============================================================
     const processo = spawn(comandoFinal, {
         shell: '/bin/bash',
         env: process.env,
@@ -282,14 +264,13 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
 }
 
 // ============================================================
-// EXECUÇÃO COM AUTENTICAÇÃO SEGURA (COM SCRIPT WRAPPER)
+// EXECUÇÃO COM AUTENTICAÇÃO SEGURA
 // ============================================================
 
 function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, callback) {
     const desktop = detectarDesktop();
     const metodo = obterMetodoAutenticacao();
 
-    // Mapeia comandos para descrições amigáveis
     const descricoesComandos = {
         'dnf upgrade': 'Atualizar o sistema Fedora',
         'dnf install': 'Instalar pacotes',
@@ -321,7 +302,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         'v4l2loopback': 'Instalar câmera virtual'
     };
 
-    // Gera uma descrição amigável
     let descricao = 'Executar comando administrativo';
     for (const [key, value] of Object.entries(descricoesComandos)) {
         if (comandoOriginal.includes(key)) {
@@ -330,7 +310,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         }
     }
 
-    // Verifica se a descrição é genérica
     if (descricao === 'Executar comando administrativo' && idComando) {
         const descricoesPorId = {
             'atualizacao-inicial': 'Atualizar o sistema Fedora',
@@ -366,48 +345,26 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
     const comandoSemSudo = comandoOriginal.replace(/sudo\s+/g, '');
     const comandoEscapado = comandoSemSudo
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\$/g, '\\$')
-    .replace(/`/g, '\\`');
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\$/g, '\\$')
+        .replace(/`/g, '\\`');
 
     let comandoFinal = '';
 
     switch (metodo.tipo) {
-        case 'kdesu': {
-            // ============================================================
-            // KDSU - SEM A OPÇÃO --comment (não suportada)
-            // ============================================================
-
-            const envDisplay = process.env.DISPLAY || ':0';
-            const envXauthority = process.env.XAUTHORITY || `${process.env.HOME}/.Xauthority`;
-
-            comandoFinal = `DISPLAY=${envDisplay} XAUTHORITY=${envXauthority} kdesu -c "${comandoEscapado}" 2>/dev/null`;
-
-            console.log(`[KDESU] Executando com DISPLAY=${envDisplay}`);
-            console.log(`[KDESU] Comando: ${comandoFinal}`);
-            break;
-        }
-
-        case 'pkexec':
-            // ============================================================
-            // MÉTODO DO SCRIPT WRAPPER - MAIS CONFIÁVEL
-            // ============================================================
-
-            // Cria um nome único para o script temporário
+        case 'pkexec': {
             const timestamp = Date.now();
             const random = Math.random().toString(36).substring(7);
             const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
 
-            // Conteúdo do script com descrição
             const scriptContent = `#!/bin/bash
-            # Fedora Only Fans - ${descricao}
-            # Executado em: $(date '+%d/%m/%Y %H:%M:%S')
+# Fedora Only Fans - ${descricao}
+# Executado em: $(date '+%d/%m/%Y %H:%M:%S')
 
-            ${comandoEscapado}
-            `;
+${comandoEscapado}
+`;
 
-            // Escreve o script no disco
             try {
                 fs.writeFileSync(scriptTemp, scriptContent, { mode: 0o755 });
                 console.log(`[PKEXEC] Script criado: ${scriptTemp}`);
@@ -416,22 +373,18 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
                 return callback(err, "", "");
             }
 
-            // Executa o script com pkexec e depois remove
             comandoFinal = `pkexec ${scriptTemp} && rm -f ${scriptTemp}`;
 
-            // Limpeza forçada em caso de falha (60 segundos)
             setTimeout(() => {
                 if (fs.existsSync(scriptTemp)) {
                     try {
                         fs.unlinkSync(scriptTemp);
                         console.log(`[PKEXEC] Limpeza forçada: ${scriptTemp} removido`);
-                    } catch(e) {
-                        // Ignora erros na limpeza
-                    }
+                    } catch(e) {}
                 }
             }, 60000);
-
             break;
+        }
 
         case 'sudo_fallback':
             enviarLog(idComando, '⚠️ Usando fallback com sudo - pode expor senha!\n', 'warning');
@@ -465,26 +418,20 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
     executarComandoComStream(comandoFinal, idComando, isReversao, callback);
 }
 
-// ============ FUNÇÃO PRINCIPAL DE EXECUÇÃO (SEM WHITELIST) ============
+// ============ FUNÇÃO PRINCIPAL DE EXECUÇÃO ============
 
 function procederComExecucao(comando, idComando, isReversao, res) {
-    // Responde imediatamente que o comando foi aceito
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
         success: true,
         output: 'Comando aceito. Acompanhe o progresso no log abaixo.'
     }));
 
-    // Executa o comando em background
     setImmediate(() => {
         if (comando.includes('sudo ') || comando.includes('pkexec ') || comando.includes('kdesu ')) {
-            executarComAutenticacaoSegura(comando, idComando, isReversao, (error, stdout, stderr) => {
-                // Callback vazio pois já estamos usando SSE
-            });
+            executarComAutenticacaoSegura(comando, idComando, isReversao, (error, stdout, stderr) => {});
         } else {
-            executarComandoComStream(comando, idComando, isReversao, (error, stdout, stderr) => {
-                // Callback vazio pois já estamos usando SSE
-            });
+            executarComandoComStream(comando, idComando, isReversao, (error, stdout, stderr) => {});
         }
     });
 }
@@ -529,7 +476,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // GET /stream - SSE para logs em tempo real
     if (req.method === 'GET' && req.url.startsWith('/stream')) {
         const urlParams = new URL(req.url, `http://${req.headers.host}`);
         const idComando = urlParams.searchParams.get('id');
@@ -563,7 +509,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // GET / - Serve a interface HTML
     if (req.method === 'GET' && (req.url === '/' || req.url === '/fof.html')) {
         if (fs.existsSync(HTML_FILE)) {
             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -575,61 +520,30 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // GET /icone_app.png - Serve o ícone
     if (req.method === 'GET' && req.url === '/icone_app.png') {
         servirArquivoEstatico(req, res, 'icone_app.png');
         return;
     }
 
-    // GET /status - Retorna progresso
     if (req.method === 'GET' && req.url === '/status') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ executados: lerProgresso() }));
         return;
     }
 
-    // GET /info - Informações do sistema
     if (req.method === 'GET' && req.url === '/info') {
         const desktop = detectarDesktop();
         const metodo = obterMetodoAutenticacao();
-
-        // Detecta o diretório de instalação
-        let installDir = '';
-        const possibleDirs = [
-            '/usr/local/share/fedora-only-fans',
-            '/opt/fedora-only-fans',
-            path.join(process.env.HOME, '.local/share/fedora-only-fans'),
-                                 path.join(process.env.HOME, 'Fedora-Only-Fans')
-        ];
-
-        for (const dir of possibleDirs) {
-            if (fs.existsSync(dir) && fs.existsSync(path.join(dir, 'install.sh'))) {
-                installDir = dir;
-                break;
-            }
-        }
-
-        // Se não encontrou, usa o diretório atual
-        if (!installDir) {
-            // Verifica se o install.sh está no mesmo diretório do server.js
-            if (fs.existsSync(path.join(__dirname, 'install.sh'))) {
-                installDir = __dirname;
-            }
-        }
-
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             desktop: desktop,
             autenticacao: metodo.descricao,
             nodeVersion: process.version,
-            platform: process.platform,
-            installDir: installDir,        // ← NOVO
-            serverDir: __dirname           // ← NOVO
+            platform: process.platform
         }));
         return;
     }
 
-    // GET /security - Informações de segurança
     if (req.method === 'GET' && req.url === '/security') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -639,7 +553,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // POST /executar ou /reverter
     if (req.method === 'POST' && (req.url === '/executar' || req.url === '/reverter')) {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -656,7 +569,6 @@ const server = http.createServer((req, res) => {
                     }));
                 }
 
-                // Verifica se é um upgrade de versão
                 if (comando.includes('system-upgrade download')) {
                     const match = comando.match(/--releasever=(\d+)/);
                     const versaoAlvo = match ? match[1] : null;
