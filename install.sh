@@ -79,33 +79,28 @@ log() {
 # ============================================================
 
 reaplicar_permissoes() {
-print_step "Reaplicando permissões dos arquivos..."
+    print_step "Reaplicando permissões dos arquivos..."
 
-    # Dá permissão para o script principal
     if [ -f "$INSTALL_DIR/iniciar_fof.sh" ]; then
         chmod +x "$INSTALL_DIR/iniciar_fof.sh"
         print_info "Permissão aplicada: iniciar_fof.sh"
     fi
 
-    # Dá permissão para o link no PATH
     if [ -f "$BIN_DIR/fof" ]; then
         chmod +x "$BIN_DIR/fof"
         print_info "Permissão aplicada: fof (link)"
     fi
 
-    # Dá permissão para o container
     if [ -f "$INSTALL_DIR/fof-container" ]; then
         chmod +x "$INSTALL_DIR/fof-container"
         print_info "Permissão aplicada: fof-container"
     fi
 
-    # Dá permissão para o script de build
     if [ -f "$INSTALL_DIR/build-container.sh" ]; then
         chmod +x "$INSTALL_DIR/build-container.sh"
         print_info "Permissão aplicada: build-container.sh"
     fi
 
-    # Dá permissão para o link do container
     if [ -f "$BIN_DIR/fof-container" ]; then
         chmod +x "$BIN_DIR/fof-container"
         print_info "Permissão aplicada: fof-container (link)"
@@ -519,7 +514,7 @@ desinstalar() {
 }
 
 # ============================================================
-# ATUALIZAÇÃO (CORRIGIDA COM REAPLICAÇÃO DE PERMISSÕES)
+# ATUALIZAÇÃO
 # ============================================================
 
 atualizar() {
@@ -535,10 +530,7 @@ atualizar() {
 
     cd "$INSTALL_DIR"
 
-    # Salva alterações locais temporariamente
     git stash save "Backup automático antes da atualização" 2>/dev/null
-
-    # Baixa as atualizações
     git pull origin main
 
     if [ $? -ne 0 ]; then
@@ -546,10 +538,8 @@ atualizar() {
         exit 1
     fi
 
-    # Reaplica o stash se houver alterações salvas
     git stash pop 2>/dev/null
 
-    # Atualiza dependências
     print_step "Atualizando dependências do Node.js..."
     npm install --no-audit --no-fund --silent
 
@@ -557,22 +547,14 @@ atualizar() {
         print_warning "Falha ao atualizar dependências, continuando..."
     fi
 
-    # Recompila o container
     print_step "Recompilando container..."
     if [ -f "$INSTALL_DIR/build-container.sh" ]; then
         chmod +x "$INSTALL_DIR/build-container.sh"
         "$INSTALL_DIR/build-container.sh" 2>/dev/null
     fi
 
-    # ============================================================
-    # REAPLICA PERMISSÕES (CORREÇÃO IMPORTANTE)
-    # ============================================================
     reaplicar_permissoes
-
-    # Atualiza o atalho do menu
     criar_atalho
-
-    # Tenta fixar na barra de tarefas novamente
     fixar_na_barra
 
     print_success "✅ FOF atualizado para a versão mais recente!"
