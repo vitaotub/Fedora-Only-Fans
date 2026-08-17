@@ -421,7 +421,7 @@ configurar_path() {
 }
 
 # ============================================================
-# DESINSTALAÇÃO (CORRIGIDA)
+# DESINSTALAÇÃO COMPLETA
 # ============================================================
 
 desinstalar() {
@@ -502,15 +502,62 @@ desinstalar() {
         print_success "Progresso removido: .progresso.json"
     fi
 
-    # 9. Remove do PATH (instrução)
-    print_info "Para remover o PATH do FOF, edite manualmente .bashrc ou .zshrc"
-    print_info "Procure por: export PATH=\"\$HOME/.local/bin:\$PATH\""
+    # ============================================================
+    # 9. REMOVE O PATH DO .bashrc E .zshrc (AUTOMATICAMENTE)
+    # ============================================================
+    print_step "Removendo FOF do PATH..."
+
+    # Função para remover a linha do PATH de um arquivo
+    remover_linha_path() {
+        local arquivo="$1"
+        local backup="${arquivo}.fof-backup"
+        local linha_a_remover='export PATH="$HOME/.local/bin:$PATH"'
+        
+        if [ -f "$arquivo" ]; then
+            # Faz backup do arquivo original
+            cp "$arquivo" "$backup"
+            print_info "Backup criado: $backup"
+            
+            # Remove a linha do arquivo
+            grep -vF "$linha_a_remover" "$arquivo" > "${arquivo}.tmp"
+            mv "${arquivo}.tmp" "$arquivo"
+            
+            print_success "Linha removida de: $arquivo"
+        else
+            print_info "Arquivo não encontrado: $arquivo"
+        fi
+    }
+
+    # Remove do .bashrc
+    remover_linha_path "$HOME/.bashrc"
+
+    # Remove do .zshrc (se existir)
+    if [ -f "$HOME/.zshrc" ]; then
+        remover_linha_path "$HOME/.zshrc"
+    fi
+
+    # Remove do .profile (se existir)
+    if [ -f "$HOME/.profile" ]; then
+        remover_linha_path "$HOME/.profile"
+    fi
 
     # 10. Atualiza o banco de dados do desktop
     update-desktop-database ~/.local/share/applications/ 2>/dev/null
 
+    # 11. Mensagem final
+    echo ""
     print_success "✅ FOF completamente desinstalado!"
-    print_info "Você pode fechar esta janela."
+    print_info ""
+    print_info "📋 Resumo da desinstalação:"
+    echo "  ✅ Diretório removido: $INSTALL_DIR"
+    echo "  ✅ Comando 'fof' removido"
+    echo "  ✅ Atalho do menu removido"
+    echo "  ✅ Logs removidos"
+    echo "  ✅ PATH limpo (.bashrc, .zshrc, .profile)"
+    echo ""
+    print_info "💡 Para aplicar as mudanças no PATH, reinicie o terminal ou execute:"
+    echo "  source ~/.bashrc  # ou source ~/.zshrc"
+    echo ""
 }
 
 # ============================================================
