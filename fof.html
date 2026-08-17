@@ -629,23 +629,23 @@
             <div class="etapa-titulo">📦 Etapa 2: Repositórios, Codecs e Aceleração Gráfica</div>
             <div id="comandos-etapa-2">
                 <!-- RPM Fusion -->
-                <div class="bloco-comando">
-                    <div class="comando-info">
-                        <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
-                        <p>Instala e sincroniza os repositórios oficiais RPM Fusion, adiciona suporte a metadados do AppStream e executa um ajuste de segurança para garantir que o canal de desenvolvimento (Rawhide) não seja ativado por engano.</p>
-                        <button class="btn-executar" onclick="executarComando('rpm-fusion', 'sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y && sudo dnf update @core -y && sudo dnf install rpmfusion-*-appstream-data -y && sudo dnf repolist --all | grep -i fusion && sudo dnf config-manager setopt rpmfusion-free.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-updates.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-rawhide.enabled=0')">Ativar RPM Fusion</button>
-                    </div>
-                    <div class="progress-container" id="progress-rpm-fusion">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progress-fill-rpm-fusion"></div>
-                        </div>
-                        <div class="progress-text">
-                            <span class="status" id="progress-status-rpm-fusion">⏳ Iniciando...</span>
-                            <span class="percentage" id="progress-percent-rpm-fusion">0%</span>
-                        </div>
-                    </div>
-                    <div class="terminal-log" id="log-rpm-fusion"></div>
-                </div>
+<div class="bloco-comando">
+    <div class="comando-info">
+        <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
+        <p>Instala e sincroniza os repositórios oficiais RPM Fusion.</p>
+        <button class="btn-executar" onclick="executarRPMFusion()">Ativar RPM Fusion</button>
+    </div>
+    <div class="progress-container" id="progress-rpm-fusion">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill-rpm-fusion"></div>
+        </div>
+        <div class="progress-text">
+            <span class="status" id="progress-status-rpm-fusion">⏳ Iniciando...</span>
+            <span class="percentage" id="progress-percent-rpm-fusion">0%</span>
+        </div>
+    </div>
+    <div class="terminal-log" id="log-rpm-fusion"></div>
+</div>
 
                 <!-- Flatpak -->
                 <div class="bloco-comando">
