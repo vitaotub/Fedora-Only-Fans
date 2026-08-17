@@ -3,22 +3,18 @@
 # Fedora Only Fans (FOF) - Script de Inicialização
 # Versão: 0.3.0
 # ============================================================
-#
+# 
 # Este script inicia o servidor e abre a interface do FOF
-#
+# 
 # Uso: ./iniciar_fof.sh [opções]
-#
+# 
 # Opções:
 #   --debug, -d     Modo debug (logs detalhados)
 #   --no-clean      Não limpar perfis do navegador
 #   --help, -h      Mostra esta ajuda
 # ============================================================
 
-set -e  # Sai se algum comando falhar
-
-# ============================================================
-# CONFIGURAÇÕES
-# ============================================================
+set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
 cd "$DIR"
@@ -76,22 +72,19 @@ log_header() {
 abrir_no_terminal_nativo() {
     local script_path="$1"
     local titulo="Fedora Only Fans - Servidor"
-
+    
     log_debug "Tentando abrir no terminal nativo..."
-
-    # 1. Tenta o xdg-terminal-exec (Padrão moderno Freedesktop)
+    
     if command -v xdg-terminal-exec &> /dev/null; then
         log_debug "Usando xdg-terminal-exec"
         exec xdg-terminal-exec bash "$script_path" --no-fork
     fi
-
-    # 2. KDE Plasma
+    
     if command -v konsole &> /dev/null; then
         log_debug "Usando konsole (KDE)"
         exec konsole --title "$titulo" -e bash "$script_path" --no-fork
     fi
-
-    # 3. GNOME (Fedora Workstation)
+    
     if command -v ptyxis &> /dev/null; then
         log_debug "Usando ptyxis (GNOME)"
         exec ptyxis --title "$titulo" -- bash "$script_path" --no-fork
@@ -100,32 +93,28 @@ abrir_no_terminal_nativo() {
         log_debug "Usando gnome-terminal (GNOME)"
         exec gnome-terminal --title="$titulo" -- bash "$script_path" --no-fork
     fi
-
-    # 4. XFCE
+    
     if command -v xfce4-terminal &> /dev/null; then
         log_debug "Usando xfce4-terminal (XFCE)"
         exec xfce4-terminal --title "$titulo" -e "bash \"$script_path\" --no-fork"
     fi
-
-    # 5. Cinnamon
+    
     if command -v gnome-terminal &> /dev/null; then
         log_debug "Usando gnome-terminal (Cinnamon)"
         exec gnome-terminal --title="$titulo" -- bash "$script_path" --no-fork
     fi
-
-    # 6. Fallbacks genéricos
+    
     for term in tilix alacritty kitty xterm x-terminal-emulator; do
         if command -v $term &> /dev/null; then
             log_debug "Usando $term (fallback)"
             exec $term -e bash "$script_path" --no-fork
         fi
     done
-
+    
     log_error "Nenhum emulador de terminal compatível foi encontrado."
     exit 1
 }
 
-# Se o script NÃO estiver rodando dentro de uma janela separada
 if [ "$1" != "--no-fork" ] && [ "$1" != "--debug" ] && [ "$1" != "--no-clean" ] && [ "$1" != "--help" ] && [ "$1" != "-h" ] && [ "$1" != "-d" ]; then
     SCRIPT_PATH="$(realpath "${BASH_SOURCE}")"
     abrir_no_terminal_nativo "$SCRIPT_PATH"
@@ -140,15 +129,12 @@ abrir_container() {
     local url="$1"
     local icone="$DIR/icone_app.png"
 
-    # Verifica se o container existe no diretório atual
     if [ -f "$DIR/fof-container" ]; then
         log_info "📦 Abrindo no container nativo (WebKitGTK)..."
         "$DIR/fof-container" --url "$url" --icon "$icone" --name "Fedora Only Fans"
-        # Quando o container fechar, encerra o script
         exit 0
     fi
 
-    # Verifica se está instalado no sistema
     if command -v fof-container &> /dev/null; then
         log_info "📦 Abrindo no container nativo (WebKitGTK)..."
         fof-container --url "$url" --icon "$icone" --name "Fedora Only Fans"
@@ -180,29 +166,29 @@ compilar_container() {
 
 verificar_arquivos() {
     log_info "Verificando arquivos do projeto..."
-
+    
     if [ ! -f "$DIR/server.js" ]; then
         log_error "Arquivo server.js não encontrado!"
         log_error "Certifique-se de estar no diretório correto."
         exit 1
     fi
-
+    
     if [ ! -f "$DIR/fof.html" ]; then
         log_error "Arquivo fof.html não encontrado!"
         log_error "Certifique-se de estar no diretório correto."
         exit 1
     fi
-
+    
     if [ ! -f "$DIR/icone_app.png" ]; then
         log_warning "Arquivo icone_app.png não encontrado. Ícone pode não aparecer."
     fi
-
+    
     log_success "Arquivos verificados com sucesso"
 }
 
 verificar_sudo() {
     log_info "Verificando permissões sudo..."
-
+    
     if ! sudo -n true 2>/dev/null; then
         log_warning "Sudo requer senha. Você será solicitado durante a execução."
         log_warning "Alguns comandos podem pedir autenticação."
@@ -228,11 +214,11 @@ verificar_fedora() {
 instalar_nodejs() {
     if ! command -v node &> /dev/null; then
         log_warning "Node.js não encontrado. Instalando..."
-
+        
         sudo dnf install -y nodejs npm 2>&1 | while read line; do
             log_debug "dnf: $line"
         done
-
+        
         if [ $? -ne 0 ]; then
             log_error "Falha ao instalar Node.js"
             log_error "Tente instalar manualmente: sudo dnf install nodejs npm"
@@ -248,11 +234,11 @@ instalar_dependencias_npm() {
     if [ -f "$DIR/package.json" ]; then
         if [ ! -d "$DIR/node_modules" ]; then
             log_info "Instalando dependências do Node.js..."
-
+            
             npm install --no-audit --no-fund --silent 2>&1 | while read line; do
                 log_debug "npm: $line"
             done
-
+            
             if [ $? -ne 0 ]; then
                 log_error "Falha ao instalar dependências"
                 log_error "Tente instalar manualmente: npm install"
@@ -282,21 +268,19 @@ limpar_perfis() {
         log_info "🧹 Limpeza de perfis desabilitada (--no-clean)"
         return 0
     fi
-
+    
     log_info "Limpando perfis antigos do navegador..."
-
-    # Firefox
+    
     if [ -d "$DIR/.perfil_firefox" ]; then
         rm -rf "$DIR/.perfil_firefox"
         log_debug "Perfil Firefox removido"
     fi
-
-    # Chromium/Chrome
+    
     if [ -d "$DIR/.perfil_app" ]; then
         rm -rf "$DIR/.perfil_app"
         log_debug "Perfil Chromium removido"
     fi
-
+    
     log_success "Perfis limpos"
 }
 
@@ -318,15 +302,13 @@ liberar_porta() {
 
 iniciar_servidor() {
     log_info "Iniciando servidor na porta 3000..."
-
-    # Remove PID antigo se existir
+    
     if [ -f "$SERVER_PID_FILE" ]; then
         rm -f "$SERVER_PID_FILE"
     fi
-
-    # Inicia o servidor com nohup
+    
     local server_pid
-
+    
     if [ "$DEBUG" = true ]; then
         node server.js 2>&1 | tee -a "$LOG_FILE" &
         server_pid=$!
@@ -334,16 +316,14 @@ iniciar_servidor() {
         nohup node server.js >> "$LOG_FILE" 2>&1 &
         server_pid=$!
     fi
-
-    # Salva o PID
+    
     echo $server_pid > "$SERVER_PID_FILE"
-
-    # Aguarda o servidor iniciar
+    
     local tentativas=0
     local max_tentativas=15
-
+    
     log_info "Aguardando servidor iniciar..."
-
+    
     while [ $tentativas -lt $max_tentativas ]; do
         if curl -s --max-time 1 http://localhost:3000/status > /dev/null 2>&1; then
             log_success "Servidor iniciado (PID: $server_pid)"
@@ -354,7 +334,7 @@ iniciar_servidor() {
         tentativas=$((tentativas + 1))
         log_debug "Aguardando servidor... ($tentativas/$max_tentativas)"
     done
-
+    
     log_error "Servidor não respondeu após $max_tentativas segundos"
     log_error "Verifique o log: $LOG_FILE"
     kill $server_pid 2>/dev/null
@@ -368,15 +348,15 @@ iniciar_servidor() {
 abrir_firefox() {
     local url="$1"
     local perfil_dir="$DIR/.perfil_firefox"
-
+    
     mkdir -p "$perfil_dir"
-
+    
     if [ "$DEBUG" = true ]; then
         firefox --profile "$perfil_dir" --window-size 950,850 --new-window "$url" 2>&1 | tee -a "$LOG_FILE" &
     else
         firefox --profile "$perfil_dir" --window-size 950,850 --new-window "$url" > /dev/null 2>&1 &
     fi
-
+    
     log_info "🦊 Firefox aberto"
 }
 
@@ -384,9 +364,9 @@ abrir_chromium() {
     local url="$1"
     local perfil_dir="$DIR/.perfil_app"
     local icone="$DIR/icone_app.png"
-
+    
     mkdir -p "$perfil_dir"
-
+    
     local binario=""
     for cmd in chromium chromium-browser google-chrome brave microsoft-edge opera vivaldi; do
         if command -v $cmd &> /dev/null; then
@@ -394,59 +374,46 @@ abrir_chromium() {
             break
         fi
     done
-
+    
     if [ -z "$binario" ]; then
         log_warning "Nenhum navegador Chromium encontrado"
         return 1
     fi
-
+    
     if [ "$DEBUG" = true ]; then
         $binario --user-data-dir="$perfil_dir" --app="$url" --window-size=950,850 2>&1 | tee -a "$LOG_FILE" &
     else
         $binario --user-data-dir="$perfil_dir" --app="$url" --window-size=950,850 > /dev/null 2>&1 &
     fi
-
+    
     log_info "🌐 $binario aberto"
 }
 
 abrir_navegador() {
     local url="http://localhost:3000"
 
-    # ============================================================
-    # TENTA O CONTAINER PRIMEIRO
-    # ============================================================
-
-    # Tenta abrir com o container nativo
     if abrir_container "$url"; then
         return 0
     fi
 
-    # Tenta compilar o container
     if compilar_container; then
         if abrir_container "$url"; then
             return 0
         fi
     fi
 
-    # ============================================================
-    # FALLBACK: NAVEGADORES
-    # ============================================================
-
     log_warning "Container não disponível. Usando navegador..."
 
-    # Fallback: Firefox
     if command -v firefox &> /dev/null; then
         abrir_firefox "file://$DIR/fof.html"
         return 0
     fi
 
-    # Fallback: Chromium
     if command -v chromium &> /dev/null || command -v chromium-browser &> /dev/null; then
         abrir_chromium "file://$DIR/fof.html"
         return 0
     fi
 
-    # Fallback: tenta instalar
     log_warning "Nenhum navegador encontrado. Tentando instalar Chromium..."
     sudo dnf install -y chromium
     if [ $? -eq 0 ] && command -v chromium &> /dev/null; then
@@ -465,22 +432,21 @@ abrir_navegador() {
 criar_atalho() {
     local desktop_file="$HOME/.local/share/applications/fedora-only-fans.desktop"
     local icone="$DIR/icone_app.png"
-
+    
     if [ -f "$desktop_file" ] && [ ! "$DEBUG" = true ]; then
         log_info "Atalho já existe: $desktop_file"
         return 0
     fi
-
+    
     log_info "Criando atalho no menu de aplicativos..."
-
+    
     mkdir -p "$(dirname "$desktop_file")"
-
-    # Verifica se o ícone existe
+    
     if [ ! -f "$icone" ]; then
         icone="applications-utilities"
         log_warning "Ícone não encontrado, usando ícone genérico"
     fi
-
+    
     cat > "$desktop_file" <<EOF
 [Desktop Entry]
 Version=1.0
@@ -494,10 +460,10 @@ Categories=System;Settings;
 StartupNotify=true
 X-GNOME-Autostart-enabled=true
 EOF
-
+    
     chmod +x "$desktop_file"
     update-desktop-database ~/.local/share/applications/ 2>/dev/null
-
+    
     log_success "Atalho criado: $desktop_file"
     log_info "O FOF aparecerá no menu de aplicativos como 'Fedora Only Fans'"
 }
@@ -544,7 +510,6 @@ EOF
 # ============================================================
 
 main() {
-    # Processa argumentos especiais primeiro
     for arg in "$@"; do
         case $arg in
             --help|-h)
@@ -558,43 +523,35 @@ main() {
                 ;;
         esac
     done
-
-    # Remove argumentos processados
+    
     shift $((OPTIND-1)) 2>/dev/null
-
+    
     log_header
-
+    
     if [ "$DEBUG" = true ]; then
         log_info "🐛 Modo DEBUG ativado"
         log_info "📋 Arquivo de log: $LOG_FILE"
     fi
-
+    
     if [ "$NO_CLEAN" = true ]; then
         log_info "🧹 Limpeza de perfis desabilitada"
     fi
-
-    # Verificações
+    
     verificar_arquivos
     verificar_sudo
     verificar_fedora
-
-    # Dependências
+    
     verificar_dependencias
-
-    # Limpeza
+    
     limpar_perfis
-
-    # Servidor
+    
     liberar_porta
     iniciar_servidor
-
-    # Navegador (container ou fallback)
+    
     abrir_navegador
-
-    # Atalho
+    
     criar_atalho
-
-    # Finalização
+    
     echo ""
     log_success "🎉 Fedora Only Fans está rodando!"
     log_info "🌐 http://localhost:3000"
@@ -602,8 +559,7 @@ main() {
     echo ""
     log_info "Pressione Ctrl+C para encerrar o servidor"
     echo ""
-
-    # Mantém o script rodando e monitora o servidor
+    
     while true; do
         if [ -f "$SERVER_PID_FILE" ]; then
             local pid=$(cat "$SERVER_PID_FILE")
@@ -624,7 +580,7 @@ main() {
 cleanup() {
     echo ""
     log_info "Encerrando o servidor..."
-
+    
     if [ -f "$SERVER_PID_FILE" ]; then
         local pid=$(cat "$SERVER_PID_FILE")
         if kill -0 $pid 2>/dev/null; then
@@ -633,12 +589,11 @@ cleanup() {
         fi
         rm -f "$SERVER_PID_FILE"
     fi
-
+    
     log_info "👋 Até logo!"
     exit 0
 }
 
-# Registra a função de limpeza
 trap cleanup EXIT INT TERM
 
 # ============================================================
