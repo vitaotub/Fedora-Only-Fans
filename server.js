@@ -175,6 +175,61 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
     enviarLog(idComando, `$ ${comandoFinal}\n`, 'info');
     enviarLog(idComando, '─'.repeat(50) + '\n', 'info');
 
+    // ============================================================
+    // DETECTA COMANDOS COMPLEXOS (pipes, redirecionamentos, etc)
+    // ============================================================
+    const isComplexo = comandoFinal.includes('|') || 
+                       comandoFinal.includes('<(') || 
+                       comandoFinal.includes('>') || 
+                       comandoFinal.includes('&&') ||
+                       comandoFinal.includes(';');
+
+    if (isComplexo) {
+        // ============================================================
+        // USA EXEC PARA COMANDOS COMPLEXOS
+        // ============================================================
+        console.log(`[EXEC] Comando complexo detectado: ${comandoFinal}`);
+        
+        exec(comandoFinal, {
+            shell: '/bin/bash',
+            maxBuffer: 1024 * 1024 * 50,
+            timeout: 300000
+        }, (error, stdout, stderr) => {
+            if (stdout) {
+                enviarLog(idComando, stdout, 'output');
+            }
+            if (stderr) {
+                const stderrFiltrado = stderr.replace(/\[sudo\] password for .+: /g, '');
+                if (stderrFiltrado.trim()) {
+                    enviarLog(idComando, stderrFiltrado, 'error');
+                }
+            }
+            
+            if (error) {
+                enviarLog(idComando, `\n❌ Comando falhou com código: ${error.code || 1}\n`, 'error');
+                console.error(`[ERRO] ${idComando}: Código ${error.code || 1}`);
+            } else {
+                if (isReversao) {
+                    removerProgresso(idComando);
+                } else {
+                    salvarProgresso(idComando);
+                }
+                enviarLog(idComando, `\n✅ Comando concluído com sucesso!\n`, 'success');
+                console.log(`[SUCESSO] ${idComando}`);
+            }
+            
+            enviarLog(idComando, '─'.repeat(50) + '\n', 'info');
+            enviarLog(idComando, '✅ Tarefa concluída!\n', 'success');
+            enviarLog(idComando, '__END__', 'end');
+            
+            callback(error, stdout, stderr);
+        });
+        return;
+    }
+
+    // ============================================================
+    // USA SPAWN PARA COMANDOS SIMPLES
+    // ============================================================
     const processo = spawn(comandoFinal, {
         shell: '/bin/bash',
         env: process.env,
