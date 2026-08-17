@@ -13,10 +13,6 @@ echo "  🏗️  Fedora Only Fans - Build do Container"
 echo "============================================================"
 echo ""
 
-# ============================================================
-# VERIFICA DEPENDÊNCIAS
-# ============================================================
-
 echo "🔍 Verificando dependências..."
 
 if ! pkg-config --exists webkit2gtk-4.1 gtk+-3.0; then
@@ -30,15 +26,7 @@ fi
 
 echo "✅ Dependências OK"
 
-# ============================================================
-# CRIA DIRETÓRIO SRC
-# ============================================================
-
 mkdir -p src
-
-# ============================================================
-# VERIFICA ARQUIVO FONTE
-# ============================================================
 
 if [ ! -f "src/fof-container.c" ]; then
     echo "❌ Arquivo src/fof-container.c não encontrado!"
@@ -46,10 +34,6 @@ if [ ! -f "src/fof-container.c" ]; then
     echo "   Certifique-se de que o arquivo existe."
     exit 1
 fi
-
-# ============================================================
-# COMPILA
-# ============================================================
 
 echo ""
 echo "📦 Compilando container..."
