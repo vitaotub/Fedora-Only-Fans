@@ -1383,83 +1383,19 @@ async function abrirBtrfsAssistant() {
 
     try {
         // ============================================================
-        // DETECTA O AMBIENTE E ESCOLHE O COMANDO CORRETO
+        // USA O COMANDO CORRETO (mesmo do menu iniciar)
         // ============================================================
         
-        let comando = '';
-        const desktop = detectarDesktopFrontend();
+        // O comando que funciona no menu iniciar
+        const comando = 'btrfs-assistant-launcher &';
         
-        // Verifica se o Btrfs-Assistant está instalado
-        const checkResponse = await fetch('http://localhost:3000/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: 'which btrfs-assistant > /dev/null 2>&1 && echo "EXISTS" || echo "NOT_FOUND"',
-                idComando: 'check-btrfs'
-            })
-        });
-        
-        let btrfsExists = false;
-        if (checkResponse.ok) {
-            const data = await checkResponse.json();
-            if (data.output && data.output.includes('EXISTS')) {
-                btrfsExists = true;
-            }
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line output';
+            infoLine.textContent = `🔄 Usando: btrfs-assistant-launcher`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
         }
-        
-        if (!btrfsExists) {
-            if (logBox) {
-                const errorLine = document.createElement('div');
-                errorLine.className = 'log-line error';
-                errorLine.textContent = `❌ Btrfs-Assistant não está instalado! Clique em "Instalar" primeiro.`;
-                logBox.appendChild(errorLine);
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-            return;
-        }
-        
-        // ============================================================
-        // ESCOLHE O COMANDO BASEADO NO DESKTOP
-        // ============================================================
-        
-        if (desktop === 'KDE') {
-            // No KDE, usa kdesu para abrir com privilégios
-            comando = `kdesu -c "btrfs-assistant" 2>/dev/null &`;
-            
-            if (logBox) {
-                const infoLine = document.createElement('div');
-                infoLine.className = 'log-line output';
-                infoLine.textContent = `🪟 Usando kdesu (KDE) para abrir Btrfs-Assistant`;
-                logBox.appendChild(infoLine);
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-        } else if (desktop === 'GNOME') {
-            // No GNOME, usa pkexec
-            comando = `pkexec btrfs-assistant &`;
-            
-            if (logBox) {
-                const infoLine = document.createElement('div');
-                infoLine.className = 'log-line output';
-                infoLine.textContent = `🐧 Usando pkexec (GNOME) para abrir Btrfs-Assistant`;
-                logBox.appendChild(infoLine);
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-        } else {
-            // Fallback: tenta com sudo e define DISPLAY
-            comando = `DISPLAY=:0 btrfs-assistant &`;
-            
-            if (logBox) {
-                const infoLine = document.createElement('div');
-                infoLine.className = 'log-line output';
-                infoLine.textContent = `🖥️ Usando fallback para abrir Btrfs-Assistant`;
-                logBox.appendChild(infoLine);
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-        }
-        
-        // ============================================================
-        // EXECUTA O COMANDO
-        // ============================================================
         
         const response = await fetch('http://localhost:3000/executar', {
             method: 'POST',
