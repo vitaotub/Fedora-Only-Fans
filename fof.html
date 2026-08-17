@@ -460,7 +460,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- HEADER -->
         <header>
             <img src="icone_app.png" alt="Fedora Only Fans" class="logo-header">
             <h1>Painel de Configurações do Fedora</h1>
@@ -481,9 +480,7 @@
             </div>
         </header>
 
-        <!-- ============================================================ -->
-        <!-- BLOCO DE BOAS-VINDAS                                           -->
-        <!-- ============================================================ -->
+        <!-- BLOCO DE BOAS-VINDAS -->
         <section class="etapa-card" style="border-left: 4px solid var(--warning-border); background-color: rgba(21, 31, 50, 0.7);">
             <div class="etapa-titulo" style="color: #fbd38d;">👋 Bem-vindo ao Painel de Automação!</div>
             <p style="font-size: 1rem; line-height: 1.6; color: var(--text-main); margin-bottom: 1.25rem;">
@@ -494,7 +491,7 @@
                     <h3>Atualização Geral do Fedora</h3>
                     <p>Atualiza o índice de repositórios, sincroniza as chaves de segurança e baixa as versões mais recentes de todos os componentes do sistema.</p>
                     <button class="btn-executar" style="background-color: #d97706;" onclick="executarComando('atualizacao-inicial', 'sudo dnf upgrade --refresh -y')">
-                        🔄 Atualizar Fedora
+                        🔄 Atualizar Fedora Completamente
                     </button>
                 </div>
                 <div class="progress-container" id="progress-atualizacao-inicial">
@@ -510,9 +507,7 @@
             </div>
         </section>
 
-        <!-- ============================================================ -->
-        <!-- ETAPA 1                                                       -->
-        <!-- ============================================================ -->
+        <!-- ETAPA 1 -->
         <section class="etapa-card" id="etapa-1">
             <div class="etapa-titulo">⚙️ Etapa 1: Otimização do Sistema e Idioma</div>
             <div id="comandos-etapa-1">
@@ -557,7 +552,6 @@
                     <div class="terminal-log" id="log-dnf-speed"></div>
                 </div>
 
-                <!-- IDIOMA -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Configuração de Idioma e Localidade (PT-BR)</h3>
@@ -601,7 +595,6 @@
                     <div class="terminal-log" id="log-idioma-localectl"></div>
                 </div>
 
-                <!-- DUAL-BOOT -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Corrigir problemas de data/hora em Dual-Boot (Windows/Linux)</h3>
@@ -622,32 +615,28 @@
             </div>
         </section>
 
-        <!-- ============================================================ -->
-        <!-- ETAPA 2                                                       -->
-        <!-- ============================================================ -->
+        <!-- ETAPA 2 -->
         <section class="etapa-card" id="etapa-2">
             <div class="etapa-titulo">📦 Etapa 2: Repositórios, Codecs e Aceleração Gráfica</div>
             <div id="comandos-etapa-2">
-                <!-- RPM Fusion -->
-<div class="bloco-comando">
-    <div class="comando-info">
-        <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
-        <p>Instala e sincroniza os repositórios oficiais RPM Fusion.</p>
-        <button class="btn-executar" onclick="executarRPMFusion()">Ativar RPM Fusion</button>
-    </div>
-    <div class="progress-container" id="progress-rpm-fusion">
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill-rpm-fusion"></div>
-        </div>
-        <div class="progress-text">
-            <span class="status" id="progress-status-rpm-fusion">⏳ Iniciando...</span>
-            <span class="percentage" id="progress-percent-rpm-fusion">0%</span>
-        </div>
-    </div>
-    <div class="terminal-log" id="log-rpm-fusion"></div>
-</div>
+                <div class="bloco-comando">
+                    <div class="comando-info">
+                        <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
+                        <p>Instala e sincroniza os repositórios oficiais RPM Fusion, adiciona suporte a metadados do AppStream e executa um ajuste de segurança para garantir que o canal de desenvolvimento (Rawhide) não seja ativado por engano.</p>
+                        <button class="btn-executar" onclick="executarComando('rpm-fusion', 'sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y && sudo dnf update @core -y && sudo dnf install rpmfusion-*-appstream-data -y && sudo dnf repolist --all | grep -i fusion && sudo dnf config-manager setopt rpmfusion-free.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-updates.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-rawhide.enabled=0')">Ativar RPM Fusion</button>
+                    </div>
+                    <div class="progress-container" id="progress-rpm-fusion">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill-rpm-fusion"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span class="status" id="progress-status-rpm-fusion">⏳ Iniciando...</span>
+                            <span class="percentage" id="progress-percent-rpm-fusion">0%</span>
+                        </div>
+                    </div>
+                    <div class="terminal-log" id="log-rpm-fusion"></div>
+                </div>
 
-                <!-- Flatpak -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
@@ -666,7 +655,6 @@
                     <div class="terminal-log" id="log-flatpak-setup"></div>
                 </div>
 
-                <!-- Arquivos Compactados -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Instalar Suporte a Arquivos Compactados (7z, RAR e ZIP)</h3>
@@ -685,7 +673,6 @@
                     <div class="terminal-log" id="log-arquivos-compactados"></div>
                 </div>
 
-                <!-- Codecs -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Instalar Codecs Multimídia Essenciais</h3>
@@ -704,7 +691,6 @@
                     <div class="terminal-log" id="log-codecs-essenciais"></div>
                 </div>
 
-                <!-- Firmware -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Atualizar Firmwares de Hardware</h3>
@@ -723,7 +709,6 @@
                     <div class="terminal-log" id="log-firmware-update"></div>
                 </div>
 
-                <!-- Extras Tainted -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Extras e DVD Play (Repositórios Tainted)</h3>
@@ -742,7 +727,6 @@
                     <div class="terminal-log" id="log-extras-tainted"></div>
                 </div>
 
-                <!-- VA-API -->
                 <div class="bloco-comando" style="border-left: 4px solid var(--accent);">
                     <div class="comando-info">
                         <h3>VA-API e Codecs para Aceleração Gráfica</h3>
@@ -776,9 +760,7 @@
             </div>
         </section>
 
-        <!-- ============================================================ -->
-        <!-- ETAPA 3                                                       -->
-        <!-- ============================================================ -->
+        <!-- ETAPA 3 -->
         <section class="etapa-card" id="etapa-3">
             <div class="etapa-titulo">🔤 Etapa 3: Fontes para Compatibilidade</div>
             <div id="comandos-etapa-3">
@@ -802,9 +784,7 @@
             </div>
         </section>
 
-        <!-- ============================================================ -->
-        <!-- ETAPA 4: LAUNCHERS E PACOTES ESSENCIAIS                       -->
-        <!-- ============================================================ -->
+        <!-- ETAPA 4: LAUNCHERS E PACOTES ESSENCIAIS -->
         <section class="etapa-card" id="etapa-4">
             <div class="etapa-titulo">🎮 Etapa 4: Launchers e Pacotes Essenciais</div>
             <div id="comandos-etapa-4">
@@ -826,36 +806,35 @@
                     <div class="terminal-log" id="log-vulkan-amd"></div>
                 </div>
 
-<div class="bloco-comando">
-    <div class="comando-info">
-        <h3>Instalar Launchers e Pacotes Essenciais</h3>
-        <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
-        <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-            <button class="btn-executar" onclick="executarComando('steam-install', 'flatpak install flathub com.valvesoftware.Steam -y')">🎮 Instalar Steam (Flatpak)</button>
-            <button class="btn-executar" style="background-color: #10b981;" onclick="executarComando('heroic-install', 'flatpak install flathub com.heroicgameslauncher.HeroicGamesLauncher -y')">⚡ Heroic Games Launcher</button>
-            <button class="btn-executar" style="background-color: #8b5cf6;" onclick="executarComando('lutris-install', 'flatpak install flathub net.lutris.Lutris -y')">🎯 Lutris (Flatpak)</button>
-            <button class="btn-executar" style="background-color: #f59e0b;" onclick="executarComando('protonup-install', 'flatpak install flathub net.davidotek.pupgui2 -y')">🔄 ProtonUp-Qt</button>
-        </div>
-    </div>
-    <div class="progress-container" id="progress-steam-install">
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill-steam-install"></div>
-        </div>
-        <div class="progress-text">
-            <span class="status" id="progress-status-steam-install">⏳ Iniciando...</span>
-            <span class="percentage" id="progress-percent-steam-install">0%</span>
-        </div>
-    </div>
-    <div class="terminal-log" id="log-steam-install"></div>
-    <div class="terminal-log" id="log-heroic-install"></div>
-    <div class="terminal-log" id="log-lutris-install"></div>
-    <div class="terminal-log" id="log-protonup-install"></div>
-</div>
+                <div class="bloco-comando">
+                    <div class="comando-info">
+                        <h3>Instalar Launchers e Pacotes Essenciais</h3>
+                        <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
+                        <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="btn-executar" onclick="executarComando('steam-install', 'flatpak install flathub com.valvesoftware.Steam -y')">🎮 Instalar Steam (Flatpak)</button>
+                            <button class="btn-executar" style="background-color: #10b981;" onclick="executarComando('heroic-install', 'flatpak install flathub com.heroicgameslauncher.HeroicGamesLauncher -y')">⚡ Heroic Games Launcher</button>
+                            <button class="btn-executar" style="background-color: #8b5cf6;" onclick="executarComando('lutris-install', 'flatpak install flathub net.lutris.Lutris -y')">🎯 Lutris (Flatpak)</button>
+                            <button class="btn-executar" style="background-color: #f59e0b;" onclick="executarComando('protonup-install', 'flatpak install flathub net.davidotek.pupgui2 -y')">🔄 ProtonUp-Qt</button>
+                        </div>
+                    </div>
+                    <div class="progress-container" id="progress-steam-install">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill-steam-install"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span class="status" id="progress-status-steam-install">⏳ Iniciando...</span>
+                            <span class="percentage" id="progress-percent-steam-install">0%</span>
+                        </div>
+                    </div>
+                    <div class="terminal-log" id="log-steam-install"></div>
+                    <div class="terminal-log" id="log-heroic-install"></div>
+                    <div class="terminal-log" id="log-lutris-install"></div>
+                    <div class="terminal-log" id="log-protonup-install"></div>
+                </div>
+            </div>
         </section>
 
-        <!-- ============================================================ -->
-        <!-- ETAPA 5: LOJA DE APLICATIVOS DO FEDORA                        -->
-        <!-- ============================================================ -->
+        <!-- ETAPA 5: LOJA DE APLICATIVOS DO FEDORA -->
         <section class="etapa-card" id="etapa-5">
             <div class="etapa-titulo">🛍️ Etapa 5: Loja de Aplicativos do Fedora</div>
             <div id="comandos-etapa-5">
@@ -902,30 +881,29 @@
                     <div class="terminal-log" id="log-obs-cam"></div>
                 </div>
 
-<div class="bloco-comando">
-    <div class="comando-info">
-        <h3>Melhoria de Áudio com EasyEffects</h3>
-        <p>Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
-        <div class="grupo-botoes">
-            <button class="btn-executar" onclick="executarComando('instalar-easyeffects', 'flatpak install flathub com.github.wwmm.easyeffects -y')">Instalar EasyEffects (Flatpak)</button>
-        </div>
-    </div>
-    <div class="progress-container" id="progress-instalar-easyeffects">
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill-instalar-easyeffects"></div>
-        </div>
-        <div class="progress-text">
-            <span class="status" id="progress-status-instalar-easyeffects">⏳ Iniciando...</span>
-            <span class="percentage" id="progress-percent-instalar-easyeffects">0%</span>
-        </div>
-    </div>
-    <div class="terminal-log" id="log-instalar-easyeffects"></div>
-</div>
+                <div class="bloco-comando">
+                    <div class="comando-info">
+                        <h3>Melhoria de Áudio com EasyEffects</h3>
+                        <p>Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
+                        <div class="grupo-botoes">
+                            <button class="btn-executar" onclick="executarComando('instalar-easyeffects', 'flatpak install flathub com.github.wwmm.easyeffects -y')">Instalar EasyEffects (Flatpak)</button>
+                        </div>
+                    </div>
+                    <div class="progress-container" id="progress-instalar-easyeffects">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill-instalar-easyeffects"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span class="status" id="progress-status-instalar-easyeffects">⏳ Iniciando...</span>
+                            <span class="percentage" id="progress-percent-instalar-easyeffects">0%</span>
+                        </div>
+                    </div>
+                    <div class="terminal-log" id="log-instalar-easyeffects"></div>
+                </div>
+            </div>
         </section>
 
-        <!-- ============================================================ -->
-        <!-- ETAPA 6                                                       -->
-        <!-- ============================================================ -->
+        <!-- ETAPA 6 -->
         <section class="etapa-card" id="etapa-6">
             <div class="etapa-titulo">🛠️ Etapa 6: Manutenção e Tarefas Avançadas</div>
             <div id="comandos-etapa-6">
@@ -976,7 +954,6 @@
                     <div class="terminal-log" id="log-listar-kernels"></div>
                 </div>
 
-                <!-- Upgrade Fedora -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Upgrade de Versão do Fedora</h3>
@@ -1031,9 +1008,7 @@
             </div>
         </section>
 
-        <!-- ============================================================ -->
-        <!-- ETAPA 7: RESTAURAÇÃO DE SISTEMA (BTRFS-ASSISTANT)             -->
-        <!-- ============================================================ -->
+        <!-- ETAPA 7: RESTAURAÇÃO DE SISTEMA (BTRFS-ASSISTANT) -->
         <section class="etapa-card" id="etapa-7" style="border-left: 4px solid #8b5cf6;">
             <div class="etapa-titulo">💾 Etapa 7: Restauração de Sistema</div>
             <div id="comandos-etapa-7">
@@ -1063,9 +1038,7 @@
             </div>
         </section>
 
-        <!-- ============================================================ -->
-        <!-- ETAPA 8: MANUTENÇÃO DO FOF                                     -->
-        <!-- ============================================================ -->
+        <!-- ETAPA 8: MANUTENÇÃO DO FOF -->
         <section class="etapa-card" id="etapa-8" style="border-left: 4px solid var(--accent);">
             <div class="etapa-titulo">🔧 Etapa 8: Manutenção do FOF</div>
             <div id="comandos-etapa-8">
@@ -1122,40 +1095,38 @@
             return { btnExecutar, btnReverter };
         }
 
-function marcarBotaoComoExecutado(idComando) {
-    // ============================================================
-    // SE FOR O BOTÃO DE ATUALIZAÇÃO, NÃO MARCA COMO CONCLUÍDO
-    // ============================================================
-    if (idComando === 'atualizacao-inicial') {
-        // Apenas restaura o botão
-        const { btnExecutar } = obterBotoesPorId(idComando);
-        if (btnExecutar) {
-            btnExecutar.innerHTML = "🔄 Atualizar Fedora";
-            btnExecutar.style.backgroundColor = "#d97706";
-            btnExecutar.style.cursor = "pointer";
-            btnExecutar.disabled = false;
-            btnExecutar.removeAttribute("data-texto-original");
+        function marcarBotaoComoExecutado(idComando) {
+            const { btnExecutar, btnReverter } = obterBotoesPorId(idComando);
+            if (btnExecutar) {
+                if (!btnExecutar.hasAttribute("data-texto-original")) {
+                    btnExecutar.setAttribute("data-texto-original", btnExecutar.innerHTML);
+                }
+                btnExecutar.innerHTML = "✅ Concluído";
+                btnExecutar.style.backgroundColor = "#4b5563";
+                btnExecutar.style.cursor = "default";
+                btnExecutar.disabled = true;
+            }
+            if (btnReverter) {
+                btnReverter.innerHTML = "↩️ Desfazer Alteração";
+                btnReverter.style.backgroundColor = "#ef4444";
+                btnReverter.disabled = false;
+            }
         }
-        return;
-    }
 
-    // Código original para os outros botões
-    const { btnExecutar, btnReverter } = obterBotoesPorId(idComando);
-    if (btnExecutar) {
-        if (!btnExecutar.hasAttribute("data-texto-original")) {
-            btnExecutar.setAttribute("data-texto-original", btnExecutar.innerHTML);
+        function restaurarBotaoOriginal(idComando) {
+            const { btnExecutar, btnReverter } = obterBotoesPorId(idComando);
+            if (btnExecutar) {
+                btnExecutar.innerHTML = btnExecutar.getAttribute("data-texto-original") || "Executar Ajuste";
+                btnExecutar.style.backgroundColor = "var(--accent)";
+                btnExecutar.style.cursor = "pointer";
+                btnExecutar.disabled = false;
+            }
+            if (btnReverter) {
+                btnReverter.innerHTML = "Revertido com Sucesso";
+                btnReverter.style.backgroundColor = "#374151";
+                btnReverter.disabled = true;
+            }
         }
-        btnExecutar.innerHTML = "✅ Concluído";
-        btnExecutar.style.backgroundColor = "#4b5563";
-        btnExecutar.style.cursor = "default";
-        btnExecutar.disabled = true;
-    }
-    if (btnReverter) {
-        btnReverter.innerHTML = "↩️ Desfazer Alteração";
-        btnReverter.style.backgroundColor = "#ef4444";
-        btnReverter.disabled = false;
-    }
-}
 
         // ============ CARREGAR PROGRESSO ============
 
@@ -1243,7 +1214,7 @@ function marcarBotaoComoExecutado(idComando) {
             }
         }
 
-        // ============ CODE CS (TRATA ERRO COMO SUCESSO) ============
+        // ============ CODECS (TRATA ERRO COMO SUCESSO) ============
 
         async function executarComandoCodecs() {
             const idComando = 'codecs-essenciais';
@@ -1366,139 +1337,49 @@ function marcarBotaoComoExecutado(idComando) {
             }
         }
 
-async function abrirBtrfsAssistant() {
-    const logBox = document.getElementById('log-btrfs-install');
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
-
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = `🚀 Abrindo Btrfs-Assistant...`;
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    try {
-        // ============================================================
-        // USA O COMANDO CORRETO (mesmo do menu iniciar)
-        // ============================================================
-        
-        // O comando que funciona no menu iniciar
-        const comando = 'btrfs-assistant-launcher &';
-        
-        if (logBox) {
-            const infoLine = document.createElement('div');
-            infoLine.className = 'log-line output';
-            infoLine.textContent = `🔄 Usando: btrfs-assistant-launcher`;
-            logBox.appendChild(infoLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-        
-        const response = await fetch('http://localhost:3000/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                comando: comando, 
-                idComando: 'btrfs-open' 
-            })
-        });
-        
-        if (response.ok) {
+        async function abrirBtrfsAssistant() {
+            const logBox = document.getElementById('log-btrfs-install');
             if (logBox) {
-                const successLine = document.createElement('div');
-                successLine.className = 'log-line success';
-                successLine.textContent = `✅ Btrfs-Assistant aberto!`;
-                logBox.appendChild(successLine);
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `🚀 Abrindo Btrfs-Assistant...`;
+                logBox.appendChild(infoLine);
                 logBox.scrollTop = logBox.scrollHeight;
             }
-        } else {
-            if (logBox) {
-                const errorLine = document.createElement('div');
-                errorLine.className = 'log-line error';
-                errorLine.textContent = `❌ Erro ao abrir: ${response.status}`;
-                logBox.appendChild(errorLine);
-                logBox.scrollTop = logBox.scrollHeight;
+
+            try {
+                await fetch('http://localhost:3000/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        comando: 'btrfs-assistant &', 
+                        idComando: 'btrfs-open' 
+                    })
+                });
+                
+                if (logBox) {
+                    const successLine = document.createElement('div');
+                    successLine.className = 'log-line success';
+                    successLine.textContent = `✅ Btrfs-Assistant aberto!`;
+                    logBox.appendChild(successLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            } catch (e) {
+                if (logBox) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = `❌ Erro ao abrir: ${e.message}`;
+                    logBox.appendChild(errorLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
             }
         }
-        
-    } catch (e) {
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = `❌ Erro ao abrir: ${e.message}`;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    }
-}
 
-// ============ RPM FUSION ============
-
-async function executarRPMFusion() {
-    const logBox = document.getElementById('log-rpm-fusion');
-    const btn = document.querySelector('button[onclick="executarRPMFusion()"]');
-    
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Instalando...';
-        btn.style.opacity = '0.6';
-    }
-
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
-
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = `📦 Ativando repositórios RPM Fusion... (${new Date().toLocaleTimeString()})`;
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    try {
-        const comando = `sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-\$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-\$(rpm -E %fedora).noarch.rpm && sudo dnf update @core -y && sudo dnf install rpmfusion-free-appstream-data rpmfusion-nonfree-appstream-data -y && sudo dnf config-manager setopt rpmfusion-free.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-updates.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-rawhide.enabled=0`;
-        
-        // Usa o executarComando diretamente, igual aos outros botões
-        await executarComando('rpm-fusion', comando, true);
-
-        if (logBox) {
-            const successLine = document.createElement('div');
-            successLine.className = 'log-line success';
-            successLine.textContent = `✅🎉 RPM Fusion ativado com sucesso!`;
-            logBox.appendChild(successLine);
-            
-            const endLine = document.createElement('div');
-            endLine.className = 'log-line end';
-            endLine.textContent = `──────────────────────────────────────────────────`;
-            logBox.appendChild(endLine);
-            
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-
-    } catch (e) {
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = `❌ Erro: ${e.message}`;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    }
-
-    setTimeout(() => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Ativar RPM Fusion';
-            btn.style.opacity = '1';
-        }
-    }, 5000);
-}
-        
         // ============ UPGRADE FEDORA ============
 
         async function executarUpgradeFedora() {
@@ -1552,10 +1433,8 @@ async function executarRPMFusion() {
                         select.disabled = true;
                         btnRemover.disabled = true;
                     } else {
-                        // Ordena kernels (mais recentes primeiro)
                         lines.sort((a, b) => b.localeCompare(a));
                         
-                        // Adiciona opções
                         lines.forEach(kernel => {
                             const option = document.createElement('option');
                             option.value = kernel;
@@ -1595,13 +1474,9 @@ async function executarRPMFusion() {
                 return;
             }
 
-            // Extrai o nome do pacote
             const kernelPackage = `kernel-core-${kernel}`;
-            
-            // Extrai a versão do kernel para exibição
             const kernelVersion = kernel;
 
-            // Verifica se é o kernel atual
             try {
                 const response = await fetch('http://localhost:3000/executar', {
                     method: 'POST',
@@ -1654,7 +1529,6 @@ async function executarRPMFusion() {
                 logBox.scrollTop = logBox.scrollHeight;
             }
 
-            // Recarrega a lista de kernels
             setTimeout(listarKernels, 2000);
         }
 
@@ -1675,21 +1549,16 @@ async function executarRPMFusion() {
                 let linhas = 0;
                 const MAX_LINHAS = 100;
 
-                // ============================================================
                 // TIMEOUT DE SEGURANÇA - Força o fim após 30 minutos
-                // ============================================================
                 const timeoutId = setTimeout(() => {
                     if (sseConnections[idComando]) {
                         console.log(`[SSE] Timeout de segurança para: ${idComando}`);
                         
-                        // Completa a barra de progresso
                         completarProgresso(idComando, true);
                         
-                        // Fecha a conexão
                         sseConnections[idComando].close();
                         delete sseConnections[idComando];
                         
-                        // Restaura o botão
                         const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
                                     document.querySelector(`button[onclick*="${idComando}"]`);
                         if (btn) {
@@ -1711,10 +1580,8 @@ async function executarRPMFusion() {
                             eventSource.close();
                             delete sseConnections[idComando];
                             
-                            // Completa a barra de progresso
                             completarProgresso(idComando, true);
                             
-                            // Restaura o botão
                             const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
                                         document.querySelector(`button[onclick*="${idComando}"]`);
                             if (btn) {
@@ -1971,7 +1838,6 @@ async function executarRPMFusion() {
 
             if (!fill || !percent || !status) return;
 
-            // Para a animação
             if (progressIntervals[idComando]) {
                 clearInterval(progressIntervals[idComando]);
                 delete progressIntervals[idComando];
@@ -1991,7 +1857,6 @@ async function executarRPMFusion() {
                 status.className = 'status error';
             }
 
-            // Esconde a barra após 5 segundos
             setTimeout(() => {
                 const logBox = document.getElementById(`log-${idComando}`);
                 if (logBox && logBox.style.display !== 'block') {
@@ -2049,7 +1914,6 @@ async function executarRPMFusion() {
                     logBox.appendChild(errorLine);
                     completarProgresso(idComando, false);
                 }
-                // O SSE vai completar a barra quando receber __END__
             } catch (e) {
                 const errorLine = document.createElement('div');
                 errorLine.className = 'log-line error';
@@ -2063,402 +1927,158 @@ async function executarRPMFusion() {
 
         // ============ MANUTENÇÃO DO FOF ============
 
-async function atualizarFOF() {
-    const logBox = document.getElementById('log-atualizar-fof');
-    if (!logBox) return;
+        async function atualizarFOF() {
+            const logBox = document.getElementById('log-atualizar-fof');
+            if (!logBox) return;
 
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
+            logBox.innerHTML = '';
+            logBox.style.display = 'block';
+            logBox.style.height = '100px';
+            logBox.style.maxHeight = '100px';
 
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = `🔄 Iniciando atualização... (${new Date().toLocaleTimeString()})`;
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
+            const header = document.createElement('div');
+            header.className = 'log-line info';
+            header.textContent = `🔄 Iniciando atualização... (${new Date().toLocaleTimeString()})`;
+            logBox.appendChild(header);
+            logBox.scrollTop = logBox.scrollHeight;
 
-    const btn = document.querySelector('button[onclick="atualizarFOF()"]');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Atualizando...';
-        btn.style.opacity = '0.6';
-    }
-
-    try {
-        // ============================================================
-        // 1. OBTÉM O DIRETÓRIO DE INSTALAÇÃO
-        // ============================================================
-
-        let installDir = '';
-
-        // Usa o endpoint /info para obter informações do servidor
-        try {
-            const infoResponse = await fetch('http://localhost:3000/info');
-            if (infoResponse.ok) {
-                const info = await infoResponse.json();
-                // O servidor retorna o installDir
-                if (info.installDir) {
-                    installDir = info.installDir;
-                }
+            const btn = document.querySelector('button[onclick="atualizarFOF()"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Atualizando...';
+                btn.style.opacity = '0.6';
             }
-        } catch (e) {
-            console.log('Não foi possível obter informações do servidor');
-        }
 
-        // Se ainda não encontrou, tenta usar caminhos comuns (sem process.env)
-        if (!installDir) {
-            // Lista de possíveis diretórios (hardcoded)
-            const possibleDirs = [
-                '/usr/local/share/fedora-only-fans',
-                '/opt/fedora-only-fans',
-                // Usa o diretório home do usuário via caminho relativo
-                // O servidor vai resolver o caminho absoluto
-            ];
-            
-            // Tenta cada diretório via servidor
-            for (const dir of possibleDirs) {
-                try {
-                    const testResponse = await fetch('http://localhost:3000/executar', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            comando: `test -d "${dir}" && echo "EXISTS" || echo "NOT_FOUND"`,
-                            idComando: 'find-install-dir'
-                        })
-                    });
-                    if (testResponse.ok) {
-                        const data = await testResponse.json();
-                        if (data.output && data.output.includes('EXISTS')) {
-                            installDir = dir;
-                            break;
-                        }
-                    }
-                } catch (e) {
-                    // Continua tentando
-                }
-            }
-        }
-
-        // Fallback: usa o diretório padrão do usuário (via servidor)
-        if (!installDir) {
-            // Pede ao servidor para descobrir o home do usuário
             try {
-                const homeResponse = await fetch('http://localhost:3000/executar', {
+                conectarSSE('atualizar-fof', logBox);
+
+                const response = await fetch('http://localhost:3000/executar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        comando: 'echo $HOME',
-                        idComando: 'get-home-dir'
+                        comando: 'bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --update',
+                        idComando: 'atualizar-fof'
                     })
                 });
-                if (homeResponse.ok) {
-                    const data = await homeResponse.json();
-                    const homeDir = (data.output || '').trim();
-                    if (homeDir) {
-                        installDir = `${homeDir}/.local/share/fedora-only-fans`;
+
+                if (!response.ok) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
+                    logBox.appendChild(errorLine);
+                }
+            } catch (e) {
+                const errorLine = document.createElement('div');
+                errorLine.className = 'log-line error';
+                errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
+                logBox.appendChild(errorLine);
+            }
+
+            setTimeout(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🔄 Atualizar FOF';
+                    btn.style.opacity = '1';
+                }
+            }, 5000);
+        }
+
+        async function desinstalarFOF() {
+            const logBox = document.getElementById('log-desinstalar-fof');
+            if (!logBox) return;
+
+            const confirmacao = confirm(
+                '⚠️ ATENÇÃO!\n\n' +
+                'Você está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
+                'Isso irá remover:\n' +
+                '• Todos os arquivos do FOF\n' +
+                '• Atalhos do menu\n' +
+                '• Comando "fof" do terminal\n\n' +
+                'Esta ação é IRREVERSÍVEL!\n\n' +
+                'Tem certeza que deseja continuar?'
+            );
+
+            if (!confirmacao) return;
+
+            const confirmacao2 = confirm(
+                '🔄 Última confirmação!\n\n' +
+                'Todos os dados do FOF serão perdidos.\n\n' +
+                'Deseja realmente desinstalar o Fedora Only Fans?'
+            );
+
+            if (!confirmacao2) return;
+
+            logBox.innerHTML = '';
+            logBox.style.display = 'block';
+            logBox.style.height = '100px';
+            logBox.style.maxHeight = '100px';
+
+            const header = document.createElement('div');
+            header.className = 'log-line info';
+            header.textContent = `🗑️ Iniciando desinstalação... (${new Date().toLocaleTimeString()})`;
+            logBox.appendChild(header);
+            logBox.scrollTop = logBox.scrollHeight;
+
+            const btn = document.querySelector('button[onclick="desinstalarFOF()"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Desinstalando...';
+                btn.style.opacity = '0.6';
+            }
+
+            try {
+                conectarSSE('desinstalar-fof', logBox);
+
+                const response = await fetch('http://localhost:3000/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comando: 'echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall',
+                        idComando: 'desinstalar-fof'
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
+                    logBox.appendChild(errorLine);
+                } else {
+                    const dados = await response.json();
+                    if (dados.success === false) {
+                        const errorLine = document.createElement('div');
+                        errorLine.className = 'log-line error';
+                        errorLine.textContent = `❌ Erro: ${dados.output || 'Falha na desinstalação'}`;
+                        logBox.appendChild(errorLine);
+                        logBox.scrollTop = logBox.scrollHeight;
+                    } else {
+                        const successLine = document.createElement('div');
+                        successLine.className = 'log-line success';
+                        successLine.textContent = '✅ FOF desinstalado com sucesso!';
+                        logBox.appendChild(successLine);
+                        logBox.scrollTop = logBox.scrollHeight;
+
+                        setTimeout(() => {
+                            window.close();
+                        }, 3000);
                     }
                 }
             } catch (e) {
-                console.log('Não foi possível obter o diretório home');
+                const errorLine = document.createElement('div');
+                errorLine.className = 'log-line error';
+                errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
+                logBox.appendChild(errorLine);
+                logBox.scrollTop = logBox.scrollHeight;
             }
-        }
 
-        // Se ainda não encontrou, usa fallback final
-        if (!installDir) {
-            installDir = '~/.local/share/fedora-only-fans';
-        }
-
-        // ============================================================
-        // 2. VERIFICA SE O install.sh EXISTE NO DIRETÓRIO
-        // ============================================================
-
-        const comandoVerificacao = `test -f "${installDir}/install.sh" && echo "EXISTS" || echo "NOT_FOUND"`;
-
-        const verificaResponse = await fetch('http://localhost:3000/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comandoVerificacao,
-                idComando: 'verificar-install-sh'
-            })
-        });
-
-        let installScriptExists = false;
-        if (verificaResponse.ok) {
-            const dados = await verificaResponse.json();
-            if (dados.output && dados.output.includes('EXISTS')) {
-                installScriptExists = true;
-            }
-        }
-
-        // ============================================================
-        // 3. ESCOLHE O COMANDO DE ATUALIZAÇÃO
-        // ============================================================
-
-        let comandoAtualizacao = '';
-
-        if (installScriptExists) {
-            // Usa o install.sh local
-            comandoAtualizacao = `bash "${installDir}/install.sh" --update`;
-            const infoLine = document.createElement('div');
-            infoLine.className = 'log-line output';
-            infoLine.textContent = `📂 Usando install.sh local: ${installDir}`;
-            logBox.appendChild(infoLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        } else {
-            // Tenta baixar o install.sh do GitHub
-            const infoLine = document.createElement('div');
-            infoLine.className = 'log-line warning';
-            infoLine.textContent = `⚠️ install.sh não encontrado em ${installDir}`;
-            logBox.appendChild(infoLine);
-
-            const infoLine2 = document.createElement('div');
-            infoLine2.className = 'log-line info';
-            infoLine2.textContent = `📥 Baixando install.sh do GitHub...`;
-            logBox.appendChild(infoLine2);
-            logBox.scrollTop = logBox.scrollHeight;
-
-            comandoAtualizacao = `bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --update`;
-        }
-
-        // ============================================================
-        // 4. EXECUTA A ATUALIZAÇÃO
-        // ============================================================
-
-        conectarSSE('atualizar-fof', logBox);
-
-        const response = await fetch('http://localhost:3000/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comandoAtualizacao,
-                idComando: 'atualizar-fof'
-            })
-        });
-
-        if (!response.ok) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
-            logBox.appendChild(errorLine);
-        }
-
-    } catch (e) {
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
-        logBox.appendChild(errorLine);
-    }
-
-    // Reactiva o botão após a atualização
-    setTimeout(() => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = '🔄 Atualizar FOF';
-            btn.style.opacity = '1';
-        }
-    }, 5000);
-}
-
-async function desinstalarFOF() {
-    const logBox = document.getElementById('log-desinstalar-fof');
-    if (!logBox) return;
-
-    // ============================================================
-    // CONFIRMAÇÃO DUPLA (SEGURANÇA)
-    // ============================================================
-
-    const confirmacao = confirm(
-        '⚠️ ATENÇÃO!\n\n' +
-        'Você está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
-        'Isso irá remover:\n' +
-        '• Todos os arquivos do FOF\n' +
-        '• Atalhos do menu\n' +
-        '• Comando "fof" do terminal\n\n' +
-        'Esta ação é IRREVERSÍVEL!\n\n' +
-        'Tem certeza que deseja continuar?'
-    );
-
-    if (!confirmacao) return;
-
-    const confirmacao2 = confirm(
-        '🔄 Última confirmação!\n\n' +
-        'Todos os dados do FOF serão perdidos.\n\n' +
-        'Deseja realmente desinstalar o Fedora Only Fans?'
-    );
-
-    if (!confirmacao2) return;
-
-    // ============================================================
-    // PREPARA O LOG
-    // ============================================================
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = `🗑️ Iniciando desinstalação... (${new Date().toLocaleTimeString()})`;
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    const btn = document.querySelector('button[onclick="desinstalarFOF()"]');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Desinstalando...';
-        btn.style.opacity = '0.6';
-    }
-
-    try {
-        // ============================================================
-        // 1. OBTÉM O DIRETÓRIO DE INSTALAÇÃO
-        // ============================================================
-
-        let installDir = '';
-
-        try {
-            const infoResponse = await fetch('http://localhost:3000/info');
-            if (infoResponse.ok) {
-                const info = await infoResponse.json();
-                if (info.installDir) {
-                    installDir = info.installDir;
-                }
-            }
-        } catch (e) {
-            console.log('Não foi possível obter informações do servidor');
-        }
-
-        // Fallback: usa o diretório padrão
-        if (!installDir) {
-            installDir = `${process.env.HOME}/.local/share/fedora-only-fans`;
-        }
-
-        // ============================================================
-        // 2. VERIFICA SE O install.sh EXISTE NO DIRETÓRIO
-        // ============================================================
-
-        const comandoVerificacao = `test -f "${installDir}/install.sh" && echo "EXISTS" || echo "NOT_FOUND"`;
-
-        const verificaResponse = await fetch('http://localhost:3000/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comandoVerificacao,
-                idComando: 'verificar-install-sh'
-            })
-        });
-
-        let installScriptExists = false;
-        if (verificaResponse.ok) {
-            const dados = await verificaResponse.json();
-            if (dados.output && dados.output.includes('EXISTS')) {
-                installScriptExists = true;
-            }
-        }
-
-        // ============================================================
-        // 3. ESCOLHE O COMANDO DE DESINSTALAÇÃO
-        // ============================================================
-
-        let comandoDesinstalacao = '';
-
-        if (installScriptExists) {
-            // Usa o install.sh local
-            comandoDesinstalacao = `echo "s" | bash "${installDir}/install.sh" --uninstall`;
-
-            const infoLine = document.createElement('div');
-            infoLine.className = 'log-line output';
-            infoLine.textContent = `📂 Usando install.sh local: ${installDir}`;
-            logBox.appendChild(infoLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        } else {
-            // Tenta baixar o install.sh do GitHub
-            const infoLine = document.createElement('div');
-            infoLine.className = 'log-line warning';
-            infoLine.textContent = `⚠️ install.sh não encontrado em ${installDir}`;
-            logBox.appendChild(infoLine);
-
-            const infoLine2 = document.createElement('div');
-            infoLine2.className = 'log-line info';
-            infoLine2.textContent = `📥 Baixando install.sh do GitHub...`;
-            logBox.appendChild(infoLine2);
-            logBox.scrollTop = logBox.scrollHeight;
-
-            comandoDesinstalacao = `echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall`;
-        }
-
-        // ============================================================
-        // 4. EXECUTA A DESINSTALAÇÃO
-        // ============================================================
-
-        conectarSSE('desinstalar-fof', logBox);
-
-        const response = await fetch('http://localhost:3000/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comandoDesinstalacao,
-                idComando: 'desinstalar-fof'
-            })
-        });
-
-        if (!response.ok) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-            return;
-        }
-
-        // ============================================================
-        // 5. TRATA A RESPOSTA
-        // ============================================================
-
-        const dados = await response.json();
-
-        if (dados.success === false) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = `❌ Erro: ${dados.output || 'Falha na desinstalação'}`;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        } else {
-            const successLine = document.createElement('div');
-            successLine.className = 'log-line success';
-            successLine.textContent = '✅ FOF desinstalado com sucesso!';
-            logBox.appendChild(successLine);
-            logBox.scrollTop = logBox.scrollHeight;
-
-            // Aguarda um momento e fecha a janela
             setTimeout(() => {
-                window.close();
-            }, 3000);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🗑️ Desinstalar FOF';
+                    btn.style.opacity = '1';
+                }
+            }, 10000);
         }
-
-    } catch (e) {
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    // ============================================================
-    // 6. REATIVA O BOTÃO
-    // ============================================================
-
-    setTimeout(() => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = '🗑️ Desinstalar FOF';
-            btn.style.opacity = '1';
-        }
-    }, 10000);
-}
 
         // ============ SELECT PERSONALIZADO - DNF ============
         function initCustomSelect() {
