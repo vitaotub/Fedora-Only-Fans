@@ -1409,6 +1409,195 @@ function marcarBotaoComoExecutado(idComando) {
             }
         }
 
+        // ============ RPM FUSION ============
+
+async function executarRPMFusion() {
+    const logBox = document.getElementById('log-rpm-fusion');
+    const btn = document.querySelector('button[onclick="executarRPMFusion()"]');
+    
+    // Desabilita o botão
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Instalando...';
+        btn.style.opacity = '0.6';
+    }
+
+    // Prepara o log
+    if (logBox) {
+        logBox.innerHTML = '';
+        logBox.style.display = 'block';
+        logBox.style.height = '100px';
+        logBox.style.maxHeight = '100px';
+
+        const infoLine = document.createElement('div');
+        infoLine.className = 'log-line info';
+        infoLine.textContent = `📦 Ativando repositórios RPM Fusion... (${new Date().toLocaleTimeString()})`;
+        logBox.appendChild(infoLine);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    try {
+        // ============================================================
+        // PASSO 1: Obter a versão do Fedora
+        // ============================================================
+        
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line info';
+            infoLine.textContent = `🔍 Obtendo versão do Fedora...`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        const versionResponse = await fetch('http://localhost:3000/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                comando: 'rpm -E %fedora',
+                idComando: 'get-fedora-version'
+            })
+        });
+
+        let fedoraVersion = '40';
+        if (versionResponse.ok) {
+            const data = await versionResponse.json();
+            fedoraVersion = (data.output || '40').trim();
+        }
+
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line output';
+            infoLine.textContent = `🐧 Fedora ${fedoraVersion} detectado`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // ============================================================
+        // PASSO 2: Instalar os repositórios RPM Fusion
+        // ============================================================
+        
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line info';
+            infoLine.textContent = `📦 Instalando repositórios RPM Fusion...`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        const comando1 = `sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${fedoraVersion}.noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${fedoraVersion}.noarch.rpm`;
+        
+        await executarComando('rpm-fusion-1', comando1, true);
+
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line success';
+            infoLine.textContent = `✅ Repositórios instalados!`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // ============================================================
+        // PASSO 3: Atualizar e instalar appstream-data
+        // ============================================================
+        
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line info';
+            infoLine.textContent = `📦 Instalando appstream-data...`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        const comando2 = `sudo dnf update @core -y && sudo dnf install rpmfusion-free-appstream-data rpmfusion-nonfree-appstream-data -y`;
+        
+        await executarComando('rpm-fusion-2', comando2, true);
+
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line success';
+            infoLine.textContent = `✅ appstream-data instalado!`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // ============================================================
+        // PASSO 4: Configurar repositórios
+        // ============================================================
+        
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line info';
+            infoLine.textContent = `⚙️ Configurando repositórios...`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        const comando3 = `sudo dnf config-manager setopt rpmfusion-free.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-updates.enabled=1 && sudo dnf config-manager setopt rpmfusion-free-rawhide.enabled=0`;
+        
+        await executarComando('rpm-fusion-3', comando3, true);
+
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line success';
+            infoLine.textContent = `✅ Repositórios configurados!`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // ============================================================
+        // PASSO 5: Verificar instalação
+        // ============================================================
+        
+        if (logBox) {
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line info';
+            infoLine.textContent = `🔍 Verificando instalação...`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        const comando4 = `sudo dnf repolist --all | grep -i fusion || echo "Nenhum repositório fusion encontrado"`;
+        
+        await executarComando('rpm-fusion-4', comando4, true);
+
+        // ============================================================
+        // CONCLUSÃO
+        // ============================================================
+        
+        if (logBox) {
+            const successLine = document.createElement('div');
+            successLine.className = 'log-line success';
+            successLine.textContent = `✅🎉 RPM Fusion ativado com sucesso!`;
+            logBox.appendChild(successLine);
+            
+            const endLine = document.createElement('div');
+            endLine.className = 'log-line end';
+            endLine.textContent = `──────────────────────────────────────────────────`;
+            logBox.appendChild(endLine);
+            
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+    } catch (e) {
+        if (logBox) {
+            const errorLine = document.createElement('div');
+            errorLine.className = 'log-line error';
+            errorLine.textContent = `❌ Erro: ${e.message}`;
+            logBox.appendChild(errorLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+    }
+
+    // Reativa o botão
+    setTimeout(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Ativar RPM Fusion';
+            btn.style.opacity = '1';
+        }
+    }, 5000);
+}
+        
         // ============ UPGRADE FEDORA ============
 
         async function executarUpgradeFedora() {
