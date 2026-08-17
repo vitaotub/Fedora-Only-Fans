@@ -193,7 +193,7 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
         exec(comandoFinal, {
             shell: '/bin/bash',
             maxBuffer: 1024 * 1024 * 50,
-            timeout: 300000
+            timeout: 1800000
         }, (error, stdout, stderr) => {
             if (stdout) {
                 enviarLog(idComando, stdout, 'output');
