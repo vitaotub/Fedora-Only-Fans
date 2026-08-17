@@ -1971,159 +1971,369 @@
 
         // ============ MANUTENÇÃO DO FOF ============
 
-        async function atualizarFOF() {
-            const logBox = document.getElementById('log-atualizar-fof');
-            if (!logBox) return;
+async function atualizarFOF() {
+    const logBox = document.getElementById('log-atualizar-fof');
+    if (!logBox) return;
 
-            logBox.innerHTML = '';
-            logBox.style.display = 'block';
-            logBox.style.height = '100px';
-            logBox.style.maxHeight = '100px';
+    logBox.innerHTML = '';
+    logBox.style.display = 'block';
+    logBox.style.height = '100px';
+    logBox.style.maxHeight = '100px';
 
-            const header = document.createElement('div');
-            header.className = 'log-line info';
-            header.textContent = `🔄 Iniciando atualização... (${new Date().toLocaleTimeString()})`;
-            logBox.appendChild(header);
-            logBox.scrollTop = logBox.scrollHeight;
+    const header = document.createElement('div');
+    header.className = 'log-line info';
+    header.textContent = `🔄 Iniciando atualização... (${new Date().toLocaleTimeString()})`;
+    logBox.appendChild(header);
+    logBox.scrollTop = logBox.scrollHeight;
 
-            const btn = document.querySelector('button[onclick="atualizarFOF()"]');
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = '⏳ Atualizando...';
-                btn.style.opacity = '0.6';
-            }
+    const btn = document.querySelector('button[onclick="atualizarFOF()"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Atualizando...';
+        btn.style.opacity = '0.6';
+    }
 
-            try {
-                conectarSSE('atualizar-fof', logBox);
+    try {
+        // ============================================================
+        // 1. PRIMEIRO: VERIFICA SE O install.sh EXISTE
+        // ============================================================
 
-                const response = await fetch('http://localhost:3000/executar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        comando: 'bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --update',
-                        idComando: 'atualizar-fof'
-                    })
-                });
+        // Tenta encontrar o diretório de instalação
+        let installDir = '';
 
-                if (!response.ok) {
-                    const errorLine = document.createElement('div');
-                    errorLine.className = 'log-line error';
-                    errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
-                    logBox.appendChild(errorLine);
+        // Verifica se o FOF está instalado no local padrão
+        const possibleDirs = [
+            '/usr/local/share/fedora-only-fans',
+            '/opt/fedora-only-fans',
+            `${process.env.HOME}/.local/share/fedora-only-fans`,
+            `${process.env.HOME}/Fedora-Only-Fans`
+        ];
+
+        // Usa o endpoint /info para obter informações
+        try {
+            const infoResponse = await fetch('http://localhost:3000/info');
+            if (infoResponse.ok) {
+                const info = await infoResponse.json();
+                // Se o servidor souber onde está instalado, usa isso
+                if (info.installDir) {
+                    installDir = info.installDir;
                 }
-            } catch (e) {
-                const errorLine = document.createElement('div');
-                errorLine.className = 'log-line error';
-                errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
-                logBox.appendChild(errorLine);
             }
-
-            // Sempre reativa o botão após a atualização
-            setTimeout(() => {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = '🔄 Atualizar FOF';
-                    btn.style.opacity = '1';
-                }
-            }, 5000);
+        } catch (e) {
+            console.log('Não foi possível obter informações do servidor');
         }
 
-        async function desinstalarFOF() {
-            const logBox = document.getElementById('log-desinstalar-fof');
-            if (!logBox) return;
-
-            const confirmacao = confirm(
-                '⚠️ ATENÇÃO!\n\n' +
-                'Você está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
-                'Isso irá remover:\n' +
-                '• Todos os arquivos do FOF\n' +
-                '• Atalhos do menu\n' +
-                '• Comando "fof" do terminal\n\n' +
-                'Esta ação é IRREVERSÍVEL!\n\n' +
-                'Tem certeza que deseja continuar?'
-            );
-
-            if (!confirmacao) return;
-
-            const confirmacao2 = confirm(
-                '🔄 Última confirmação!\n\n' +
-                'Todos os dados do FOF serão perdidos.\n\n' +
-                'Deseja realmente desinstalar o Fedora Only Fans?'
-            );
-
-            if (!confirmacao2) return;
-
-            logBox.innerHTML = '';
-            logBox.style.display = 'block';
-            logBox.style.height = '100px';
-            logBox.style.maxHeight = '100px';
-
-            const header = document.createElement('div');
-            header.className = 'log-line info';
-            header.textContent = `🗑️ Iniciando desinstalação... (${new Date().toLocaleTimeString()})`;
-            logBox.appendChild(header);
-            logBox.scrollTop = logBox.scrollHeight;
-
-            const btn = document.querySelector('button[onclick="desinstalarFOF()"]');
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = '⏳ Desinstalando...';
-                btn.style.opacity = '0.6';
-            }
-
+        // Se não encontrou, tenta descobrir onde está o script atual
+        if (!installDir) {
+            // Tenta usar o caminho do script atual (se estiver rodando)
             try {
-                conectarSSE('desinstalar-fof', logBox);
-
-                const response = await fetch('http://localhost:3000/executar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        comando: 'echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall',
-                        idComando: 'desinstalar-fof'
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorLine = document.createElement('div');
-                    errorLine.className = 'log-line error';
-                    errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
-                    logBox.appendChild(errorLine);
-                } else {
-                    const dados = await response.json();
-                    if (dados.success === false) {
-                        const errorLine = document.createElement('div');
-                        errorLine.className = 'log-line error';
-                        errorLine.textContent = `❌ Erro: ${dados.output || 'Falha na desinstalação'}`;
-                        logBox.appendChild(errorLine);
-                        logBox.scrollTop = logBox.scrollHeight;
-                    } else {
-                        const successLine = document.createElement('div');
-                        successLine.className = 'log-line success';
-                        successLine.textContent = '✅ FOF desinstalado com sucesso!';
-                        logBox.appendChild(successLine);
-                        logBox.scrollTop = logBox.scrollHeight;
-
-                        setTimeout(() => {
-                            window.close();
-                        }, 3000);
-                    }
+                const scriptPath = document.querySelector('script[src]')?.src || '';
+                if (scriptPath.includes('fedora-only-fans') || scriptPath.includes('FOF')) {
+                    // Extrai o diretório do caminho
+                    const pathParts = scriptPath.split('/');
+                    pathParts.pop(); // Remove o nome do arquivo
+                    installDir = pathParts.join('/');
                 }
             } catch (e) {
-                const errorLine = document.createElement('div');
-                errorLine.className = 'log-line error';
-                errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
-                logBox.appendChild(errorLine);
-                logBox.scrollTop = logBox.scrollHeight;
+                console.log('Não foi possível determinar o diretório de instalação');
             }
-
-            setTimeout(() => {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = '🗑️ Desinstalar FOF';
-                    btn.style.opacity = '1';
-                }
-            }, 10000);
         }
+
+        // Fallback: usa o diretório padrão
+        if (!installDir) {
+            installDir = `${process.env.HOME}/.local/share/fedora-only-fans`;
+        }
+
+        // ============================================================
+        // 2. VERIFICA SE O install.sh EXISTE NO DIRETÓRIO
+        // ============================================================
+
+        const comandoVerificacao = `test -f "${installDir}/install.sh" && echo "EXISTS" || echo "NOT_FOUND"`;
+
+        const verificaResponse = await fetch('http://localhost:3000/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                comando: comandoVerificacao,
+                idComando: 'verificar-install-sh'
+            })
+        });
+
+        let installScriptExists = false;
+        if (verificaResponse.ok) {
+            const dados = await verificaResponse.json();
+            if (dados.output && dados.output.includes('EXISTS')) {
+                installScriptExists = true;
+            }
+        }
+
+        // ============================================================
+        // 3. SE NÃO EXISTIR, TENTA BAIXAR OU USAR FALLBACK
+        // ============================================================
+
+        let comandoAtualizacao = '';
+
+        if (installScriptExists) {
+            // Usa o install.sh local
+            comandoAtualizacao = `bash "${installDir}/install.sh" --update`;
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line output';
+            infoLine.textContent = `📂 Usando install.sh local: ${installDir}`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        } else {
+            // Tenta baixar o install.sh do GitHub
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line warning';
+            infoLine.textContent = `⚠️ install.sh não encontrado em ${installDir}`;
+            logBox.appendChild(infoLine);
+
+            const infoLine2 = document.createElement('div');
+            infoLine2.className = 'log-line info';
+            infoLine2.textContent = `📥 Baixando install.sh do GitHub...`;
+            logBox.appendChild(infoLine2);
+            logBox.scrollTop = logBox.scrollHeight;
+
+            comandoAtualizacao = `bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --update`;
+        }
+
+        // ============================================================
+        // 4. EXECUTA A ATUALIZAÇÃO
+        // ============================================================
+
+        conectarSSE('atualizar-fof', logBox);
+
+        const response = await fetch('http://localhost:3000/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                comando: comandoAtualizacao,
+                idComando: 'atualizar-fof'
+            })
+        });
+
+        if (!response.ok) {
+            const errorLine = document.createElement('div');
+            errorLine.className = 'log-line error';
+            errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
+            logBox.appendChild(errorLine);
+        }
+
+    } catch (e) {
+        const errorLine = document.createElement('div');
+        errorLine.className = 'log-line error';
+        errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
+        logBox.appendChild(errorLine);
+    }
+
+    // Reactiva o botão após a atualização
+    setTimeout(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '🔄 Atualizar FOF';
+            btn.style.opacity = '1';
+        }
+    }, 5000);
+}
+
+async function desinstalarFOF() {
+    const logBox = document.getElementById('log-desinstalar-fof');
+    if (!logBox) return;
+
+    // ============================================================
+    // CONFIRMAÇÃO DUPLA (SEGURANÇA)
+    // ============================================================
+
+    const confirmacao = confirm(
+        '⚠️ ATENÇÃO!\n\n' +
+        'Você está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
+        'Isso irá remover:\n' +
+        '• Todos os arquivos do FOF\n' +
+        '• Atalhos do menu\n' +
+        '• Comando "fof" do terminal\n\n' +
+        'Esta ação é IRREVERSÍVEL!\n\n' +
+        'Tem certeza que deseja continuar?'
+    );
+
+    if (!confirmacao) return;
+
+    const confirmacao2 = confirm(
+        '🔄 Última confirmação!\n\n' +
+        'Todos os dados do FOF serão perdidos.\n\n' +
+        'Deseja realmente desinstalar o Fedora Only Fans?'
+    );
+
+    if (!confirmacao2) return;
+
+    // ============================================================
+    // PREPARA O LOG
+    // ============================================================
+
+    logBox.innerHTML = '';
+    logBox.style.display = 'block';
+    logBox.style.height = '100px';
+    logBox.style.maxHeight = '100px';
+
+    const header = document.createElement('div');
+    header.className = 'log-line info';
+    header.textContent = `🗑️ Iniciando desinstalação... (${new Date().toLocaleTimeString()})`;
+    logBox.appendChild(header);
+    logBox.scrollTop = logBox.scrollHeight;
+
+    const btn = document.querySelector('button[onclick="desinstalarFOF()"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Desinstalando...';
+        btn.style.opacity = '0.6';
+    }
+
+    try {
+        // ============================================================
+        // 1. OBTÉM O DIRETÓRIO DE INSTALAÇÃO
+        // ============================================================
+
+        let installDir = '';
+
+        try {
+            const infoResponse = await fetch('http://localhost:3000/info');
+            if (infoResponse.ok) {
+                const info = await infoResponse.json();
+                if (info.installDir) {
+                    installDir = info.installDir;
+                }
+            }
+        } catch (e) {
+            console.log('Não foi possível obter informações do servidor');
+        }
+
+        // Fallback: usa o diretório padrão
+        if (!installDir) {
+            installDir = `${process.env.HOME}/.local/share/fedora-only-fans`;
+        }
+
+        // ============================================================
+        // 2. VERIFICA SE O install.sh EXISTE NO DIRETÓRIO
+        // ============================================================
+
+        const comandoVerificacao = `test -f "${installDir}/install.sh" && echo "EXISTS" || echo "NOT_FOUND"`;
+
+        const verificaResponse = await fetch('http://localhost:3000/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                comando: comandoVerificacao,
+                idComando: 'verificar-install-sh'
+            })
+        });
+
+        let installScriptExists = false;
+        if (verificaResponse.ok) {
+            const dados = await verificaResponse.json();
+            if (dados.output && dados.output.includes('EXISTS')) {
+                installScriptExists = true;
+            }
+        }
+
+        // ============================================================
+        // 3. ESCOLHE O COMANDO DE DESINSTALAÇÃO
+        // ============================================================
+
+        let comandoDesinstalacao = '';
+
+        if (installScriptExists) {
+            // Usa o install.sh local
+            comandoDesinstalacao = `echo "s" | bash "${installDir}/install.sh" --uninstall`;
+
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line output';
+            infoLine.textContent = `📂 Usando install.sh local: ${installDir}`;
+            logBox.appendChild(infoLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        } else {
+            // Tenta baixar o install.sh do GitHub
+            const infoLine = document.createElement('div');
+            infoLine.className = 'log-line warning';
+            infoLine.textContent = `⚠️ install.sh não encontrado em ${installDir}`;
+            logBox.appendChild(infoLine);
+
+            const infoLine2 = document.createElement('div');
+            infoLine2.className = 'log-line info';
+            infoLine2.textContent = `📥 Baixando install.sh do GitHub...`;
+            logBox.appendChild(infoLine2);
+            logBox.scrollTop = logBox.scrollHeight;
+
+            comandoDesinstalacao = `echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall`;
+        }
+
+        // ============================================================
+        // 4. EXECUTA A DESINSTALAÇÃO
+        // ============================================================
+
+        conectarSSE('desinstalar-fof', logBox);
+
+        const response = await fetch('http://localhost:3000/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                comando: comandoDesinstalacao,
+                idComando: 'desinstalar-fof'
+            })
+        });
+
+        if (!response.ok) {
+            const errorLine = document.createElement('div');
+            errorLine.className = 'log-line error';
+            errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
+            logBox.appendChild(errorLine);
+            logBox.scrollTop = logBox.scrollHeight;
+            return;
+        }
+
+        // ============================================================
+        // 5. TRATA A RESPOSTA
+        // ============================================================
+
+        const dados = await response.json();
+
+        if (dados.success === false) {
+            const errorLine = document.createElement('div');
+            errorLine.className = 'log-line error';
+            errorLine.textContent = `❌ Erro: ${dados.output || 'Falha na desinstalação'}`;
+            logBox.appendChild(errorLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        } else {
+            const successLine = document.createElement('div');
+            successLine.className = 'log-line success';
+            successLine.textContent = '✅ FOF desinstalado com sucesso!';
+            logBox.appendChild(successLine);
+            logBox.scrollTop = logBox.scrollHeight;
+
+            // Aguarda um momento e fecha a janela
+            setTimeout(() => {
+                window.close();
+            }, 3000);
+        }
+
+    } catch (e) {
+        const errorLine = document.createElement('div');
+        errorLine.className = 'log-line error';
+        errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
+        logBox.appendChild(errorLine);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // ============================================================
+    // 6. REATIVA O BOTÃO
+    // ============================================================
+
+    setTimeout(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '🗑️ Desinstalar FOF';
+            btn.style.opacity = '1';
+        }
+    }, 10000);
+}
 
         // ============ SELECT PERSONALIZADO - DNF ============
         function initCustomSelect() {

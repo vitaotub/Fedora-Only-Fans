@@ -150,19 +150,77 @@ compilar_container_install() {
 
     cd "$INSTALL_DIR"
 
-    if [ -f "$INSTALL_DIR/build-container.sh" ]; then
+    # Verifica se o build-container.sh existe
+    if [ ! -f "$INSTALL_DIR/build-container.sh" ]; then
+        print_warning "Arquivo build-container.sh não encontrado!"
+        print_info "Criando build-container.sh a partir do template..."
+
+        cat > "$INSTALL_DIR/build-container.sh" << 'EOF'
+#!/usr/bin/env bash
+set -e
+
+DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
+cd "$DIR"
+
+echo "🔍 Verificando dependências..."
+
+if ! pkg-config --exists webkit2gtk-4.1 gtk+-3.0; then
+    echo "❌ Bibliotecas de desenvolvimento não encontradas!"
+    echo ""
+    echo "   Instale com:"
+    echo "   sudo dnf install webkit2gtk4.1-devel gtk3-devel"
+    echo ""
+    exit 1
+fi
+
+echo "✅ Dependências OK"
+
+mkdir -p src
+
+if [ ! -f "src/fof-container.c" ]; then
+    echo "❌ Arquivo src/fof-container.c não encontrado!"
+    exit 1
+fi
+
+echo ""
+echo "📦 Compilando container..."
+
+gcc -o fof-container src/fof-container.c $(pkg-config --cflags --libs webkit2gtk-4.1 gtk+-3.0) 2>&1
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Container compilado com sucesso!"
+    echo "📁 Arquivo: $DIR/fof-container"
+    echo "📦 Tamanho: $(du -h fof-container | cut -f1)"
+    echo ""
+else
+    echo "❌ Falha na compilação"
+    exit 1
+fi
+EOF
+
         chmod +x "$INSTALL_DIR/build-container.sh"
-        "$INSTALL_DIR/build-container.sh"
-        if [ $? -eq 0 ] && [ -f "$INSTALL_DIR/fof-container" ]; then
+    fi
+
+    # Executa o build
+    chmod +x "$INSTALL_DIR/build-container.sh"
+
+    # Compila com saída silenciosa ou com logs
+    if "$INSTALL_DIR/build-container.sh" 2>&1 | tee -a "$LOG_FILE"; then
+        if [ -f "$INSTALL_DIR/fof-container" ]; then
             ln -sf "$INSTALL_DIR/fof-container" "$BIN_DIR/fof-container"
             chmod +x "$BIN_DIR/fof-container"
             print_success "Container compilado e instalado"
             return 0
+        else
+            print_warning "Container compilado mas executável não encontrado"
+            return 1
         fi
+    else
+        print_warning "Falha na compilação do container"
+        print_info "O FOF funcionará com navegador como fallback"
+        return 1
     fi
-
-    print_warning "Não foi possível compilar o container"
-    return 1
 }
 
 # ============================================================
@@ -666,8 +724,8 @@ main() {
     verificar_dependencias
 
     instalar_fof
-    instalar_dependencias_container
-    compilar_container_install
+    instalar_dependencias_container    # ← JÁ ESTÁ AQUI
+    compilar_container_install        # ← JÁ ESTÁ AQUI
     criar_atalho
     fixar_na_barra
     configurar_path

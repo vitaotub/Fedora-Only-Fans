@@ -592,12 +592,39 @@ const server = http.createServer((req, res) => {
     if (req.method === 'GET' && req.url === '/info') {
         const desktop = detectarDesktop();
         const metodo = obterMetodoAutenticacao();
+
+        // Detecta o diretório de instalação
+        let installDir = '';
+        const possibleDirs = [
+            '/usr/local/share/fedora-only-fans',
+            '/opt/fedora-only-fans',
+            path.join(process.env.HOME, '.local/share/fedora-only-fans'),
+                                 path.join(process.env.HOME, 'Fedora-Only-Fans')
+        ];
+
+        for (const dir of possibleDirs) {
+            if (fs.existsSync(dir) && fs.existsSync(path.join(dir, 'install.sh'))) {
+                installDir = dir;
+                break;
+            }
+        }
+
+        // Se não encontrou, usa o diretório atual
+        if (!installDir) {
+            // Verifica se o install.sh está no mesmo diretório do server.js
+            if (fs.existsSync(path.join(__dirname, 'install.sh'))) {
+                installDir = __dirname;
+            }
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             desktop: desktop,
             autenticacao: metodo.descricao,
             nodeVersion: process.version,
-            platform: process.platform
+            platform: process.platform,
+            installDir: installDir,        // ← NOVO
+            serverDir: __dirname           // ← NOVO
         }));
         return;
     }
