@@ -777,7 +777,7 @@
                     <div class="comando-info">
                         <h3>Instalar fontes Microsoft para compatibilidade</h3>
                         <p>Instala o instalador de fontes Microsoft do SourceForge para obter Arial, Times, Calibri, etc.</p>
-                        <button class="btn-executar" onclick="executarComando('fontes-ms-all', 'sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig && sudo dnf install -y https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm --nogpgcheck')">Instalar Fontes MS</button>
+                        <button class="btn-executar" onclick="executarComando('fontes-ms-all', 'sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig && \ curl -LO https://sourceforge.net && \ sudo rpm -ivh --nodigest --nofiledigest msttcore-fonts-installer-2.6-1.noarch.rpm && \ sudo fc-cache -f -v')">Instalar Fontes MS</button>
                     </div>
                     <div class="progress-container" id="progress-fontes-ms-all">
                         <div class="progress-bar">
