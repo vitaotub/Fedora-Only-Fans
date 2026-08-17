@@ -2043,31 +2043,25 @@ async function desinstalarFOF() {
     }
 
     try {
-        // Usa window.open para executar o comando em uma nova janela
-        // Isso garante que o comando seja executado independentemente do servidor
-        const comando = 'bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall';
-        
-        // Tenta via fetch primeiro
+        conectarSSE('desinstalar-fof', logBox);
+
+        // ============================================================
+        // COMANDO COM CONFIRMAÇÃO AUTOMÁTICA (echo "s" | )
+        // ============================================================
         const response = await fetch('http://localhost:3000/executar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                comando: comando,
+                comando: 'echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall',
                 idComando: 'desinstalar-fof'
             })
         });
 
         if (!response.ok) {
-            // Se o fetch falhar, tenta abrir um terminal com o comando
             const errorLine = document.createElement('div');
-            errorLine.className = 'log-line warning';
-            errorLine.textContent = '⚠️ Servidor não respondeu. Tentando abrir terminal...';
+            errorLine.className = 'log-line error';
+            errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
             logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-
-            // Abre um terminal com o comando
-            const terminalCmd = `konsole --hold -e bash -c "${comando}; echo 'Pressione Enter para fechar...'; read"`;
-            window.open(terminalCmd, '_blank');
         } else {
             const dados = await response.json();
             if (dados.success === false) {
@@ -2089,16 +2083,11 @@ async function desinstalarFOF() {
             }
         }
     } catch (e) {
-        // Se tudo falhar, abre um terminal manualmente
         const errorLine = document.createElement('div');
-        errorLine.className = 'log-line warning';
-        errorLine.textContent = `⚠️ Erro: ${e.message}. Abrindo terminal para desinstalação manual...`;
+        errorLine.className = 'log-line error';
+        errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
         logBox.appendChild(errorLine);
         logBox.scrollTop = logBox.scrollHeight;
-
-        const comando = 'bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall';
-        const terminalCmd = `konsole --hold -e bash -c "${comando}; echo 'Pressione Enter para fechar...'; read"`;
-        window.open(terminalCmd, '_blank');
     }
 
     setTimeout(() => {
