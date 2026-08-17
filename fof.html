@@ -1366,50 +1366,138 @@ function marcarBotaoComoExecutado(idComando) {
             }
         }
 
-        async function abrirBtrfsAssistant() {
-            const logBox = document.getElementById('log-btrfs-install');
-            if (logBox) {
-                logBox.innerHTML = '';
-                logBox.style.display = 'block';
-                logBox.style.height = '100px';
-                logBox.style.maxHeight = '100px';
+async function abrirBtrfsAssistant() {
+    const logBox = document.getElementById('log-btrfs-install');
+    if (logBox) {
+        logBox.innerHTML = '';
+        logBox.style.display = 'block';
+        logBox.style.height = '100px';
+        logBox.style.maxHeight = '100px';
 
+        const infoLine = document.createElement('div');
+        infoLine.className = 'log-line info';
+        infoLine.textContent = `🚀 Abrindo Btrfs-Assistant...`;
+        logBox.appendChild(infoLine);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    try {
+        // ============================================================
+        // DETECTA O AMBIENTE E ESCOLHE O COMANDO CORRETO
+        // ============================================================
+        
+        let comando = '';
+        const desktop = detectarDesktopFrontend();
+        
+        // Verifica se o Btrfs-Assistant está instalado
+        const checkResponse = await fetch('http://localhost:3000/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                comando: 'which btrfs-assistant > /dev/null 2>&1 && echo "EXISTS" || echo "NOT_FOUND"',
+                idComando: 'check-btrfs'
+            })
+        });
+        
+        let btrfsExists = false;
+        if (checkResponse.ok) {
+            const data = await checkResponse.json();
+            if (data.output && data.output.includes('EXISTS')) {
+                btrfsExists = true;
+            }
+        }
+        
+        if (!btrfsExists) {
+            if (logBox) {
+                const errorLine = document.createElement('div');
+                errorLine.className = 'log-line error';
+                errorLine.textContent = `❌ Btrfs-Assistant não está instalado! Clique em "Instalar" primeiro.`;
+                logBox.appendChild(errorLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+            return;
+        }
+        
+        // ============================================================
+        // ESCOLHE O COMANDO BASEADO NO DESKTOP
+        // ============================================================
+        
+        if (desktop === 'KDE') {
+            // No KDE, usa kdesu para abrir com privilégios
+            comando = `kdesu -c "btrfs-assistant" 2>/dev/null &`;
+            
+            if (logBox) {
                 const infoLine = document.createElement('div');
-                infoLine.className = 'log-line info';
-                infoLine.textContent = `🚀 Abrindo Btrfs-Assistant...`;
+                infoLine.className = 'log-line output';
+                infoLine.textContent = `🪟 Usando kdesu (KDE) para abrir Btrfs-Assistant`;
                 logBox.appendChild(infoLine);
                 logBox.scrollTop = logBox.scrollHeight;
             }
-
-            try {
-                await fetch('http://localhost:3000/executar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        comando: 'btrfs-assistant &', 
-                        idComando: 'btrfs-open' 
-                    })
-                });
-                
-                if (logBox) {
-                    const successLine = document.createElement('div');
-                    successLine.className = 'log-line success';
-                    successLine.textContent = `✅ Btrfs-Assistant aberto!`;
-                    logBox.appendChild(successLine);
-                    logBox.scrollTop = logBox.scrollHeight;
-                }
-            } catch (e) {
-                if (logBox) {
-                    const errorLine = document.createElement('div');
-                    errorLine.className = 'log-line error';
-                    errorLine.textContent = `❌ Erro ao abrir: ${e.message}`;
-                    logBox.appendChild(errorLine);
-                    logBox.scrollTop = logBox.scrollHeight;
-                }
+        } else if (desktop === 'GNOME') {
+            // No GNOME, usa pkexec
+            comando = `pkexec btrfs-assistant &`;
+            
+            if (logBox) {
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line output';
+                infoLine.textContent = `🐧 Usando pkexec (GNOME) para abrir Btrfs-Assistant`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        } else {
+            // Fallback: tenta com sudo e define DISPLAY
+            comando = `DISPLAY=:0 btrfs-assistant &`;
+            
+            if (logBox) {
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line output';
+                infoLine.textContent = `🖥️ Usando fallback para abrir Btrfs-Assistant`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
             }
         }
-
-        // ============ RPM FUSION ============
+        
+        // ============================================================
+        // EXECUTA O COMANDO
+        // ============================================================
+        
+        const response = await fetch('http://localhost:3000/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                comando: comando, 
+                idComando: 'btrfs-open' 
+            })
+        });
+        
+        if (response.ok) {
+            if (logBox) {
+                const successLine = document.createElement('div');
+                successLine.className = 'log-line success';
+                successLine.textContent = `✅ Btrfs-Assistant aberto!`;
+                logBox.appendChild(successLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        } else {
+            if (logBox) {
+                const errorLine = document.createElement('div');
+                errorLine.className = 'log-line error';
+                errorLine.textContent = `❌ Erro ao abrir: ${response.status}`;
+                logBox.appendChild(errorLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        }
+        
+    } catch (e) {
+        if (logBox) {
+            const errorLine = document.createElement('div');
+            errorLine.className = 'log-line error';
+            errorLine.textContent = `❌ Erro ao abrir: ${e.message}`;
+            logBox.appendChild(errorLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+    }
+}
 
 // ============ RPM FUSION ============
 
