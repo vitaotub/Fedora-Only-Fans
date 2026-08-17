@@ -1583,13 +1583,55 @@
                 let linhas = 0;
                 const MAX_LINHAS = 100;
 
+                // ============================================================
+                // TIMEOUT DE SEGURANÇA - Força o fim após 30 minutos
+                // ============================================================
+                const timeoutId = setTimeout(() => {
+                    if (sseConnections[idComando]) {
+                        console.log(`[SSE] Timeout de segurança para: ${idComando}`);
+                        
+                        // Completa a barra de progresso
+                        completarProgresso(idComando, true);
+                        
+                        // Fecha a conexão
+                        sseConnections[idComando].close();
+                        delete sseConnections[idComando];
+                        
+                        // Restaura o botão
+                        const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
+                                    document.querySelector(`button[onclick*="${idComando}"]`);
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = "✅ Concluído";
+                            btn.style.backgroundColor = "#4b5563";
+                            btn.style.cursor = "default";
+                            btn.style.opacity = '1';
+                        }
+                    }
+                }, 1800000); // 30 minutos
+
                 eventSource.onmessage = (event) => {
                     try {
                         const dados = JSON.parse(event.data);
 
                         if (dados.tipo === 'end') {
+                            clearTimeout(timeoutId);
                             eventSource.close();
                             delete sseConnections[idComando];
+                            
+                            // Completa a barra de progresso
+                            completarProgresso(idComando, true);
+                            
+                            // Restaura o botão
+                            const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
+                                        document.querySelector(`button[onclick*="${idComando}"]`);
+                            if (btn) {
+                                btn.disabled = false;
+                                btn.innerHTML = "✅ Concluído";
+                                btn.style.backgroundColor = "#4b5563";
+                                btn.style.cursor = "default";
+                                btn.style.opacity = '1';
+                            }
                             return;
                         }
 
@@ -1633,6 +1675,7 @@
                 eventSource.onerror = (event) => {
                     if (eventSource.readyState === EventSource.CLOSED) {
                         console.log('[SSE] Conexão fechada para:', idComando);
+                        clearTimeout(timeoutId);
                     } else {
                         console.warn('[SSE] Erro na conexão:', event);
                     }
@@ -1826,44 +1869,44 @@
             }, 100);
         }
 
-function completarProgresso(idComando, sucesso = true) {
-    const container = document.getElementById(`progress-${idComando}`);
-    if (!container) return;
+        function completarProgresso(idComando, sucesso = true) {
+            const container = document.getElementById(`progress-${idComando}`);
+            if (!container) return;
 
-    const fill = document.getElementById(`progress-fill-${idComando}`);
-    const percent = document.getElementById(`progress-percent-${idComando}`);
-    const status = document.getElementById(`progress-status-${idComando}`);
+            const fill = document.getElementById(`progress-fill-${idComando}`);
+            const percent = document.getElementById(`progress-percent-${idComando}`);
+            const status = document.getElementById(`progress-status-${idComando}`);
 
-    if (!fill || !percent || !status) return;
+            if (!fill || !percent || !status) return;
 
-    // Para a animação
-    if (progressIntervals[idComando]) {
-        clearInterval(progressIntervals[idComando]);
-        delete progressIntervals[idComando];
-    }
+            // Para a animação
+            if (progressIntervals[idComando]) {
+                clearInterval(progressIntervals[idComando]);
+                delete progressIntervals[idComando];
+            }
 
-    if (sucesso) {
-        fill.style.width = '100%';
-        fill.className = 'progress-fill complete';
-        percent.textContent = '100%';
-        status.textContent = '✅ Concluído!';
-        status.className = 'status success';
-    } else {
-        fill.style.width = '100%';
-        fill.className = 'progress-fill error';
-        percent.textContent = '❌ Falha';
-        status.textContent = '❌ Erro na execução';
-        status.className = 'status error';
-    }
+            if (sucesso) {
+                fill.style.width = '100%';
+                fill.className = 'progress-fill complete';
+                percent.textContent = '100%';
+                status.textContent = '✅ Concluído!';
+                status.className = 'status success';
+            } else {
+                fill.style.width = '100%';
+                fill.className = 'progress-fill error';
+                percent.textContent = '❌ Falha';
+                status.textContent = '❌ Erro na execução';
+                status.className = 'status error';
+            }
 
-    // Esconde a barra após 5 segundos
-    setTimeout(() => {
-        const logBox = document.getElementById(`log-${idComando}`);
-        if (logBox && logBox.style.display !== 'block') {
-            container.style.display = 'none';
+            // Esconde a barra após 5 segundos
+            setTimeout(() => {
+                const logBox = document.getElementById(`log-${idComando}`);
+                if (logBox && logBox.style.display !== 'block') {
+                    container.style.display = 'none';
+                }
+            }, 5000);
         }
-    }, 5000);
-}
 
         function resetarProgresso(idComando) {
             const container = document.getElementById(`progress-${idComando}`);
@@ -1913,24 +1956,8 @@ function completarProgresso(idComando, sucesso = true) {
                     errorLine.textContent = `❌ Erro HTTP: ${response.status} - ${response.statusText}`;
                     logBox.appendChild(errorLine);
                     completarProgresso(idComando, false);
-                } else {
-                    const dados = await response.json();
-                    if (dados.success === false) {
-                        // Se o comando falhou, verifica se foi por pacotes já instalados
-                        if (dados.output && (dados.output.includes('already installed') || 
-                            dados.output.includes('Nada para fazer') ||
-                            dados.output.includes('nothing to do'))) {
-                            const successLine = document.createElement('div');
-                            successLine.className = 'log-line success';
-                            successLine.textContent = `✅ Pacotes já estão instalados!`;
-                            logBox.appendChild(successLine);
-                            logBox.scrollTop = logBox.scrollHeight;
-                            completarProgresso(idComando, true);
-                        } else {
-                            completarProgresso(idComando, false);
-                        }
-                    }
                 }
+                // O SSE vai completar a barra quando receber __END__
             } catch (e) {
                 const errorLine = document.createElement('div');
                 errorLine.className = 'log-line error';
@@ -2001,105 +2028,102 @@ function completarProgresso(idComando, sucesso = true) {
             }, 5000);
         }
 
-async function desinstalarFOF() {
-    const logBox = document.getElementById('log-desinstalar-fof');
-    if (!logBox) return;
+        async function desinstalarFOF() {
+            const logBox = document.getElementById('log-desinstalar-fof');
+            if (!logBox) return;
 
-    const confirmacao = confirm(
-        '⚠️ ATENÇÃO!\n\n' +
-        'Você está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
-        'Isso irá remover:\n' +
-        '• Todos os arquivos do FOF\n' +
-        '• Atalhos do menu\n' +
-        '• Comando "fof" do terminal\n\n' +
-        'Esta ação é IRREVERSÍVEL!\n\n' +
-        'Tem certeza que deseja continuar?'
-    );
+            const confirmacao = confirm(
+                '⚠️ ATENÇÃO!\n\n' +
+                'Você está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
+                'Isso irá remover:\n' +
+                '• Todos os arquivos do FOF\n' +
+                '• Atalhos do menu\n' +
+                '• Comando "fof" do terminal\n\n' +
+                'Esta ação é IRREVERSÍVEL!\n\n' +
+                'Tem certeza que deseja continuar?'
+            );
 
-    if (!confirmacao) return;
+            if (!confirmacao) return;
 
-    const confirmacao2 = confirm(
-        '🔄 Última confirmação!\n\n' +
-        'Todos os dados do FOF serão perdidos.\n\n' +
-        'Deseja realmente desinstalar o Fedora Only Fans?'
-    );
+            const confirmacao2 = confirm(
+                '🔄 Última confirmação!\n\n' +
+                'Todos os dados do FOF serão perdidos.\n\n' +
+                'Deseja realmente desinstalar o Fedora Only Fans?'
+            );
 
-    if (!confirmacao2) return;
+            if (!confirmacao2) return;
 
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
+            logBox.innerHTML = '';
+            logBox.style.display = 'block';
+            logBox.style.height = '100px';
+            logBox.style.maxHeight = '100px';
 
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = `🗑️ Iniciando desinstalação... (${new Date().toLocaleTimeString()})`;
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
+            const header = document.createElement('div');
+            header.className = 'log-line info';
+            header.textContent = `🗑️ Iniciando desinstalação... (${new Date().toLocaleTimeString()})`;
+            logBox.appendChild(header);
+            logBox.scrollTop = logBox.scrollHeight;
 
-    const btn = document.querySelector('button[onclick="desinstalarFOF()"]');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Desinstalando...';
-        btn.style.opacity = '0.6';
-    }
+            const btn = document.querySelector('button[onclick="desinstalarFOF()"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Desinstalando...';
+                btn.style.opacity = '0.6';
+            }
 
-    try {
-        conectarSSE('desinstalar-fof', logBox);
+            try {
+                conectarSSE('desinstalar-fof', logBox);
 
-        // ============================================================
-        // COMANDO COM CONFIRMAÇÃO AUTOMÁTICA (echo "s" | )
-        // ============================================================
-        const response = await fetch('http://localhost:3000/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: 'echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall',
-                idComando: 'desinstalar-fof'
-            })
-        });
+                const response = await fetch('http://localhost:3000/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comando: 'echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall',
+                        idComando: 'desinstalar-fof'
+                    })
+                });
 
-        if (!response.ok) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
-            logBox.appendChild(errorLine);
-        } else {
-            const dados = await response.json();
-            if (dados.success === false) {
+                if (!response.ok) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
+                    logBox.appendChild(errorLine);
+                } else {
+                    const dados = await response.json();
+                    if (dados.success === false) {
+                        const errorLine = document.createElement('div');
+                        errorLine.className = 'log-line error';
+                        errorLine.textContent = `❌ Erro: ${dados.output || 'Falha na desinstalação'}`;
+                        logBox.appendChild(errorLine);
+                        logBox.scrollTop = logBox.scrollHeight;
+                    } else {
+                        const successLine = document.createElement('div');
+                        successLine.className = 'log-line success';
+                        successLine.textContent = '✅ FOF desinstalado com sucesso!';
+                        logBox.appendChild(successLine);
+                        logBox.scrollTop = logBox.scrollHeight;
+
+                        setTimeout(() => {
+                            window.close();
+                        }, 3000);
+                    }
+                }
+            } catch (e) {
                 const errorLine = document.createElement('div');
                 errorLine.className = 'log-line error';
-                errorLine.textContent = `❌ Erro: ${dados.output || 'Falha na desinstalação'}`;
+                errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
                 logBox.appendChild(errorLine);
                 logBox.scrollTop = logBox.scrollHeight;
-            } else {
-                const successLine = document.createElement('div');
-                successLine.className = 'log-line success';
-                successLine.textContent = '✅ FOF desinstalado com sucesso!';
-                logBox.appendChild(successLine);
-                logBox.scrollTop = logBox.scrollHeight;
-
-                setTimeout(() => {
-                    window.close();
-                }, 3000);
             }
-        }
-    } catch (e) {
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
 
-    setTimeout(() => {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = '🗑️ Desinstalar FOF';
-            btn.style.opacity = '1';
+            setTimeout(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🗑️ Desinstalar FOF';
+                    btn.style.opacity = '1';
+                }
+            }, 10000);
         }
-    }, 10000);
-}
 
         // ============ SELECT PERSONALIZADO - DNF ============
         function initCustomSelect() {
