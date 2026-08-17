@@ -15,6 +15,8 @@
             --border: #24334d;
             --warning-bg: rgba(245, 158, 11, 0.1);
             --warning-border: #f59e0b;
+            --success-bg: rgba(52, 211, 153, 0.1);
+            --success-border: #34d399;
         }
 
         * {
@@ -153,6 +155,17 @@
             padding: 0.75rem 1rem;
             margin: 1rem 0;
             color: #fbd38d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .aviso-sucesso {
+            background-color: var(--success-bg);
+            border: 1px solid var(--success-border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin: 1rem 0;
+            color: #34d399;
             font-size: 0.9rem;
             font-weight: 500;
         }
@@ -421,28 +434,25 @@
             color: #ef4444;
         }
 
-        /* ===== SELECT CORRIGIDO (fallback) ===== */
-        .select-corrigido {
+        /* ===== SELECT DROPDOWN PARA KERNELS ===== */
+        .kernel-dropdown {
             background-color: #1a2236;
             color: #ffffff;
-            border: 1px solid var(--border);
-            padding: 0.4rem;
+            border: 1px solid #3c67e3;
             border-radius: 6px;
+            padding: 0.4rem 0.8rem;
             font-size: 0.9rem;
             cursor: pointer;
+            min-width: 200px;
         }
 
-        .select-corrigido:hover {
-            border-color: var(--accent);
-        }
-
-        .select-corrigido:focus {
+        .kernel-dropdown:focus {
             outline: none;
-            border-color: var(--accent);
+            border-color: #527bee;
             box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
         }
 
-        .select-corrigido option {
+        .kernel-dropdown option {
             background-color: #0b111e;
             color: #ffffff;
         }
@@ -512,7 +522,6 @@
                         <p>Configura os downloads paralelos simultâneos e ativa a busca automática pelo espelho de servidor mais rápido.</p>
                         <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             <label for="select-downloads" style="font-size: 0.9rem; color: var(--text-muted);">Conexões simultâneas:</label>
-                            <!-- SELECT PERSONALIZADO - DNF -->
                             <div class="custom-select" id="custom-select-container">
                                 <div class="custom-select-trigger" id="custom-select-trigger">
                                     <span id="custom-select-value">5 (Recomendado)</span>
@@ -533,7 +542,7 @@
                             </div>
                         </div>
                         <div class="grupo-botoes">
-                            <button class="btn-executar" onclick="executarAjusteDNF()">Executar Ajuste</button>
+                            <button class="btn-executar" onclick="executarAjusteDNF()">Aplicar Ajuste</button>
                         </div>
                     </div>
                     <div class="progress-container" id="progress-dnf-speed">
@@ -681,7 +690,7 @@
                     <div class="comando-info">
                         <h3>Instalar Codecs Multimídia Essenciais</h3>
                         <p>Substitui o ffmpeg-free pela versão completa sem restrições, instala plugins gstreamer essenciais e habilita o Cisco OpenH264.</p>
-                        <button class="btn-executar" onclick="executarComando('codecs-essenciais', 'sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y && sudo dnf install --setopt=\'install_weak_deps=False\' gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-plugins-ugly-free gstreamer1-plugin-openh264 gstreamer1-plugin-libav --exclude=PackageKit-gstreamer-plugin -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1')">Instalar Codecs</button>
+                        <button class="btn-executar" onclick="executarComandoCodecs()">Instalar Codecs</button>
                     </div>
                     <div class="progress-container" id="progress-codecs-essenciais">
                         <div class="progress-bar">
@@ -719,7 +728,7 @@
                     <div class="comando-info">
                         <h3>Extras e DVD Play (Repositórios Tainted)</h3>
                         <p>Habilita sub-repositórios restritos para habilitar reprodução de DVDs comerciais e firmware proprietário.</p>
-                        <button class="btn-executar" onclick="executarComando('extras-tainted', 'sudo dnf install rpmfusion-free-release-tainted -y && sudo dnf install rpmfusion-nonfree-release-tainted -y && sudo dnf install libdvdcss -y && sudo dnf --repo=rpmfusion-nonfree-tainted install \'*-firmware\' -y')">Instalar Extras</button>
+                        <button class="btn-executar" onclick="executarComandoExtrasTainted()">Instalar Extras</button>
                     </div>
                     <div class="progress-container" id="progress-extras-tainted">
                         <div class="progress-bar">
@@ -739,8 +748,8 @@
                         <h3>VA-API e Codecs para Aceleração Gráfica</h3>
                         <p>Instala drivers e utilitários de aceleração de vídeo em hardware para placas de vídeo AMD e Intel.</p>
                         <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <button class="btn-executar" onclick="executarComando('vaapi-amd', 'sudo dnf install ffmpeg-libs libva libva-utils -y && sudo dnf install mesa-va-drivers-freeworld mesa-va-drivers-freeworld.i686 -y')">🚀 Instalação Padrão</button>
-                            <button class="btn-executar" style="background-color: #4b5563;" onclick="executarComando('vaapi-swap', 'sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld -y && sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld -y')">🔄 Alternativa</button>
+                            <button class="btn-executar" onclick="executarComandoVaapi()">🚀 Instalação Padrão</button>
+                            <button class="btn-executar" style="background-color: #4b5563;" onclick="executarComandoVaapiSwap()">🔄 Alternativa</button>
                         </div>
                     </div>
                     <div class="progress-container" id="progress-vaapi-amd">
@@ -777,7 +786,7 @@
                     <div class="comando-info">
                         <h3>Instalar fontes Microsoft para compatibilidade</h3>
                         <p>Instala o instalador de fontes Microsoft do SourceForge para obter Arial, Times, Calibri, etc.</p>
-                        <button class="btn-executar" onclick="executarComando('fontes-ms-all', 'sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig && \ sudo rpm -ivh --nodigest --nofiledigest https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm && \ sudo fc-cache -f -v')">Instalar Fontes MS</button>
+                        <button class="btn-executar" onclick="executarComando('fontes-ms-all', 'sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig && sudo dnf install -y https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm --nogpgcheck')">Instalar Fontes MS</button>
                     </div>
                     <div class="progress-container" id="progress-fontes-ms-all">
                         <div class="progress-bar">
@@ -794,10 +803,10 @@
         </section>
 
         <!-- ============================================================ -->
-        <!-- ETAPA 4                                                       -->
+        <!-- ETAPA 4: LAUNCHERS E PACOTES ESSENCIAIS                       -->
         <!-- ============================================================ -->
         <section class="etapa-card" id="etapa-4">
-            <div class="etapa-titulo">🎮 Etapa 4: Configuração para Jogos (Gaming)</div>
+            <div class="etapa-titulo">🎮 Etapa 4: Launchers e Pacotes Essenciais</div>
             <div id="comandos-etapa-4">
                 <div class="bloco-comando">
                     <div class="comando-info">
@@ -819,11 +828,13 @@
 
                 <div class="bloco-comando">
                     <div class="comando-info">
-                        <h3>Instalar Steam e Regras de Dispositivos</h3>
-                        <p>Instala a Steam oficial e regras de udev para joysticks e dispositivos de VR.</p>
-                        <div class="grupo-botoes">
-                            <button class="btn-executar" onclick="executarComando('steam-install', 'sudo dnf install steam steam-devices -y')">Instalar Steam</button>
-                            <button class="btn-reverter" onclick="reverterComando('steam-install', 'sudo dnf remove steam steam-devices -y && sudo dnf autoremove -y')">Desinstalar Steam</button>
+                        <h3>Instalar Launchers e Pacotes Essenciais</h3>
+                        <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
+                        <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="btn-executar" onclick="executarComando('steam-install', 'sudo dnf install steam steam-devices -y')">🎮 Instalar Steam</button>
+                            <button class="btn-executar" style="background-color: #10b981;" onclick="executarComando('heroic-install', 'flatpak install flathub com.heroicgameslauncher.HeroicGamesLauncher -y')">⚡ Heroic Games Launcher</button>
+                            <button class="btn-executar" style="background-color: #8b5cf6;" onclick="executarComando('lutris-install', 'sudo dnf install lutris -y')">🎯 Lutris</button>
+                            <button class="btn-executar" style="background-color: #f59e0b;" onclick="executarComando('protonup-install', 'flatpak install flathub net.davidotek.pupgui2 -y')">🔄 ProtonUp-Qt</button>
                         </div>
                     </div>
                     <div class="progress-container" id="progress-steam-install">
@@ -836,15 +847,18 @@
                         </div>
                     </div>
                     <div class="terminal-log" id="log-steam-install"></div>
+                    <div class="terminal-log" id="log-heroic-install"></div>
+                    <div class="terminal-log" id="log-lutris-install"></div>
+                    <div class="terminal-log" id="log-protonup-install"></div>
                 </div>
             </div>
         </section>
 
         <!-- ============================================================ -->
-        <!-- ETAPA 5                                                       -->
+        <!-- ETAPA 5: LOJA DE APLICATIVOS DO FEDORA                        -->
         <!-- ============================================================ -->
         <section class="etapa-card" id="etapa-5">
-            <div class="etapa-titulo">🎬 Etapa 5: Produção de Áudio, Vídeo e Apps</div>
+            <div class="etapa-titulo">🛍️ Etapa 5: Loja de Aplicativos do Fedora</div>
             <div id="comandos-etapa-5">
                 <div class="bloco-comando" style="border-left: 4px solid var(--text-muted);">
                     <div class="comando-info">
@@ -895,7 +909,6 @@
                         <p>Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
                         <div class="grupo-botoes">
                             <button class="btn-executar" onclick="executarComando('instalar-easyeffects', 'flatpak install flathub com.github.wwmm.easyeffects -y')">Instalar EasyEffects</button>
-                            <button class="btn-reverter" onclick="reverterComando('instalar-easyeffects', 'flatpak uninstall com.github.wwmm.easyeffects -y')">Desinstalar EasyEffects</button>
                         </div>
                     </div>
                     <div class="progress-container" id="progress-instalar-easyeffects">
@@ -936,11 +949,22 @@
                     <div class="terminal-log" id="log-limpeza-sistema"></div>
                 </div>
 
+                <!-- GERENCIAMENTO DE KERNELS -->
                 <div class="bloco-comando">
                     <div class="comando-info">
-                        <h3>Gerenciamento de Kernels Antigos (Opcional)</h3>
-                        <p>Lista os kernels atualmente instalados no seu sistema.</p>
-                        <button class="btn-executar" onclick="executarComando('listar-kernels', 'rpm -q kernel-core')">Listar Kernels Instalados</button>
+                        <h3>Gerenciamento de Kernels</h3>
+                        <p>Gerencie os kernels instalados no seu sistema.</p>
+                        <div class="aviso-caixa">⚠️ IMPORTANTE: Não é recomendado remover nenhuma versão anterior do kernel pois o Fedora mantém apenas os 3 últimos kernels e os anteriores ele remove automaticamente. Manter os 3 últimos é uma medida de segurança para caso alguma versão nova do kernel não funcione.</div>
+                        <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+                            <button class="btn-executar" onclick="listarKernels()">📋 Verificar Kernels Instalados</button>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <label for="kernel-select" style="font-size: 0.9rem; color: var(--text-muted);">Selecionar kernel:</label>
+                                <select id="kernel-select" class="kernel-dropdown" disabled>
+                                    <option value="">Nenhum kernel detectado</option>
+                                </select>
+                            </div>
+                            <button class="btn-executar" style="background-color: #ef4444;" onclick="removerKernel()" id="btn-remover-kernel" disabled>🗑️ Remover Kernel Selecionado</button>
+                        </div>
                     </div>
                     <div class="progress-container" id="progress-listar-kernels">
                         <div class="progress-bar">
@@ -954,13 +978,13 @@
                     <div class="terminal-log" id="log-listar-kernels"></div>
                 </div>
 
+                <!-- Upgrade Fedora -->
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>Upgrade de Versão do Fedora</h3>
                         <p>Prepara e baixa os pacotes para a próxima grande versão do Fedora.</p>
                         <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             <label for="select-fedora-version" style="font-size: 0.9rem; color: var(--text-muted);">Versão de destino:</label>
-                            <!-- SELECT PERSONALIZADO - VERSÃO FEDORA -->
                             <div class="custom-select" id="custom-select-fedora-container">
                                 <div class="custom-select-trigger" id="custom-select-fedora-trigger">
                                     <span id="custom-select-fedora-value">Fedora 47</span>
@@ -1010,11 +1034,43 @@
         </section>
 
         <!-- ============================================================ -->
-        <!-- ETAPA 7: MANUTENÇÃO DO FOF                                     -->
+        <!-- ETAPA 7: RESTAURAÇÃO DE SISTEMA (BTRFS-ASSISTANT)             -->
         <!-- ============================================================ -->
-        <section class="etapa-card" id="etapa-7" style="border-left: 4px solid var(--accent);">
-            <div class="etapa-titulo">🔧 Etapa 7: Manutenção do FOF</div>
+        <section class="etapa-card" id="etapa-7" style="border-left: 4px solid #8b5cf6;">
+            <div class="etapa-titulo">💾 Etapa 7: Restauração de Sistema</div>
             <div id="comandos-etapa-7">
+                <div class="bloco-comando">
+                    <div class="comando-info">
+                        <h3>🔄 Btrfs-Assistant - Gerenciador de Snapshots</h3>
+                        <p>O Btrfs-Assistant é uma ferramenta gráfica para gerenciar snapshots do sistema de arquivos Btrfs, permitindo criar e restaurar backups do seu sistema.</p>
+                        <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                            <button class="btn-executar" style="background-color: #8b5cf6;" onclick="instalarBtrfsAssistant()">📦 Instalar Btrfs-Assistant</button>
+                            <button class="btn-executar" style="background-color: #10b981;" onclick="abrirBtrfsAssistant()">🚀 Abrir Btrfs-Assistant</button>
+                        </div>
+                        <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                            ℹ️ O Btrfs-Assistant permite criar snapshots antes de fazer alterações no sistema, garantindo que você possa restaurar se algo der errado.
+                        </div>
+                    </div>
+                    <div class="progress-container" id="progress-btrfs-install">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill-btrfs-install"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span class="status" id="progress-status-btrfs-install">⏳ Iniciando...</span>
+                            <span class="percentage" id="progress-percent-btrfs-install">0%</span>
+                        </div>
+                    </div>
+                    <div class="terminal-log" id="log-btrfs-install"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- ETAPA 8: MANUTENÇÃO DO FOF                                     -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="etapa-8" style="border-left: 4px solid var(--accent);">
+            <div class="etapa-titulo">🔧 Etapa 8: Manutenção do FOF</div>
+            <div id="comandos-etapa-8">
                 <div class="bloco-comando">
                     <div class="comando-info">
                         <h3>🔄 Atualizar Fedora Only Fans</h3>
@@ -1155,41 +1211,203 @@
             }
         }
 
-        // ============ AJUSTE DNF ============
+        // ============ AJUSTE DNF (SEMPRE CLICÁVEL) ============
 
-async function executarAjusteDNF() {
-    const conexoes = document.getElementById('select-downloads').value;
-    const idComando = 'dnf-speed';
-    const comandoMontado = `sudo dnf config-manager setopt max_parallel_downloads=${conexoes} && sudo dnf config-manager setopt fastestmirror=True`;
+        async function executarAjusteDNF() {
+            const conexoes = document.getElementById('select-downloads').value;
+            const idComando = 'dnf-speed';
+            const comandoMontado = `sudo dnf config-manager setopt max_parallel_downloads=${conexoes} && sudo dnf config-manager setopt fastestmirror=True`;
 
-    // Exibe uma mensagem no log indicando o valor escolhido
-    const logBox = document.getElementById('log-dnf-speed');
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
+            const logBox = document.getElementById('log-dnf-speed');
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
 
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = `📦 Aplicando ajuste: ${conexoes} conexões simultâneas...`;
-        logBox.appendChild(infoLine);
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `📦 Aplicando ajuste: ${conexoes} conexões simultâneas...`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
 
-        logBox.scrollTop = logBox.scrollHeight;
-    }
+            await executarComando(idComando, comandoMontado, true);
 
-    // Executa o comando (sem desabilitar o botão)
-    await executarComando(idComando, comandoMontado, true);
+            if (logBox) {
+                const successLine = document.createElement('div');
+                successLine.className = 'log-line success';
+                successLine.textContent = `✅ Ajuste aplicado com sucesso! (${conexoes} conexões)`;
+                logBox.appendChild(successLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        }
 
-    // Exibe mensagem de sucesso no log
-    if (logBox) {
-        const successLine = document.createElement('div');
-        successLine.className = 'log-line success';
-        successLine.textContent = `✅ Ajuste aplicado com sucesso! (${conexoes} conexões)`;
-        logBox.appendChild(successLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-}
+        // ============ CODE CS (TRATA ERRO COMO SUCESSO) ============
+
+        async function executarComandoCodecs() {
+            const idComando = 'codecs-essenciais';
+            const comando = `sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y && sudo dnf install --setopt=\'install_weak_deps=False\' gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-plugins-ugly-free gstreamer1-plugin-openh264 gstreamer1-plugin-libav --exclude=PackageKit-gstreamer-plugin -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1`;
+            
+            const logBox = document.getElementById('log-codecs-essenciais');
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `📦 Instalando codecs multimídia...`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            await executarComando(idComando, comando, true);
+        }
+
+        // ============ EXTRAS TAINTED ============
+
+        async function executarComandoExtrasTainted() {
+            const idComando = 'extras-tainted';
+            const comando = `sudo dnf install rpmfusion-free-release-tainted -y && sudo dnf install rpmfusion-nonfree-release-tainted -y && sudo dnf install libdvdcss -y && sudo dnf --repo=rpmfusion-nonfree-tainted install \'*-firmware\' -y`;
+            
+            const logBox = document.getElementById('log-extras-tainted');
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `📦 Instalando extras e suporte a DVD...`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            await executarComando(idComando, comando, true);
+        }
+
+        // ============ VA-API ============
+
+        async function executarComandoVaapi() {
+            const idComando = 'vaapi-amd';
+            const comando = `sudo dnf install ffmpeg-libs libva libva-utils -y && sudo dnf install mesa-va-drivers-freeworld mesa-va-drivers-freeworld.i686 -y`;
+            
+            const logBox = document.getElementById('log-vaapi-amd');
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `📦 Instalando aceleração gráfica VA-API...`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            await executarComando(idComando, comando, true);
+        }
+
+        // ============ VA-API SWAP ============
+
+        async function executarComandoVaapiSwap() {
+            const idComando = 'vaapi-swap';
+            const comando = `sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld -y && sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld -y`;
+            
+            const logBox = document.getElementById('log-vaapi-swap');
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `🔄 Substituindo drivers de aceleração gráfica...`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            await executarComando(idComando, comando, true);
+        }
+
+        // ============ BTRFS-ASSISTANT ============
+
+        async function instalarBtrfsAssistant() {
+            const idComando = 'btrfs-install';
+            const comando = `sudo dnf install btrfs-assistant -y`;
+            
+            const logBox = document.getElementById('log-btrfs-install');
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `📦 Instalando Btrfs-Assistant...`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            await executarComando(idComando, comando, true);
+
+            if (logBox) {
+                const successLine = document.createElement('div');
+                successLine.className = 'log-line success';
+                successLine.textContent = `✅ Btrfs-Assistant instalado! Clique em "Abrir" para iniciar.`;
+                logBox.appendChild(successLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        }
+
+        async function abrirBtrfsAssistant() {
+            const logBox = document.getElementById('log-btrfs-install');
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `🚀 Abrindo Btrfs-Assistant...`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            try {
+                await fetch('http://localhost:3000/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        comando: 'btrfs-assistant &', 
+                        idComando: 'btrfs-open' 
+                    })
+                });
+                
+                if (logBox) {
+                    const successLine = document.createElement('div');
+                    successLine.className = 'log-line success';
+                    successLine.textContent = `✅ Btrfs-Assistant aberto!`;
+                    logBox.appendChild(successLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            } catch (e) {
+                if (logBox) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = `❌ Erro ao abrir: ${e.message}`;
+                    logBox.appendChild(errorLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            }
+        }
 
         // ============ UPGRADE FEDORA ============
 
@@ -1200,101 +1418,235 @@ async function executarAjusteDNF() {
             await executarComando(idComando, comandoMontado);
         }
 
+        // ============ GERENCIAMENTO DE KERNELS ============
+
+        let kernelsList = [];
+
+        async function listarKernels() {
+            const logBox = document.getElementById('log-listar-kernels');
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `📋 Obtendo lista de kernels instalados...`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        comando: 'rpm -q kernel-core --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n"', 
+                        idComando: 'listar-kernels' 
+                    })
+                });
+
+                if (response.ok) {
+                    const dados = await response.json();
+                    const output = dados.output || '';
+                    const lines = output.split('\n').filter(line => line.trim() !== '');
+                    
+                    kernelsList = lines;
+                    const select = document.getElementById('kernel-select');
+                    const btnRemover = document.getElementById('btn-remover-kernel');
+                    
+                    select.innerHTML = '';
+                    if (lines.length === 0) {
+                        select.innerHTML = '<option value="">Nenhum kernel encontrado</option>';
+                        select.disabled = true;
+                        btnRemover.disabled = true;
+                    } else {
+                        // Ordena kernels (mais recentes primeiro)
+                        lines.sort((a, b) => b.localeCompare(a));
+                        
+                        // Adiciona opções
+                        lines.forEach(kernel => {
+                            const option = document.createElement('option');
+                            option.value = kernel;
+                            option.textContent = `kernel-${kernel}`;
+                            select.appendChild(option);
+                        });
+                        
+                        select.disabled = false;
+                        btnRemover.disabled = false;
+                        
+                        if (logBox) {
+                            const successLine = document.createElement('div');
+                            successLine.className = 'log-line success';
+                            successLine.textContent = `✅ ${lines.length} kernel(s) encontrado(s)`;
+                            logBox.appendChild(successLine);
+                            logBox.scrollTop = logBox.scrollHeight;
+                        }
+                    }
+                }
+            } catch (e) {
+                if (logBox) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = `❌ Erro ao listar kernels: ${e.message}`;
+                    logBox.appendChild(errorLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            }
+        }
+
+        async function removerKernel() {
+            const select = document.getElementById('kernel-select');
+            const kernel = select.value;
+            
+            if (!kernel) {
+                alert('Selecione um kernel para remover.');
+                return;
+            }
+
+            // Extrai o nome do pacote
+            const kernelPackage = `kernel-core-${kernel}`;
+            
+            // Extrai a versão do kernel para exibição
+            const kernelVersion = kernel;
+
+            // Verifica se é o kernel atual
+            try {
+                const response = await fetch('http://localhost:3000/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        comando: 'uname -r', 
+                        idComando: 'check-current-kernel' 
+                    })
+                });
+                
+                if (response.ok) {
+                    const dados = await response.json();
+                    const currentKernel = dados.output.trim();
+                    
+                    if (kernel.includes(currentKernel) || currentKernel.includes(kernel)) {
+                        alert('⚠️ Você está tentando remover o kernel atual! Isso não é recomendado e pode tornar o sistema instável.');
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('Erro ao verificar kernel atual:', e);
+            }
+
+            const confirmacao = confirm(
+                `⚠️ ATENÇÃO!\n\n` +
+                `Você está prestes a remover o kernel:\n` +
+                `${kernelVersion}\n\n` +
+                `Tem certeza que deseja continuar?`
+            );
+
+            if (!confirmacao) return;
+
+            const logBox = document.getElementById('log-listar-kernels');
+            if (logBox) {
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = `🗑️ Removendo kernel: ${kernelVersion}...`;
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            const comando = `sudo dnf remove ${kernelPackage} -y`;
+            await executarComando('remover-kernel', comando, true);
+
+            if (logBox) {
+                const successLine = document.createElement('div');
+                successLine.className = 'log-line success';
+                successLine.textContent = `✅ Kernel ${kernelVersion} removido com sucesso!`;
+                logBox.appendChild(successLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            // Recarrega a lista de kernels
+            setTimeout(listarKernels, 2000);
+        }
+
         // ============ SSE - LOGS EM TEMPO REAL ============
 
         let sseConnections = {};
 
-function conectarSSE(idComando, logBox) {
-    if (sseConnections[idComando]) {
-        sseConnections[idComando].close();
-        delete sseConnections[idComando];
-    }
+        function conectarSSE(idComando, logBox) {
+            if (sseConnections[idComando]) {
+                sseConnections[idComando].close();
+                delete sseConnections[idComando];
+            }
 
-    try {
-        const eventSource = new EventSource(`http://localhost:3000/stream?id=${idComando}`);
-        sseConnections[idComando] = eventSource;
-
-        let linhas = 0;
-        const MAX_LINHAS = 100;
-
-        eventSource.onmessage = (event) => {
             try {
-                const dados = JSON.parse(event.data);
+                const eventSource = new EventSource(`http://localhost:3000/stream?id=${idComando}`);
+                sseConnections[idComando] = eventSource;
 
-                if (dados.tipo === 'end') {
-                    eventSource.close();
-                    delete sseConnections[idComando];
+                let linhas = 0;
+                const MAX_LINHAS = 100;
 
-                    // Restaura o botão apenas para outros comandos (não para dnf-speed)
-                    if (idComando !== 'dnf-speed') {
-                        const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
-                                    document.querySelector(`button[onclick*="${idComando}"]`);
-                        if (btn) {
-                            btn.disabled = false;
-                            btn.innerHTML = "✅ Concluído";
-                            btn.style.backgroundColor = "#4b5563";
-                            btn.style.cursor = "default";
-                            btn.style.opacity = '1';
+                eventSource.onmessage = (event) => {
+                    try {
+                        const dados = JSON.parse(event.data);
+
+                        if (dados.tipo === 'end') {
+                            eventSource.close();
+                            delete sseConnections[idComando];
+                            return;
                         }
+
+                        let mensagem = dados.mensagem;
+                        mensagem = mensagem.replace(/\x1b\]3008;[^\x1b]*\x1b\\/g, '');
+                        mensagem = mensagem.replace(/\x1b\[[0-9;]*m/g, '');
+                        mensagem = mensagem.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+                        const lines = mensagem.split('\n');
+                        for (const line of lines) {
+                            if (line.trim() === '') continue;
+                            if (line.includes('org.kde.plasma.libdiscover')) continue;
+                            if (line.includes('QML Shortcut')) continue;
+                            if (line.includes('qt.qpa.services')) continue;
+                            if (line.includes('WARNING **: Found icon of unknown type')) continue;
+                            if (line.includes('QIODevice::read')) continue;
+                            if (line.includes('adding empty sources model')) continue;
+
+                            const lineElement = document.createElement('div');
+                            lineElement.className = `log-line ${dados.tipo}`;
+                            lineElement.textContent = line;
+                            logBox.appendChild(lineElement);
+                            linhas++;
+                        }
+
+                        if (linhas > MAX_LINHAS) {
+                            const children = logBox.children;
+                            for (let i = 0; i < linhas - MAX_LINHAS; i++) {
+                                if (children[i]) children[i].remove();
+                            }
+                            linhas = MAX_LINHAS;
+                        }
+
+                        logBox.scrollTop = logBox.scrollHeight;
+
+                    } catch (e) {
+                        console.error('[SSE] Erro ao processar mensagem:', e);
                     }
-                    // Para dnf-speed, NÃO faz nada - o botão nunca foi desabilitado
+                };
 
-                    completarProgresso(idComando, true);
-                    return;
-                }
-
-                let mensagem = dados.mensagem;
-                mensagem = mensagem.replace(/\x1b\]3008;[^\x1b]*\x1b\\/g, '');
-                mensagem = mensagem.replace(/\x1b\[[0-9;]*m/g, '');
-                mensagem = mensagem.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-
-                const lines = mensagem.split('\n');
-                for (const line of lines) {
-                    if (line.trim() === '') continue;
-                    if (line.includes('org.kde.plasma.libdiscover')) continue;
-                    if (line.includes('QML Shortcut')) continue;
-                    if (line.includes('qt.qpa.services')) continue;
-                    if (line.includes('WARNING **: Found icon of unknown type')) continue;
-                    if (line.includes('QIODevice::read')) continue;
-                    if (line.includes('adding empty sources model')) continue;
-
-                    const lineElement = document.createElement('div');
-                    lineElement.className = `log-line ${dados.tipo}`;
-                    lineElement.textContent = line;
-                    logBox.appendChild(lineElement);
-                    linhas++;
-                }
-
-                if (linhas > MAX_LINHAS) {
-                    const children = logBox.children;
-                    for (let i = 0; i < linhas - MAX_LINHAS; i++) {
-                        if (children[i]) children[i].remove();
+                eventSource.onerror = (event) => {
+                    if (eventSource.readyState === EventSource.CLOSED) {
+                        console.log('[SSE] Conexão fechada para:', idComando);
+                    } else {
+                        console.warn('[SSE] Erro na conexão:', event);
                     }
-                    linhas = MAX_LINHAS;
-                }
-
-                logBox.scrollTop = logBox.scrollHeight;
-
+                };
             } catch (e) {
-                console.error('[SSE] Erro ao processar mensagem:', e);
+                console.error('[SSE] Erro ao criar conexão:', e);
+                const errorLine = document.createElement('div');
+                errorLine.className = 'log-line error';
+                errorLine.textContent = `❌ Erro ao conectar SSE: ${e.message}`;
+                logBox.appendChild(errorLine);
             }
-        };
-
-        eventSource.onerror = (event) => {
-            if (eventSource.readyState === EventSource.CLOSED) {
-                console.log('[SSE] Conexão fechada para:', idComando);
-            } else {
-                console.warn('[SSE] Erro na conexão:', event);
-            }
-        };
-    } catch (e) {
-        console.error('[SSE] Erro ao criar conexão:', e);
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = `❌ Erro ao conectar SSE: ${e.message}`;
-        logBox.appendChild(errorLine);
-    }
-}
+        }
 
         // ============ DETECÇÃO DE DESKTOP PARA CENTRAL DE APPS ============
 
@@ -1527,62 +1879,68 @@ function conectarSSE(idComando, logBox) {
 
         // ============ FUNÇÃO EXECUTAR COMANDO ============
 
-const executarComando = async function(idComando, scriptComando, manterHabilitado = false) {
-    const logBox = document.getElementById(`log-${idComando}`);
-    if (!logBox) {
-        console.error(`Log box não encontrado: log-${idComando}`);
-        return;
-    }
+        const executarComando = async function(idComando, scriptComando, manterHabilitado = false) {
+            const logBox = document.getElementById(`log-${idComando}`);
+            if (!logBox) {
+                console.error(`Log box não encontrado: log-${idComando}`);
+                return;
+            }
 
-    iniciarProgresso(idComando);
+            iniciarProgresso(idComando);
 
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
+            logBox.innerHTML = '';
+            logBox.style.display = 'block';
+            logBox.style.height = '100px';
+            logBox.style.maxHeight = '100px';
 
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = `🚀 Iniciando... (${new Date().toLocaleTimeString()})`;
-    logBox.appendChild(header);
+            const header = document.createElement('div');
+            header.className = 'log-line info';
+            header.textContent = `🚀 Iniciando... (${new Date().toLocaleTimeString()})`;
+            logBox.appendChild(header);
 
-    conectarSSE(idComando, logBox);
+            conectarSSE(idComando, logBox);
 
-    // NUNCA desabilita o botão para dnf-speed
-    if (!manterHabilitado && idComando !== 'dnf-speed') {
-        const btn = document.querySelector(`button[onclick*="'${idComando}'"]`) ||
-                    document.querySelector(`button[onclick*="${idComando}"]`);
-        if (btn) {
-            btn.disabled = true;
-            btn.textContent = '⏳ Executando...';
-            btn.style.opacity = '0.6';
-        }
-    }
+            try {
+                const response = await fetch('http://localhost:3000/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comando: scriptComando, idComando: idComando })
+                });
 
-    try {
-        const response = await fetch('http://localhost:3000/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: scriptComando, idComando: idComando })
-        });
+                if (!response.ok) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = `❌ Erro HTTP: ${response.status} - ${response.statusText}`;
+                    logBox.appendChild(errorLine);
+                    completarProgresso(idComando, false);
+                } else {
+                    const dados = await response.json();
+                    if (dados.success === false) {
+                        // Se o comando falhou, verifica se foi por pacotes já instalados
+                        if (dados.output && (dados.output.includes('already installed') || 
+                            dados.output.includes('Nada para fazer') ||
+                            dados.output.includes('nothing to do'))) {
+                            const successLine = document.createElement('div');
+                            successLine.className = 'log-line success';
+                            successLine.textContent = `✅ Pacotes já estão instalados!`;
+                            logBox.appendChild(successLine);
+                            logBox.scrollTop = logBox.scrollHeight;
+                            completarProgresso(idComando, true);
+                        } else {
+                            completarProgresso(idComando, false);
+                        }
+                    }
+                }
+            } catch (e) {
+                const errorLine = document.createElement('div');
+                errorLine.className = 'log-line error';
+                errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
+                logBox.appendChild(errorLine);
+                completarProgresso(idComando, false);
+            }
+        };
 
-        if (!response.ok) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = `❌ Erro HTTP: ${response.status} - ${response.statusText}`;
-            logBox.appendChild(errorLine);
-            completarProgresso(idComando, false);
-        }
-    } catch (e) {
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
-        logBox.appendChild(errorLine);
-        completarProgresso(idComando, false);
-    }
-};
-
-window.executarComando = executarComando;
+        window.executarComando = executarComando;
 
         // ============ MANUTENÇÃO DO FOF ============
 
@@ -1633,6 +1991,7 @@ window.executarComando = executarComando;
                 logBox.appendChild(errorLine);
             }
 
+            // Sempre reativa o botão após a atualização
             setTimeout(() => {
                 if (btn) {
                     btn.disabled = false;
