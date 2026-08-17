@@ -1999,92 +1999,95 @@
             }, 5000);
         }
 
-        async function desinstalarFOF() {
-            const logBox = document.getElementById('log-desinstalar-fof');
-            if (!logBox) return;
+async function desinstalarFOF() {
+    const logBox = document.getElementById('log-desinstalar-fof');
+    if (!logBox) return;
 
-            const confirmacao = confirm(
-                '⚠️ ATENÇÃO!\n\n' +
-                'Você está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
-                'Isso irá remover:\n' +
-                '• Todos os arquivos do FOF\n' +
-                '• Atalhos do menu\n' +
-                '• Comando "fof" do terminal\n\n' +
-                'Esta ação é IRREVERSÍVEL!\n\n' +
-                'Tem certeza que deseja continuar?'
-            );
+    const confirmacao = confirm(
+        '⚠️ ATENÇÃO!\n\n' +
+        'Você está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
+        'Isso irá remover:\n' +
+        '• Todos os arquivos do FOF\n' +
+        '• Atalhos do menu\n' +
+        '• Comando "fof" do terminal\n\n' +
+        'Esta ação é IRREVERSÍVEL!\n\n' +
+        'Tem certeza que deseja continuar?'
+    );
 
-            if (!confirmacao) return;
+    if (!confirmacao) return;
 
-            const confirmacao2 = confirm(
-                '🔄 Última confirmação!\n\n' +
-                'Todos os dados do FOF serão perdidos.\n\n' +
-                'Deseja realmente desinstalar o Fedora Only Fans?'
-            );
+    const confirmacao2 = confirm(
+        '🔄 Última confirmação!\n\n' +
+        'Todos os dados do FOF serão perdidos.\n\n' +
+        'Deseja realmente desinstalar o Fedora Only Fans?'
+    );
 
-            if (!confirmacao2) return;
+    if (!confirmacao2) return;
 
-            logBox.innerHTML = '';
-            logBox.style.display = 'block';
-            logBox.style.height = '100px';
-            logBox.style.maxHeight = '100px';
+    logBox.innerHTML = '';
+    logBox.style.display = 'block';
+    logBox.style.height = '100px';
+    logBox.style.maxHeight = '100px';
 
-            const header = document.createElement('div');
-            header.className = 'log-line info';
-            header.textContent = `🗑️ Iniciando desinstalação... (${new Date().toLocaleTimeString()})`;
-            logBox.appendChild(header);
+    const header = document.createElement('div');
+    header.className = 'log-line info';
+    header.textContent = `🗑️ Iniciando desinstalação... (${new Date().toLocaleTimeString()})`;
+    logBox.appendChild(header);
+    logBox.scrollTop = logBox.scrollHeight;
+
+    const btn = document.querySelector('button[onclick="desinstalarFOF()"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Desinstalando...';
+        btn.style.opacity = '0.6';
+    }
+
+    try {
+        conectarSSE('desinstalar-fof', logBox);
+
+        const response = await fetch('http://localhost:3000/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                comando: 'bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall',
+                idComando: 'desinstalar-fof'
+            })
+        });
+
+        if (!response.ok) {
+            const errorLine = document.createElement('div');
+            errorLine.className = 'log-line error';
+            errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
+            logBox.appendChild(errorLine);
+        } else {
+            const successLine = document.createElement('div');
+            successLine.className = 'log-line success';
+            successLine.textContent = '✅ FOF desinstalado com sucesso!';
+            logBox.appendChild(successLine);
             logBox.scrollTop = logBox.scrollHeight;
 
-            const btn = document.querySelector('button[onclick="desinstalarFOF()"]');
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = '⏳ Desinstalando...';
-                btn.style.opacity = '0.6';
-            }
-
-            try {
-                conectarSSE('desinstalar-fof', logBox);
-
-                const response = await fetch('http://localhost:3000/executar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        comando: 'bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall',
-                        idComando: 'desinstalar-fof'
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorLine = document.createElement('div');
-                    errorLine.className = 'log-line error';
-                    errorLine.textContent = `❌ Erro HTTP: ${response.status}`;
-                    logBox.appendChild(errorLine);
-                } else {
-                    const successLine = document.createElement('div');
-                    successLine.className = 'log-line success';
-                    successLine.textContent = '✅ FOF desinstalado com sucesso! Você pode fechar esta janela.';
-                    logBox.appendChild(successLine);
-                    logBox.scrollTop = logBox.scrollHeight;
-
-                    setTimeout(() => {
-                        location.reload();
-                    }, 5000);
-                }
-            } catch (e) {
-                const errorLine = document.createElement('div');
-                errorLine.className = 'log-line error';
-                errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
-                logBox.appendChild(errorLine);
-            }
-
+            // ============================================================
+            // FECHA A JANELA APÓS 3 SEGUNDOS
+            // ============================================================
             setTimeout(() => {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = '🗑️ Desinstalar FOF';
-                    btn.style.opacity = '1';
-                }
-            }, 10000);
+                window.close();
+            }, 3000);
         }
+    } catch (e) {
+        const errorLine = document.createElement('div');
+        errorLine.className = 'log-line error';
+        errorLine.textContent = `❌ Erro de conexão: ${e.message}`;
+        logBox.appendChild(errorLine);
+    }
+
+    setTimeout(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '🗑️ Desinstalar FOF';
+            btn.style.opacity = '1';
+        }
+    }, 10000);
+}
 
         // ============ SELECT PERSONALIZADO - DNF ============
         function initCustomSelect() {
