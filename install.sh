@@ -426,7 +426,7 @@ configurar_path() {
 }
 
 # ============================================================
-# DESINSTALAÇÃO
+# DESINSTALAÇÃO (CORRIGIDA)
 # ============================================================
 
 desinstalar() {
@@ -442,29 +442,80 @@ desinstalar() {
 
     print_step "Removendo arquivos..."
 
+    # 1. Remove o diretório de instalação
     if [ -d "$INSTALL_DIR" ]; then
         rm -rf "$INSTALL_DIR"
         print_success "Diretório removido: $INSTALL_DIR"
+    else
+        print_info "Diretório não encontrado: $INSTALL_DIR"
     fi
 
+    # 2. Remove o link simbólico do comando 'fof'
     if [ -f "$BIN_DIR/fof" ]; then
         rm -f "$BIN_DIR/fof"
         print_success "Link removido: $BIN_DIR/fof"
+    else
+        print_info "Link não encontrado: $BIN_DIR/fof"
     fi
 
+    # 3. Remove o link simbólico do container
     if [ -f "$BIN_DIR/fof-container" ]; then
         rm -f "$BIN_DIR/fof-container"
         print_success "Link removido: $BIN_DIR/fof-container"
+    else
+        print_info "Link não encontrado: $BIN_DIR/fof-container"
     fi
 
+    # 4. Remove o atalho do menu (.desktop)
     if [ -f "$DESKTOP_FILE" ]; then
         rm -f "$DESKTOP_FILE"
         print_success "Atalho removido: $DESKTOP_FILE"
+    else
+        print_info "Atalho não encontrado: $DESKTOP_FILE"
     fi
 
-    print_info "Para remover o PATH, edite manualmente .bashrc ou .zshrc"
+    # 5. Remove atalho alternativo (caso exista em outro local)
+    DESKTOP_FILE_ALT="$HOME/.local/share/applications/fedora-only-fans.desktop"
+    if [ -f "$DESKTOP_FILE_ALT" ]; then
+        rm -f "$DESKTOP_FILE_ALT"
+        print_success "Atalho alternativo removido: $DESKTOP_FILE_ALT"
+    fi
 
-    print_success "FOF desinstalado com sucesso!"
+    # 6. Remove arquivos de log do FOF
+    rm -f /tmp/fof-*.log
+    print_success "Logs removidos: /tmp/fof-*.log"
+
+    # 7. Remove perfis do navegador (se existirem)
+    if [ -d "$INSTALL_DIR/.perfil_firefox" ]; then
+        rm -rf "$INSTALL_DIR/.perfil_firefox"
+        print_success "Perfil Firefox removido"
+    fi
+
+    if [ -d "$INSTALL_DIR/.perfil_app" ]; then
+        rm -rf "$INSTALL_DIR/.perfil_app"
+        print_success "Perfil Chromium removido"
+    fi
+
+    # 8. Remove arquivos de estado do servidor
+    if [ -f "$INSTALL_DIR/.fof.pid" ]; then
+        rm -f "$INSTALL_DIR/.fof.pid"
+        print_success "PID removido: .fof.pid"
+    fi
+
+    if [ -f "$INSTALL_DIR/.progresso.json" ]; then
+        rm -f "$INSTALL_DIR/.progresso.json"
+        print_success "Progresso removido: .progresso.json"
+    fi
+
+    # 9. Remove do PATH (instrução)
+    print_info "Para remover o PATH do FOF, edite manualmente .bashrc ou .zshrc"
+    print_info "Procure por: export PATH=\"\$HOME/.local/bin:\$PATH\""
+
+    # 10. Atualiza o banco de dados do desktop
+    update-desktop-database ~/.local/share/applications/ 2>/dev/null
+
+    print_success "✅ FOF completamente desinstalado!"
+    print_info "Você pode fechar esta janela."
 }
 
 # ============================================================
