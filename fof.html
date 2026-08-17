@@ -1826,42 +1826,44 @@
             }, 100);
         }
 
-        function completarProgresso(idComando, sucesso = true) {
-            const container = document.getElementById(`progress-${idComando}`);
-            if (!container) return;
+function completarProgresso(idComando, sucesso = true) {
+    const container = document.getElementById(`progress-${idComando}`);
+    if (!container) return;
 
-            const fill = document.getElementById(`progress-fill-${idComando}`);
-            const percent = document.getElementById(`progress-percent-${idComando}`);
-            const status = document.getElementById(`progress-status-${idComando}`);
+    const fill = document.getElementById(`progress-fill-${idComando}`);
+    const percent = document.getElementById(`progress-percent-${idComando}`);
+    const status = document.getElementById(`progress-status-${idComando}`);
 
-            if (!fill || !percent || !status) return;
+    if (!fill || !percent || !status) return;
 
-            if (progressIntervals[idComando]) {
-                clearInterval(progressIntervals[idComando]);
-                delete progressIntervals[idComando];
-            }
+    // Para a animação
+    if (progressIntervals[idComando]) {
+        clearInterval(progressIntervals[idComando]);
+        delete progressIntervals[idComando];
+    }
 
-            if (sucesso) {
-                fill.style.width = '100%';
-                fill.className = 'progress-fill complete';
-                percent.textContent = '100%';
-                status.textContent = '✅ Concluído!';
-                status.className = 'status success';
-            } else {
-                fill.style.width = '100%';
-                fill.className = 'progress-fill error';
-                percent.textContent = '❌ Falha';
-                status.textContent = '❌ Erro na execução';
-                status.className = 'status error';
-            }
+    if (sucesso) {
+        fill.style.width = '100%';
+        fill.className = 'progress-fill complete';
+        percent.textContent = '100%';
+        status.textContent = '✅ Concluído!';
+        status.className = 'status success';
+    } else {
+        fill.style.width = '100%';
+        fill.className = 'progress-fill error';
+        percent.textContent = '❌ Falha';
+        status.textContent = '❌ Erro na execução';
+        status.className = 'status error';
+    }
 
-            setTimeout(() => {
-                const logBox = document.getElementById(`log-${idComando}`);
-                if (logBox && logBox.style.display !== 'block') {
-                    container.style.display = 'none';
-                }
-            }, 5000);
+    // Esconde a barra após 5 segundos
+    setTimeout(() => {
+        const logBox = document.getElementById(`log-${idComando}`);
+        if (logBox && logBox.style.display !== 'block') {
+            container.style.display = 'none';
         }
+    }, 5000);
+}
 
         function resetarProgresso(idComando) {
             const container = document.getElementById(`progress-${idComando}`);
