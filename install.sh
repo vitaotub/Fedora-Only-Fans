@@ -150,77 +150,19 @@ compilar_container_install() {
 
     cd "$INSTALL_DIR"
 
-    # Verifica se o build-container.sh existe
-    if [ ! -f "$INSTALL_DIR/build-container.sh" ]; then
-        print_warning "Arquivo build-container.sh não encontrado!"
-        print_info "Criando build-container.sh a partir do template..."
-
-        cat > "$INSTALL_DIR/build-container.sh" << 'EOF'
-#!/usr/bin/env bash
-set -e
-
-DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
-cd "$DIR"
-
-echo "🔍 Verificando dependências..."
-
-if ! pkg-config --exists webkit2gtk-4.1 gtk+-3.0; then
-    echo "❌ Bibliotecas de desenvolvimento não encontradas!"
-    echo ""
-    echo "   Instale com:"
-    echo "   sudo dnf install webkit2gtk4.1-devel gtk3-devel"
-    echo ""
-    exit 1
-fi
-
-echo "✅ Dependências OK"
-
-mkdir -p src
-
-if [ ! -f "src/fof-container.c" ]; then
-    echo "❌ Arquivo src/fof-container.c não encontrado!"
-    exit 1
-fi
-
-echo ""
-echo "📦 Compilando container..."
-
-gcc -o fof-container src/fof-container.c $(pkg-config --cflags --libs webkit2gtk-4.1 gtk+-3.0) 2>&1
-
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "✅ Container compilado com sucesso!"
-    echo "📁 Arquivo: $DIR/fof-container"
-    echo "📦 Tamanho: $(du -h fof-container | cut -f1)"
-    echo ""
-else
-    echo "❌ Falha na compilação"
-    exit 1
-fi
-EOF
-
+    if [ -f "$INSTALL_DIR/build-container.sh" ]; then
         chmod +x "$INSTALL_DIR/build-container.sh"
-    fi
-
-    # Executa o build
-    chmod +x "$INSTALL_DIR/build-container.sh"
-
-    # Compila com saída silenciosa ou com logs
-    if "$INSTALL_DIR/build-container.sh" 2>&1 | tee -a "$LOG_FILE"; then
-        if [ -f "$INSTALL_DIR/fof-container" ]; then
+        "$INSTALL_DIR/build-container.sh"
+        if [ $? -eq 0 ] && [ -f "$INSTALL_DIR/fof-container" ]; then
             ln -sf "$INSTALL_DIR/fof-container" "$BIN_DIR/fof-container"
             chmod +x "$BIN_DIR/fof-container"
             print_success "Container compilado e instalado"
             return 0
-        else
-            print_warning "Container compilado mas executável não encontrado"
-            return 1
         fi
-    else
-        print_warning "Falha na compilação do container"
-        print_info "O FOF funcionará com navegador como fallback"
-        return 1
     fi
+
+    print_warning "Não foi possível compilar o container"
+    return 1
 }
 
 # ============================================================
@@ -495,7 +437,6 @@ desinstalar() {
 
     print_step "Removendo arquivos..."
 
-    # 1. Remove o diretório de instalação
     if [ -d "$INSTALL_DIR" ]; then
         rm -rf "$INSTALL_DIR"
         print_success "Diretório removido: $INSTALL_DIR"
@@ -503,7 +444,6 @@ desinstalar() {
         print_info "Diretório não encontrado: $INSTALL_DIR"
     fi
 
-    # 2. Remove o link simbólico do comando 'fof'
     if [ -f "$BIN_DIR/fof" ]; then
         rm -f "$BIN_DIR/fof"
         print_success "Link removido: $BIN_DIR/fof"
@@ -511,7 +451,6 @@ desinstalar() {
         print_info "Link não encontrado: $BIN_DIR/fof"
     fi
 
-    # 3. Remove o link simbólico do container
     if [ -f "$BIN_DIR/fof-container" ]; then
         rm -f "$BIN_DIR/fof-container"
         print_success "Link removido: $BIN_DIR/fof-container"
@@ -519,7 +458,6 @@ desinstalar() {
         print_info "Link não encontrado: $BIN_DIR/fof-container"
     fi
 
-    # 4. Remove o atalho do menu (.desktop)
     if [ -f "$DESKTOP_FILE" ]; then
         rm -f "$DESKTOP_FILE"
         print_success "Atalho removido: $DESKTOP_FILE"
@@ -527,18 +465,15 @@ desinstalar() {
         print_info "Atalho não encontrado: $DESKTOP_FILE"
     fi
 
-    # 5. Remove atalho alternativo (caso exista em outro local)
     DESKTOP_FILE_ALT="$HOME/.local/share/applications/fedora-only-fans.desktop"
     if [ -f "$DESKTOP_FILE_ALT" ]; then
         rm -f "$DESKTOP_FILE_ALT"
         print_success "Atalho alternativo removido: $DESKTOP_FILE_ALT"
     fi
 
-    # 6. Remove arquivos de log do FOF
     rm -f /tmp/fof-*.log
     print_success "Logs removidos: /tmp/fof-*.log"
 
-    # 7. Remove perfis do navegador (se existirem)
     if [ -d "$INSTALL_DIR/.perfil_firefox" ]; then
         rm -rf "$INSTALL_DIR/.perfil_firefox"
         print_success "Perfil Firefox removido"
@@ -549,7 +484,6 @@ desinstalar() {
         print_success "Perfil Chromium removido"
     fi
 
-    # 8. Remove arquivos de estado do servidor
     if [ -f "$INSTALL_DIR/.fof.pid" ]; then
         rm -f "$INSTALL_DIR/.fof.pid"
         print_success "PID removido: .fof.pid"
@@ -560,23 +494,17 @@ desinstalar() {
         print_success "Progresso removido: .progresso.json"
     fi
 
-    # ============================================================
-    # 9. REMOVE O PATH DO .bashrc E .zshrc (AUTOMATICAMENTE)
-    # ============================================================
     print_step "Removendo FOF do PATH..."
 
-    # Função para remover a linha do PATH de um arquivo
     remover_linha_path() {
         local arquivo="$1"
         local backup="${arquivo}.fof-backup"
         local linha_a_remover='export PATH="$HOME/.local/bin:$PATH"'
         
         if [ -f "$arquivo" ]; then
-            # Faz backup do arquivo original
             cp "$arquivo" "$backup"
             print_info "Backup criado: $backup"
             
-            # Remove a linha do arquivo
             grep -vF "$linha_a_remover" "$arquivo" > "${arquivo}.tmp"
             mv "${arquivo}.tmp" "$arquivo"
             
@@ -586,23 +514,18 @@ desinstalar() {
         fi
     }
 
-    # Remove do .bashrc
     remover_linha_path "$HOME/.bashrc"
 
-    # Remove do .zshrc (se existir)
     if [ -f "$HOME/.zshrc" ]; then
         remover_linha_path "$HOME/.zshrc"
     fi
 
-    # Remove do .profile (se existir)
     if [ -f "$HOME/.profile" ]; then
         remover_linha_path "$HOME/.profile"
     fi
 
-    # 10. Atualiza o banco de dados do desktop
     update-desktop-database ~/.local/share/applications/ 2>/dev/null
 
-    # 11. Mensagem final
     echo ""
     print_success "✅ FOF completamente desinstalado!"
     print_info ""
@@ -724,8 +647,8 @@ main() {
     verificar_dependencias
 
     instalar_fof
-    instalar_dependencias_container    # ← JÁ ESTÁ AQUI
-    compilar_container_install        # ← JÁ ESTÁ AQUI
+    instalar_dependencias_container
+    compilar_container_install
     criar_atalho
     fixar_na_barra
     configurar_path
