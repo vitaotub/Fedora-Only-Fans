@@ -38,7 +38,6 @@ typedef struct {
 // FUNÇÕES AUXILIARES
 // ============================================================
 
-// Carrega o ícone da aplicação
 void set_app_icon(GtkWindow *window, const char *icon_path) {
     GdkPixbuf *pixbuf = NULL;
 
@@ -58,7 +57,6 @@ void set_app_icon(GtkWindow *window, const char *icon_path) {
 // CALLBACKS
 // ============================================================
 
-// Quando a página termina de carregar (API corrigida)
 void on_load_finished(WebKitWebView *webview, WebKitLoadEvent load_event, gpointer user_data) {
     AppData *data = (AppData*)user_data;
 
@@ -73,7 +71,6 @@ void on_load_finished(WebKitWebView *webview, WebKitLoadEvent load_event, gpoint
     }
 }
 
-// Quando a página começa a carregar
 void on_load_started(WebKitWebView *webview, gpointer user_data) {
     AppData *data = (AppData*)user_data;
 
@@ -82,7 +79,6 @@ void on_load_started(WebKitWebView *webview, gpointer user_data) {
     }
 }
 
-// Fecha a aplicação
 void on_close(GtkWidget *widget, gpointer user_data) {
     g_print("[FOF] Encerrando...\n");
     gtk_main_quit();
@@ -93,20 +89,17 @@ void on_close(GtkWidget *widget, gpointer user_data) {
 // ============================================================
 
 void setup_header_bar(AppData *data) {
-    // Cria a barra de título personalizada
     data->header_bar = gtk_header_bar_new();
     gtk_header_bar_set_title(GTK_HEADER_BAR(data->header_bar), data->app_name ? data->app_name : APP_NAME);
     gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(data->header_bar), TRUE);
     gtk_header_bar_set_decoration_layout(GTK_HEADER_BAR(data->header_bar), "menu:minimize,maximize,close");
     gtk_window_set_titlebar(GTK_WINDOW(data->window), data->header_bar);
 
-    // Adiciona um spinner (indicador de carregamento)
     data->spinner = gtk_spinner_new();
     gtk_widget_set_size_request(data->spinner, 20, 20);
     gtk_widget_hide(data->spinner);
     gtk_header_bar_pack_start(GTK_HEADER_BAR(data->header_bar), data->spinner);
 
-    // Adiciona um botão de recarregar
     GtkWidget *reload_btn = gtk_button_new_from_icon_name("view-refresh", GTK_ICON_SIZE_MENU);
     gtk_button_set_relief(GTK_BUTTON(reload_btn), GTK_RELIEF_NONE);
     gtk_widget_set_tooltip_text(reload_btn, "Recarregar página");
@@ -119,12 +112,7 @@ void setup_header_bar(AppData *data) {
 // ============================================================
 
 int main(int argc, char *argv[]) {
-    // Inicializa GTK
     gtk_init(&argc, &argv);
-
-    // ============================================================
-    // PROCESSA ARGUMENTOS DA LINHA DE COMANDO
-    // ============================================================
 
     char *url = DEFAULT_URL;
     char *icon_path = NULL;
@@ -151,16 +139,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // ============================================================
-    // CRIA A JANELA
-    // ============================================================
-
     AppData data;
     data.url = url;
     data.icon_path = icon_path;
     data.app_name = app_name;
 
-    // Cria a janela principal
     data.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(data.window), app_name);
     gtk_window_set_default_size(GTK_WINDOW(data.window), WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -168,71 +151,40 @@ int main(int argc, char *argv[]) {
     gtk_window_set_resizable(GTK_WINDOW(data.window), TRUE);
     g_signal_connect(data.window, "destroy", G_CALLBACK(on_close), NULL);
 
-    // Define o ícone
     set_app_icon(GTK_WINDOW(data.window), icon_path);
 
-    // ============================================================
-    // CRIA A WEBVIEW
-    // ============================================================
-
-    // Configurações da webview
     WebKitSettings *settings = webkit_settings_new();
     webkit_settings_set_enable_developer_extras(settings, TRUE);
     webkit_settings_set_enable_javascript(settings, TRUE);
-    // Nota: webkit_settings_set_enable_plugins está deprecated
-    // webkit_settings_set_enable_plugins(settings, FALSE);
     webkit_settings_set_enable_webaudio(settings, FALSE);
     webkit_settings_set_allow_file_access_from_file_urls(settings, TRUE);
     webkit_settings_set_enable_media_stream(settings, TRUE);
 
-    // Cria a webview
     data.webview = webkit_web_view_new_with_settings(settings);
     g_object_unref(settings);
 
-    // Conecta os sinais (API corrigida)
     g_signal_connect(data.webview, "load-started", G_CALLBACK(on_load_started), &data);
     g_signal_connect(data.webview, "load-finished", G_CALLBACK(on_load_finished), &data);
 
-    // Carrega a URL
     webkit_web_view_load_uri(WEBKIT_WEB_VIEW(data.webview), url);
 
-    // ============================================================
-    // MONTA A INTERFACE
-    // ============================================================
-
-    // Cria um container para a webview
     GtkWidget *scrolled = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled),
                                    GTK_POLICY_AUTOMATIC,
                                    GTK_POLICY_AUTOMATIC);
     gtk_container_add(GTK_CONTAINER(scrolled), data.webview);
 
-    // Adiciona o container à janela
     gtk_container_add(GTK_CONTAINER(data.window), scrolled);
 
-    // Configura a barra de título
     setup_header_bar(&data);
-
-    // ============================================================
-    // EXIBE A JANELA
-    // ============================================================
 
     gtk_widget_show_all(data.window);
 
-    // ============================================================
-    // TRATAMENTO DE SINAL (Ctrl+C)
-    // ============================================================
-
-    // Instala um handler para SIGINT (Ctrl+C)
     struct sigaction sa;
     sa.sa_handler = (void(*)(int))gtk_main_quit;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(SIGINT, &sa, NULL);
-
-    // ============================================================
-    // LOOP PRINCIPAL
-    // ============================================================
 
     g_print("[FOF] 🚀 Container iniciado!\n");
     g_print("[FOF] 🌐 URL: %s\n", url);
