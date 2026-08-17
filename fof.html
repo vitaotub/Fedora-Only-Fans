@@ -1997,26 +1997,17 @@ async function atualizarFOF() {
 
     try {
         // ============================================================
-        // 1. PRIMEIRO: VERIFICA SE O install.sh EXISTE
+        // 1. OBTÉM O DIRETÓRIO DE INSTALAÇÃO
         // ============================================================
 
-        // Tenta encontrar o diretório de instalação
         let installDir = '';
 
-        // Verifica se o FOF está instalado no local padrão
-        const possibleDirs = [
-            '/usr/local/share/fedora-only-fans',
-            '/opt/fedora-only-fans',
-            `${process.env.HOME}/.local/share/fedora-only-fans`,
-            `${process.env.HOME}/Fedora-Only-Fans`
-        ];
-
-        // Usa o endpoint /info para obter informações
+        // Usa o endpoint /info para obter informações do servidor
         try {
             const infoResponse = await fetch('http://localhost:3000/info');
             if (infoResponse.ok) {
                 const info = await infoResponse.json();
-                // Se o servidor souber onde está instalado, usa isso
+                // O servidor retorna o installDir
                 if (info.installDir) {
                     installDir = info.installDir;
                 }
@@ -2025,25 +2016,67 @@ async function atualizarFOF() {
             console.log('Não foi possível obter informações do servidor');
         }
 
-        // Se não encontrou, tenta descobrir onde está o script atual
+        // Se ainda não encontrou, tenta usar caminhos comuns (sem process.env)
         if (!installDir) {
-            // Tenta usar o caminho do script atual (se estiver rodando)
-            try {
-                const scriptPath = document.querySelector('script[src]')?.src || '';
-                if (scriptPath.includes('fedora-only-fans') || scriptPath.includes('FOF')) {
-                    // Extrai o diretório do caminho
-                    const pathParts = scriptPath.split('/');
-                    pathParts.pop(); // Remove o nome do arquivo
-                    installDir = pathParts.join('/');
+            // Lista de possíveis diretórios (hardcoded)
+            const possibleDirs = [
+                '/usr/local/share/fedora-only-fans',
+                '/opt/fedora-only-fans',
+                // Usa o diretório home do usuário via caminho relativo
+                // O servidor vai resolver o caminho absoluto
+            ];
+            
+            // Tenta cada diretório via servidor
+            for (const dir of possibleDirs) {
+                try {
+                    const testResponse = await fetch('http://localhost:3000/executar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            comando: `test -d "${dir}" && echo "EXISTS" || echo "NOT_FOUND"`,
+                            idComando: 'find-install-dir'
+                        })
+                    });
+                    if (testResponse.ok) {
+                        const data = await testResponse.json();
+                        if (data.output && data.output.includes('EXISTS')) {
+                            installDir = dir;
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    // Continua tentando
                 }
-            } catch (e) {
-                console.log('Não foi possível determinar o diretório de instalação');
             }
         }
 
-        // Fallback: usa o diretório padrão
+        // Fallback: usa o diretório padrão do usuário (via servidor)
         if (!installDir) {
-            installDir = `${process.env.HOME}/.local/share/fedora-only-fans`;
+            // Pede ao servidor para descobrir o home do usuário
+            try {
+                const homeResponse = await fetch('http://localhost:3000/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comando: 'echo $HOME',
+                        idComando: 'get-home-dir'
+                    })
+                });
+                if (homeResponse.ok) {
+                    const data = await homeResponse.json();
+                    const homeDir = (data.output || '').trim();
+                    if (homeDir) {
+                        installDir = `${homeDir}/.local/share/fedora-only-fans`;
+                    }
+                }
+            } catch (e) {
+                console.log('Não foi possível obter o diretório home');
+            }
+        }
+
+        // Se ainda não encontrou, usa fallback final
+        if (!installDir) {
+            installDir = '~/.local/share/fedora-only-fans';
         }
 
         // ============================================================
@@ -2070,7 +2103,7 @@ async function atualizarFOF() {
         }
 
         // ============================================================
-        // 3. SE NÃO EXISTIR, TENTA BAIXAR OU USAR FALLBACK
+        // 3. ESCOLHE O COMANDO DE ATUALIZAÇÃO
         // ============================================================
 
         let comandoAtualizacao = '';
