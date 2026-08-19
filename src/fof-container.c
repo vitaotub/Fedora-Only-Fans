@@ -1,8 +1,6 @@
 // ============================================================
 // Fedora Only Fans (FOF) - Container WebKitGTK
-// ============================================================
-// Compilar com:
-//   make
+// Versão simplificada para Fedora 44
 // ============================================================
 
 #include <gtk/gtk.h>
@@ -11,18 +9,10 @@
 #include <string.h>
 #include <signal.h>
 
-// ============================================================
-// CONFIGURAÇÕES
-// ============================================================
-
 #define WINDOW_WIDTH 980
 #define WINDOW_HEIGHT 880
 #define APP_NAME "Fedora Only Fans"
 #define DEFAULT_URL "http://localhost:3000"
-
-// ============================================================
-// ESTRUTURA DE DADOS
-// ============================================================
 
 typedef struct {
     GtkWidget *window;
@@ -34,17 +24,11 @@ typedef struct {
     char *app_name;
 } AppData;
 
-// ============================================================
-// FUNÇÕES AUXILIARES
-// ============================================================
-
 void set_app_icon(GtkWindow *window, const char *icon_path) {
     GdkPixbuf *pixbuf = NULL;
-
     if (icon_path && g_file_test(icon_path, G_FILE_TEST_EXISTS)) {
         pixbuf = gdk_pixbuf_new_from_file(icon_path, NULL);
     }
-
     if (pixbuf) {
         gtk_window_set_icon(GTK_WINDOW(window), pixbuf);
         g_object_unref(pixbuf);
@@ -53,29 +37,22 @@ void set_app_icon(GtkWindow *window, const char *icon_path) {
     }
 }
 
-// ============================================================
-// CALLBACKS
-// ============================================================
-
-void on_load_finished(WebKitWebView *webview, WebKitLoadEvent load_event, gpointer user_data) {
+// Callback simplificado - apenas STARTED e FINISHED
+void on_webview_load_changed(WebKitWebView *webview, WebKitLoadEvent load_event, gpointer user_data) {
     AppData *data = (AppData*)user_data;
 
-    if (data->spinner) {
-        gtk_widget_hide(data->spinner);
-    }
-
-    if (load_event == WEBKIT_LOAD_FINISHED) {
+    if (load_event == WEBKIT_LOAD_STARTED) {
+        if (data->spinner) {
+            gtk_widget_show(data->spinner);
+            gtk_spinner_start(GTK_SPINNER(data->spinner));
+        }
+        g_print("[FOF] ⏳ Carregando página...\n");
+    } else if (load_event == WEBKIT_LOAD_FINISHED) {
+        if (data->spinner) {
+            gtk_spinner_stop(GTK_SPINNER(data->spinner));
+            gtk_widget_hide(data->spinner);
+        }
         g_print("[FOF] ✅ Página carregada com sucesso!\n");
-    } else {
-        g_print("[FOF] ❌ Erro ao carregar a página!\n");
-    }
-}
-
-void on_load_started(WebKitWebView *webview, gpointer user_data) {
-    AppData *data = (AppData*)user_data;
-
-    if (data->spinner) {
-        gtk_widget_show(data->spinner);
     }
 }
 
@@ -83,10 +60,6 @@ void on_close(GtkWidget *widget, gpointer user_data) {
     g_print("[FOF] Encerrando...\n");
     gtk_main_quit();
 }
-
-// ============================================================
-// CONFIGURAÇÃO DA INTERFACE
-// ============================================================
 
 void setup_header_bar(AppData *data) {
     data->header_bar = gtk_header_bar_new();
@@ -106,10 +79,6 @@ void setup_header_bar(AppData *data) {
     g_signal_connect(reload_btn, "clicked", G_CALLBACK(webkit_web_view_reload), data->webview);
     gtk_header_bar_pack_end(GTK_HEADER_BAR(data->header_bar), reload_btn);
 }
-
-// ============================================================
-// MAIN
-// ============================================================
 
 int main(int argc, char *argv[]) {
     gtk_init(&argc, &argv);
@@ -133,8 +102,6 @@ int main(int argc, char *argv[]) {
             printf("  --icon CAMINHO   Caminho do ícone da aplicação\n");
             printf("  --name NOME      Nome da aplicação (padrão: Fedora Only Fans)\n");
             printf("  --help, -h       Mostra esta ajuda\n");
-            printf("\nExemplo:\n");
-            printf("  %s --url http://localhost:3000 --icon icone.png\n", argv[0]);
             return 0;
         }
     }
@@ -163,8 +130,8 @@ int main(int argc, char *argv[]) {
     data.webview = webkit_web_view_new_with_settings(settings);
     g_object_unref(settings);
 
-    g_signal_connect(data.webview, "load-started", G_CALLBACK(on_load_started), &data);
-    g_signal_connect(data.webview, "load-finished", G_CALLBACK(on_load_finished), &data);
+    // Usando o sinal "load-changed" com callback simplificado
+    g_signal_connect(data.webview, "load-changed", G_CALLBACK(on_webview_load_changed), &data);
 
     webkit_web_view_load_uri(WEBKIT_WEB_VIEW(data.webview), url);
 
@@ -173,11 +140,9 @@ int main(int argc, char *argv[]) {
                                    GTK_POLICY_AUTOMATIC,
                                    GTK_POLICY_AUTOMATIC);
     gtk_container_add(GTK_CONTAINER(scrolled), data.webview);
-
     gtk_container_add(GTK_CONTAINER(data.window), scrolled);
 
     setup_header_bar(&data);
-
     gtk_widget_show_all(data.window);
 
     struct sigaction sa;
@@ -189,10 +154,8 @@ int main(int argc, char *argv[]) {
     g_print("[FOF] 🚀 Container iniciado!\n");
     g_print("[FOF] 🌐 URL: %s\n", url);
     g_print("[FOF] 📦 Pressione Ctrl+C para encerrar\n");
-    g_print("[FOF] ⏳ Aguardando servidor...\n");
 
     gtk_main();
-
     g_print("[FOF] 👋 Encerrado!\n");
     return 0;
 }
