@@ -1,7 +1,7 @@
 # <img src="icone_app.png" width="55" align="center"> Fedora Only Fans (FOF)
 
 ![Autor](https://img.shields.io/badge/Criador-Vit%C3%A3oTub-blue?style=flat-square)
-![Versão](https://img.shields.io/badge/Vers%C3%A3o-v0.1.1--alpha-orange?style=flat-square)
+![Versão](https://img.shields.io/badge/Versão-v0.5.0--alpha-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-40+-294172?style=flat-square&logo=fedora)
 ![Licença](https://img.shields.io/badge/Licen%C3%A7a-GPL--3.0-green?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow?style=flat-square)
@@ -23,20 +23,16 @@ Isso é tudo! O script cuida de todo o resto. 🎉
 O instalador irá:
 
 ✅ Verificar se você está no Fedora
-
 ✅ Instalar dependências (Node.js, npm, git, curl)
-
 ✅ Baixar o projeto do GitHub
-
 ✅ Instalar dependências Node.js
-
 ✅ Criar o comando fof no terminal
-
 ✅ Criar atalho no menu de aplicativos
 
-
 📦 Comandos Disponíveis
+
 Após a instalação:
+
 # Iniciar o FOF
 ```bash
 fof
@@ -57,6 +53,82 @@ O **Fedora Only Fans** é um **painel de automação interativo** com interface 
 O objetivo é transformar uma instalação limpa do Fedora em um sistema operacional completo, com todos os codecs, repositórios e ferramentas essenciais ativadas — **tudo visualmente e sem precisar usar o terminal**.
 
 ---
+
+🧭 Modos de Uso
+
+Modo	Descrição	Ideal para
+
+🧭 Modo Guiado	Passo a passo, uma sessão por vez, com explicações detalhadas e navegação intuitiva (Anterior/Próximo/Pular).	Iniciantes
+⚡ Modo Avançado	Todas as sessões em uma única página com controle total sobre cada ação e botões de reversão individuais.	Usuários experientes
+
+✨ Funcionalidades
+Etapa	Funcionalidade	Descrição
+1	👋 Boas-vindas	Atualização do sistema Fedora
+2	💾 Restauração	Btrfs-Assistant (snapshots do sistema)
+3	⚙️ Otimização	DNF, idioma PT-BR, dual-boot
+4	📦 Repositórios	RPM Fusion, Flatpak, codecs multimídia, aceleração gráfica
+5	🔤 Fontes	Fontes Microsoft para compatibilidade
+6	🎮 Launchers	Steam, Heroic, Lutris, ProtonUp, Vulkan
+7	🛍️ Loja	Apps recomendados, OBS Studio, EasyEffects
+8	🛠️ Manutenção	Limpeza, gerenciamento de kernels, upgrade de versão
+9	🔧 Manutenção FOF	Atualizar ou desinstalar o FOF
+🎨 Características Técnicas
+🖥️ Interface escura e moderna - Design pensado para conforto visual
+
+📡 Logs em tempo real - Acompanhe a execução enquanto acontece
+
+📊 Barra de progresso - Visualize o andamento das tarefas
+
+🔐 Autenticação segura - Usa pkexec/kdesu (sem expor senhas)
+
+🛡️ Whitelist de comandos - Proteção contra comandos maliciosos
+
+🐧 Suporte a múltiplos desktops - KDE, GNOME, XFCE, Cinnamon, MATE, LXQt, LXDE
+
+🖱️ 100% visual - Nunca precisa abrir o terminal
+
+💾 Persistência - Progresso salvo automaticamente no navegador
+
+🔄 Botões de reversão - Desfaça alterações com um clique
+
+🖥️ Desktops Suportados
+Desktop	Central de Apps	Status
+KDE Plasma	Discover	✅
+GNOME	GNOME Software	✅
+XFCE	AppFinder	✅
+Cinnamon	Software Center	✅
+MATE	Software Boutique	✅
+LXQt	LXQt Software Center	✅
+LXDE	LXDE Software Center	✅
+🚀 Como funciona?
+Se você veio de distribuições como Linux Mint, Ubuntu ou Zorin OS, sabe que o Fedora é incrível, mas exige alguns passos iniciais (como ativar o RPM Fusion ou configurar o Flathub).
+
+Com o FOF você:
+
+Seleciona visualmente o que deseja instalar ou configurar (Codecs de mídia, Drivers, Flatpaks, Otimizações do DNF).
+
+Executa as tarefas diretamente através da interface web integrada, digitando sua senha de administrador apenas quando solicitado pelo sistema.
+
+Acompanha o progresso em tempo real com logs e barra de progresso.
+
+💻 Como Rodar o FOF localmente?
+📦 Requisitos
+Fedora Linux 40+
+
+Node.js 18+
+
+Navegador (Firefox ou Chromium)
+
+Conexão com internet
+
+🚀 Método Rápido
+Para inicializar o painel, baixe todos os arquivos deste repositório, abra o terminal na pasta onde salvou o projeto e execute os comandos abaixo:
+# Dê permissão de execução ao script
+chmod +x iniciar_fof.sh
+
+# Execute o script de inicialização
+./iniciar_fof.sh
+
 
 ## ✨ Funcionalidades
 
@@ -130,7 +202,8 @@ O script irá:
 ✅ Iniciar o servidor na porta 3000
 ✅ Abrir a interface no seu navegador
 
-🔧 Opções do Script
+🔧 Opções do Script:
+
 # Modo debug (logs detalhados)
 ```bash
 ./iniciar_fof.sh --debug
@@ -143,7 +216,9 @@ O script irá:
 ```bash
 ./iniciar_fof.sh --help
 ```
-🖥️ Método Manual
+
+🖥️ Método Manual:
+
 # 1. Instale as dependências do sistema
 ```bash
 sudo dnf install -y nodejs npm
@@ -160,6 +235,7 @@ node server.js
 ```bash
 firefox http://localhost:3000
 ```
+
 🛠️ Tecnologias Utilizadas
 Tecnologia	Finalidade
 HTML5 / CSS3	Interface responsiva e moderna
@@ -172,15 +248,26 @@ pkexec / kdesu	Autenticação segura
 📂 Estrutura do Projeto:
 ```bash
 Fedora-Only-Fans/
-├── 📄 iniciar_fof.sh      # Script de inicialização
-├── 📄 server.js            # Servidor Node.js
-├── 📄 fof.html             # Interface web
-├── 📄 icone_app.png        # Ícone do aplicativo
-├── 📄 package.json         # Dependências Node.js
-├── 📄 README.md            # Documentação
-├── 📄 LICENSE              # Licença GPL-3.0
-└── 📁 .perfil_firefox/     # Perfil do Firefox (criado em execução)
-└── 📁 .perfil_app/         # Perfil do Chromium (criado em execução)
+├── 📄 index.html              # Landing page (escolha do modo)
+├── 📄 guiado.html             # Modo Guiado (passo a passo)
+├── 📄 avancado.html           # Modo Avançado (todas as sessões)
+├── 📄 style.css               # CSS compartilhado
+├── 📄 script.js               # JS compartilhado (com todas as correções)
+├── 📄 00-boas-vindas.html     # Sessão 1
+├── 📄 01-restauracao.html     # Sessão 2
+├── 📄 02-otimizacao.html      # Sessão 3
+├── 📄 03-repositorios.html    # Sessão 4
+├── 📄 04-fontes.html          # Sessão 5
+├── 📄 05-launchers.html       # Sessão 6
+├── 📄 06-loja.html            # Sessão 7
+├── 📄 07-manutencao.html      # Sessão 8
+├── 📄 08-fof-manutencao.html  # Sessão 9
+├── 📄 iniciar_fof.sh          # Script de inicialização
+├── 📄 server.js               # Servidor Node.js
+├── 📄 icone_app.png           # Ícone do aplicativo
+├── 📄 package.json            # Dependências Node.js
+├── 📄 README.md               # Documentação
+└── 📄 LICENSE                 # Licença GPL-3.0
 ```
 
 🛡️ Segurança
@@ -201,10 +288,18 @@ tail -f /tmp/fof-*.log
 ```
 
 🎯 Roadmap
-v0.1.2
+v0.4.0 (Atual)
+✅ Modo Guiado com navegação passo a passo
+✅ Modo Avançado com todas as sessões
+✅ Botões de reversão para todas as ações
+✅ Persistência via localStorage
+✅ Correção de todos os bugs conhecidos
+
+v0.5.0 (Futuro)
 □ Backup e restauração de configurações
 □ Integração com o terminal
 □ Notificações do sistema
+□ Tema claro/escuro
 
 🤝 Como contribuir
 Toda ajuda é muito bem-vinda! Se você quer sugerir novas otimizações para o Fedora, novos Flatpaks essenciais ou melhorar a interface:
@@ -212,6 +307,7 @@ Toda ajuda é muito bem-vinda! Se você quer sugerir novas otimizações para o 
 Faça um Fork do projeto
 
 Crie uma branch para sua modificação:
+
 ```bash
 git checkout -b feature/nova-otimizacao
 ```
@@ -228,23 +324,17 @@ Abra um Pull Request
 
 🐛 Reportar Problemas
 Encontrou um bug? Abra uma issue no GitHub:
-
 Issues do Projeto
-
-Informações Necessárias
+Informações Necessárias:
 Versão do Fedora
-
 Desktop Environment (KDE, GNOME, XFCE, etc.)
-
 Logs do servidor (/tmp/fof-*.log)
-
 Passos para reproduzir o problema
 
 ⚠️ Aviso Legal
-ESTE PROJETO AINDA ESTÁ EM DESENVOLVIMENTO E SEU STATUS É CONSIDERADO ALPHA.
+ESTE PROJETO ESTÁ EM DESENVOLVIMENTO E SEU STATUS É CONSIDERADO ALPHA.
 
 Não é recomendada a utilização em ambiente de produção, a menos que você saiba o que está fazendo. Utilize por sua conta e risco!
-
 Sempre faça backup dos seus dados antes de executar alterações no sistema.
 
 📄 Licença
@@ -254,9 +344,7 @@ Este projeto está licenciado sob a GPL-3.0 License - veja o arquivo LICENSE par
 VitãoTub
 
 🙏 Agradecimentos
-Comunidade Fedora
-RPM Fusion
-Flatpak/Flathub
+Fedora Project | RPM Fusion | Flathub
 
 ⭐ Suporte
 Se você gostou do projeto, deixe uma ⭐ no GitHub!

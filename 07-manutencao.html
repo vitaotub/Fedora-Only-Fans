@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Manutenção</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <section class="etapa-card" id="sessao-07-manutencao">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-07-manutencao">Sessão 8</span>
+                🛠️ Manutenção e Tarefas Avançadas
+            </div>
+
+            <!-- Limpeza -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Limpar Arquivos Temporários e Resíduos</h3>
+                    <p>Limpa o cache do DNF, dependências órfãs e runtimes de flatpak não utilizados.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarLimpeza()" data-comando="limpeza-sistema">Executar Limpeza</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-limpeza-sistema">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-limpeza-sistema"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-limpeza-sistema">⏳ Iniciando...</span><span class="percentage" id="progress-percent-limpeza-sistema">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-limpeza-sistema"></div>
+            </div>
+
+            <!-- Kernels -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Gerenciamento de Kernels</h3>
+                    <p>Gerencie os kernels instalados no seu sistema.</p>
+                    <div class="aviso-caixa">⚠️ IMPORTANTE: Não é recomendado remover nenhuma versão anterior do kernel pois o Fedora mantém apenas os 3 últimos kernels.</div>
+                    <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+                        <button class="btn-executar" onclick="listarKernels()">📋 Verificar Kernels</button>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <label for="kernel-select" style="font-size: 0.9rem; color: var(--text-muted);">Selecionar:</label>
+                            <select id="kernel-select" class="kernel-dropdown" disabled>
+                                <option value="">Nenhum kernel detectado</option>
+                            </select>
+                        </div>
+                        <button class="btn-executar" style="background-color: #ef4444;" onclick="removerKernel()" id="btn-remover-kernel" disabled>🗑️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-listar-kernels">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-listar-kernels"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-listar-kernels">⏳ Iniciando...</span><span class="percentage" id="progress-percent-listar-kernels">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-listar-kernels"></div>
+            </div>
+
+            <!-- Upgrade -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Upgrade de Versão do Fedora</h3>
+                    <p>Prepara e baixa os pacotes para a próxima grande versão do Fedora.</p>
+                    <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <label for="select-fedora-version" style="font-size: 0.9rem; color: var(--text-muted);">Versão de destino:</label>
+                        <div class="custom-select" id="custom-select-fedora-container">
+                            <div class="custom-select-trigger" id="custom-select-fedora-trigger">
+                                <span id="custom-select-fedora-value">Fedora 47</span>
+                                <span class="custom-select-arrow">▼</span>
+                            </div>
+                            <ul class="custom-select-options" id="custom-select-fedora-options">
+                                <li data-value="45">Fedora 45</li>
+                                <li data-value="46">Fedora 46</li>
+                                <li data-value="47" class="selected">Fedora 47</li>
+                                <li data-value="48">Fedora 48</li>
+                            </ul>
+                            <input type="hidden" id="select-fedora-version" value="47">
+                        </div>
+                    </div>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarUpgradeFedora()" data-comando="system-upgrade">Baixar Nova Versão</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-system-upgrade">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-system-upgrade"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-system-upgrade">⏳ Iniciando...</span><span class="percentage" id="progress-percent-system-upgrade">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-system-upgrade"></div>
+            </div>
+
+            <!-- Distro Sync -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Migrar do Canal Beta para o Estável (Release)</h3>
+                    <p>Sincroniza os pacotes locais com a release estável de produção.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarDistroSync()" data-comando="distro-sync">Sincronizar Canal Estável</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-distro-sync">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-distro-sync"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-distro-sync">⏳ Iniciando...</span><span class="percentage" id="progress-percent-distro-sync">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-distro-sync"></div>
+            </div>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

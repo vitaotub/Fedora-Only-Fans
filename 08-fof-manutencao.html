@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Manutenção do FOF</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <section class="etapa-card" id="sessao-08-fof-manutencao" style="border-left: 4px solid var(--accent);">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-08-fof-manutencao">Sessão 9</span>
+                🔧 Manutenção do FOF
+            </div>
+
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>🔄 Atualizar Fedora Only Fans</h3>
+                    <p>Baixa e instala a versão mais recente do FOF diretamente do GitHub. Mantenha seu app sempre atualizado!</p>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn-executar" style="background-color: #3c67e3;" onclick="atualizarFOF()">🔄 Atualizar FOF</button>
+                    </div>
+                    <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                        ℹ️ A atualização mantém suas configurações e histórico.
+                    </div>
+                </div>
+                <div class="terminal-log" id="log-atualizar-fof"></div>
+            </div>
+
+            <div class="bloco-comando" style="border-left: 4px solid #ef4444;">
+                <div class="comando-info">
+                    <h3>🗑️ Desinstalar Fedora Only Fans</h3>
+                    <p>Remove completamente o FOF do seu sistema, incluindo todos os arquivos, configurações e atalhos.</p>
+                    <div class="aviso-caixa">⚠️ ATENÇÃO: Esta ação é irreversível! Todos os dados do FOF serão removidos.</div>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn-executar" style="background-color: #ef4444;" onclick="desinstalarFOF()">🗑️ Desinstalar FOF</button>
+                    </div>
+                </div>
+                <div class="terminal-log" id="log-desinstalar-fof"></div>
+            </div>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

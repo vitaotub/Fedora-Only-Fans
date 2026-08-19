@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Modo Avançado</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilos específicos do modo avançado */
+        .header-avancado {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-avancado .titulo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-avancado .titulo h1 {
+            font-size: 1.5rem;
+            color: #fff;
+            margin: 0;
+        }
+
+        .header-avancado .titulo .badge-modo {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+            padding: 0.2rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .header-avancado .voltar {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: color 0.2s ease;
+        }
+
+        .header-avancado .voltar:hover {
+            color: #fff;
+        }
+
+        .header-avancado .stats-rapidas {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .header-avancado .stats-rapidas span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .header-avancado .stats-rapidas .num {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+
+        .header-avancado .stats-rapidas .num.concluido {
+            color: #34d399;
+        }
+
+        /* Scroll suave para navegação */
+        .etapa-card {
+            scroll-margin-top: 20px;
+        }
+
+        .btn-topo {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(60, 103, 227, 0.3);
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 1000;
+        }
+
+        .btn-topo.visivel {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .btn-topo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(60, 103, 227, 0.5);
+        }
+
+        .progress-geral-avancado {
+            background-color: #0a0e1a;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .progress-geral-avancado .info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .progress-geral-avancado .info .count {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+
+        .progress-geral-avancado .barra {
+            flex: 1;
+            min-width: 150px;
+            height: 6px;
+            background-color: #1a2236;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-geral-avancado .barra .fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3c67e3, #34d399);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .sessao-label {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.6rem;
+            border-radius: 10px;
+            background-color: #1a2236;
+            color: var(--text-muted);
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .sessao-label.concluida {
+            background-color: #065f46;
+            color: #34d399;
+        }
+
+        .sessao-label.pulada {
+            background-color: #4b5563;
+            color: #f59e0b;
+        }
+
+        @media (max-width: 600px) {
+            .header-avancado {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-avancado .stats-rapidas {
+                flex-wrap: wrap;
+                gap: 0.75rem;
+            }
+
+            .progress-geral-avancado {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-topo {
+                bottom: 1rem;
+                right: 1rem;
+                width: 44px;
+                height: 44px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ===== HEADER ===== -->
+        <div class="header-avancado">
+            <div class="titulo">
+                <img src="icone_app.png" alt="FOF" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain;" onerror="this.style.display='none'">
+                <h1>Modo Avançado</h1>
+                <span class="badge-modo">⚡ Todas as Sessões</span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">v<span class="fof-version">0.5.0 alpha</span></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <div class="stats-rapidas">
+                    <span>✅ <span class="num concluido" id="stats-executados">0</span></span>
+                    <span>⏭️ <span class="num" id="stats-pulados">0</span></span>
+                    <span>⏳ <span class="num" id="stats-pendentes">9</span></span>
+                </div>
+                <a href="index.html" class="voltar">← Voltar ao início</a>
+            </div>
+        </div>
+
+        <!-- ===== PROGRESSO GERAL ===== -->
+        <div class="progress-geral-avancado">
+            <div class="info">
+                <span>📊 Progresso:</span>
+                <span class="count" id="progress-count">0/9</span>
+                <span id="progress-percent-label">0%</span>
+            </div>
+            <div class="barra">
+                <div class="fill" id="progress-geral-fill-avancado"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SESSÃO 00: BOAS-VINDAS                                        -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="sessao-00-boas-vindas" style="border-left: 4px solid var(--warning-border); background-color: rgba(21, 31, 50, 0.7);">
+            <div class="etapa-titulo" style="color: #fbd38d;">
+                <span class="sessao-label" id="label-00-boas-vindas">Sessão 1</span>
+                👋 Boas-vindas e Atualização
+            </div>
+            <p style="font-size: 1rem; line-height: 1.6; color: var(--text-main); margin-bottom: 1.25rem;">
+                Antes de prosseguir com as etapas de configuração e instalação de aplicativos, é <strong>altamente recomendado</strong> realizar uma atualização completa no seu sistema operacional.
+            </p>
+            <div class="bloco-comando" style="background-color: rgba(0, 0, 0, 0.3); margin-bottom: 0;">
+                <div class="comando-info">
+                    <h3>Atualização Geral do Fedora</h3>
+                    <p>Atualiza o índice de repositórios, sincroniza as chaves de segurança e baixa as versões mais recentes de todos os componentes do sistema.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" style="background-color: #d97706;" onclick="executarAtualizacaoFedora()" data-comando="atualizacao-inicial">
+                            🔄 Atualizar Fedora
+                        </button>
+                        <button class="btn-reverter" onclick="alert('Esta ação não pode ser revertida.')" disabled style="display:none;">
+                            ↩️ Reverter
+                        </button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-atualizacao-inicial">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill-atualizacao-inicial"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span class="status" id="progress-status-atualizacao-inicial">⏳ Iniciando...</span>
+                        <span class="percentage" id="progress-percent-atualizacao-inicial">0%</span>
+                    </div>
+                </div>
+                <div class="terminal-log" id="log-atualizacao-inicial"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SESSÃO 01: RESTAURAÇÃO                                        -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="sessao-01-restauracao" style="border-left: 4px solid #8b5cf6;">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-01-restauracao">Sessão 2</span>
+                💾 Restauração de Sistema
+            </div>
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>🔄 Btrfs-Assistant - Gerenciador de Snapshots</h3>
+                    <p>O Btrfs-Assistant é uma ferramenta gráfica para gerenciar snapshots do sistema de arquivos Btrfs, permitindo criar e restaurar backups do seu sistema.</p>
+                    <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                        <button class="btn-executar" style="background-color: #8b5cf6;" onclick="instalarBtrfsAssistant()" data-comando="btrfs-install">
+                            📦 Instalar Btrfs-Assistant
+                        </button>
+                        <button class="btn-executar" style="background-color: #10b981;" onclick="abrirBtrfsAssistant()">
+                            🚀 Abrir Btrfs-Assistant
+                        </button>
+                        <button class="btn-reverter" onclick="reverterBtrfsAssistant()" style="display:none;">
+                            ↩️ Desinstalar
+                        </button>
+                    </div>
+                    <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                        ℹ️ O Btrfs-Assistant permite criar snapshots antes de fazer alterações no sistema, garantindo que você possa restaurar se algo der errado.
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-btrfs-install">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill-btrfs-install"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span class="status" id="progress-status-btrfs-install">⏳ Iniciando...</span>
+                        <span class="percentage" id="progress-percent-btrfs-install">0%</span>
+                    </div>
+                </div>
+                <div class="terminal-log" id="log-btrfs-install"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SESSÃO 02: OTIMIZAÇÃO                                         -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="sessao-02-otimizacao">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-02-otimizacao">Sessão 3</span>
+                ⚙️ Otimização do Sistema e Idioma
+            </div>
+
+            <!-- DNF Speed -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Melhorar velocidade de download do DNF</h3>
+                    <p>Configura os downloads paralelos simultâneos e ativa a busca automática pelo espelho de servidor mais rápido.</p>
+                    <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <label for="select-downloads" style="font-size: 0.9rem; color: var(--text-muted);">Conexões simultâneas:</label>
+                        <div class="custom-select" id="custom-select-container">
+                            <div class="custom-select-trigger" id="custom-select-trigger">
+                                <span id="custom-select-value">5 (Recomendado)</span>
+                                <span class="custom-select-arrow">▼</span>
+                            </div>
+                            <ul class="custom-select-options" id="custom-select-options">
+                                <li data-value="2">2</li>
+                                <li data-value="3">3</li>
+                                <li data-value="4">4</li>
+                                <li data-value="5" class="selected">5 (Recomendado)</li>
+                                <li data-value="6">6</li>
+                                <li data-value="7">7</li>
+                                <li data-value="8">8</li>
+                                <li data-value="9">9</li>
+                                <li data-value="10">10</li>
+                            </ul>
+                            <input type="hidden" id="select-downloads" value="5">
+                        </div>
+                    </div>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarAjusteDNF()" data-comando="dnf-speed">Aplicar Ajuste</button>
+                        <button class="btn-reverter" onclick="reverterAjusteDNF()" style="display:none;">↩️ Reverter</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-dnf-speed">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill-dnf-speed"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span class="status" id="progress-status-dnf-speed">⏳ Iniciando...</span>
+                        <span class="percentage" id="progress-percent-dnf-speed">0%</span>
+                    </div>
+                </div>
+                <div class="terminal-log" id="log-dnf-speed"></div>
+            </div>
+
+            <!-- Idioma -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Configuração de Idioma e Localidade (PT-BR)</h3>
+                    <p>Instale os pacotes de tradução, o corretor ortográfico e altere a localidade padrão do sistema:</p>
+                    <div class="aviso-caixa">⚠️ Aviso: Reinicie o computador após concluir o passo 3 para aplicar as alterações de idioma!</div>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn-executar" onclick="executarComandoPadrao('idioma-packs', 'sudo dnf -y install langpacks-pt_BR')" data-comando="idioma-packs">1. Instalar Tradução</button>
+                        <button class="btn-executar" style="background-color: #4b5563;" onclick="executarComandoPadrao('idioma-hunspell', 'sudo dnf install hunspell-br -y')" data-comando="idioma-hunspell">2. Corretor Ortográfico</button>
+                        <button class="btn-executar" style="background-color: #10b981;" onclick="executarComandoPadrao('idioma-localectl', 'sudo localectl set-locale LANG=pt_BR')" data-comando="idioma-localectl">3. Localidade PT-BR</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-idioma-packs">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-idioma-packs"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-idioma-packs">⏳ Iniciando...</span><span class="percentage" id="progress-percent-idioma-packs">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-idioma-packs"></div>
+                <div class="progress-container" id="progress-idioma-hunspell">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-idioma-hunspell"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-idioma-hunspell">⏳ Iniciando...</span><span class="percentage" id="progress-percent-idioma-hunspell">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-idioma-hunspell"></div>
+                <div class="progress-container" id="progress-idioma-localectl">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-idioma-localectl"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-idioma-localectl">⏳ Iniciando...</span><span class="percentage" id="progress-percent-idioma-localectl">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-idioma-localectl"></div>
+            </div>
+
+            <!-- Dual-Boot -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Corrigir problemas de data/hora em Dual-Boot (Windows/Linux)</h3>
+                    <p>Configura o relógio do hardware para usar o padrão UTC, evitando bagunça nos horários ao alternar sistemas.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarComandoPadrao('dual-boot-time', 'sudo timedatectl set-local-rtc 0')" data-comando="dual-boot-time">Corrigir Relógio</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-dual-boot-time">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-dual-boot-time"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-dual-boot-time">⏳ Iniciando...</span><span class="percentage" id="progress-percent-dual-boot-time">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-dual-boot-time"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SESSÃO 03: REPOSITÓRIOS                                       -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="sessao-03-repositorios">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-03-repositorios">Sessão 4</span>
+                📦 Repositórios, Codecs e Aceleração Gráfica
+            </div>
+
+            <!-- RPM Fusion -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
+                    <p>Instala e sincroniza os repositórios oficiais RPM Fusion, adiciona suporte a metadados do AppStream e executa um ajuste de segurança.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarRPMFusion()" data-comando="rpm-fusion">Ativar RPM Fusion</button>
+                        <button class="btn-reverter" onclick="reverterRPMFusion()" style="display:none;">↩️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-rpm-fusion">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-rpm-fusion"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-rpm-fusion">⏳ Iniciando...</span><span class="percentage" id="progress-percent-rpm-fusion">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-rpm-fusion"></div>
+            </div>
+
+            <!-- Flatpak -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
+                    <p>Adiciona o repositório global Flathub e garante a instalação do gerenciador de pacotes Flatpak no sistema.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarFlatpak()" data-comando="flatpak-setup">Configurar Flatpak</button>
+                        <button class="btn-reverter" onclick="reverterFlatpak()" style="display:none;">↩️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-flatpak-setup">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-flatpak-setup"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-flatpak-setup">⏳ Iniciando...</span><span class="percentage" id="progress-percent-flatpak-setup">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-flatpak-setup"></div>
+            </div>
+
+            <!-- Codecs -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Instalar Codecs Multimídia Essenciais</h3>
+                    <p>Substitui o ffmpeg-free pela versão completa sem restrições, instala plugins gstreamer essenciais e habilita o Cisco OpenH264.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarCodecs()" data-comando="codecs-essenciais">Instalar Codecs</button>
+                        <button class="btn-reverter" onclick="reverterCodecs()" style="display:none;">↩️ Reverter</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-codecs-essenciais">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-codecs-essenciais"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-codecs-essenciais">⏳ Iniciando...</span><span class="percentage" id="progress-percent-codecs-essenciais">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-codecs-essenciais"></div>
+            </div>
+
+            <!-- Extras Tainted -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Extras e DVD Play (Repositórios Tainted)</h3>
+                    <p>Habilita sub-repositórios restritos para habilitar reprodução de DVDs comerciais e firmware proprietário.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarExtrasTainted()" data-comando="extras-tainted">Instalar Extras</button>
+                        <button class="btn-reverter" onclick="reverterExtrasTainted()" style="display:none;">↩️ Reverter</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-extras-tainted">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-extras-tainted"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-extras-tainted">⏳ Iniciando...</span><span class="percentage" id="progress-percent-extras-tainted">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-extras-tainted"></div>
+            </div>
+
+            <!-- VA-API -->
+            <div class="bloco-comando" style="border-left: 4px solid var(--accent);">
+                <div class="comando-info">
+                    <h3>VA-API e Codecs para Aceleração Gráfica</h3>
+                    <p>Instala drivers e utilitários de aceleração de vídeo em hardware para placas de vídeo AMD e Intel.</p>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn-executar" onclick="executarVaapi()" data-comando="vaapi-amd">🚀 Instalação Padrão</button>
+                        <button class="btn-executar" style="background-color: #4b5563;" onclick="executarVaapiSwap()" data-comando="vaapi-swap">🔄 Alternativa</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-vaapi-amd">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-vaapi-amd"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-vaapi-amd">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vaapi-amd">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-vaapi-amd"></div>
+                <div class="progress-container" id="progress-vaapi-swap">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-vaapi-swap"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-vaapi-swap">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vaapi-swap">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-vaapi-swap"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SESSÃO 04: FONTES                                             -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="sessao-04-fontes">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-04-fontes">Sessão 5</span>
+                🔤 Fontes para Compatibilidade
+            </div>
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Instalar fontes Microsoft para compatibilidade</h3>
+                    <p>Instala o instalador de fontes Microsoft do SourceForge para obter Arial, Times, Calibri, etc.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarFontesMS()" data-comando="fontes-ms-all">Instalar Fontes MS</button>
+                        <button class="btn-reverter" onclick="reverterFontesMS()" style="display:none;">↩️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-fontes-ms-all">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-fontes-ms-all"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-fontes-ms-all">⏳ Iniciando...</span><span class="percentage" id="progress-percent-fontes-ms-all">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-fontes-ms-all"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SESSÃO 05: LAUNCHERS (CORRIGIDA)                             -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="sessao-05-launchers">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-05-launchers">Sessão 6</span>
+                🎮 Launchers e Pacotes Essenciais
+            </div>
+
+            <!-- Vulkan -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Drivers Vulkan Completos (Para GPUs AMD)</h3>
+                    <p>Instala as ferramentas e bibliotecas Vulkan em versões de 32 e 64 bits para suporte nativo ao Proton.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarVulkan()" data-comando="vulkan-amd">🚀 Instalar Drivers Vulkan</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-vulkan-amd">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-vulkan-amd"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-vulkan-amd">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vulkan-amd">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-vulkan-amd"></div>
+            </div>
+
+            <!-- Launchers - CORRIGIDO com sistema de toggle -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Instalar Launchers e Pacotes Essenciais</h3>
+                    <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem;">
+                        <!-- Steam -->
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
+                            <button class="btn-executar" onclick="executarSteam()" data-comando="steam-install" style="width: 100%;">🎮 Steam</button>
+                            <button class="btn-reverter" onclick="executarSteam()" data-comando="steam-install-uninstall" style="display:none; width: 100%; font-size: 0.75rem; padding: 0.3rem 0.6rem;">↩️ Remover Steam</button>
+                        </div>
+                        <!-- Heroic -->
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
+                            <button class="btn-executar" style="background-color: #10b981; width: 100%;" onclick="executarHeroic()" data-comando="heroic-install">⚡ Heroic Games</button>
+                            <button class="btn-reverter" onclick="executarHeroic()" data-comando="heroic-install-uninstall" style="display:none; width: 100%; font-size: 0.75rem; padding: 0.3rem 0.6rem;">↩️ Remover Heroic</button>
+                        </div>
+                        <!-- Lutris -->
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
+                            <button class="btn-executar" style="background-color: #8b5cf6; width: 100%;" onclick="executarLutris()" data-comando="lutris-install">🎯 Lutris</button>
+                            <button class="btn-reverter" onclick="executarLutris()" data-comando="lutris-install-uninstall" style="display:none; width: 100%; font-size: 0.75rem; padding: 0.3rem 0.6rem;">↩️ Remover Lutris</button>
+                        </div>
+                        <!-- ProtonUp -->
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
+                            <button class="btn-executar" style="background-color: #f59e0b; width: 100%;" onclick="executarProtonUp()" data-comando="protonup-install">🔄 ProtonUp-Qt</button>
+                            <button class="btn-reverter" onclick="executarProtonUp()" data-comando="protonup-install-uninstall" style="display:none; width: 100%; font-size: 0.75rem; padding: 0.3rem 0.6rem;">↩️ Remover ProtonUp</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-steam-install">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-steam-install"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-steam-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-steam-install">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-steam-install"></div>
+                <div class="terminal-log" id="log-heroic-install"></div>
+                <div class="terminal-log" id="log-lutris-install"></div>
+                <div class="terminal-log" id="log-protonup-install"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SESSÃO 06: LOJA (CORRIGIDA - EasyEffects com desfazer)       -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="sessao-06-loja">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-06-loja">Sessão 7</span>
+                🛍️ Loja de Aplicativos do Fedora
+            </div>
+
+            <div class="bloco-comando" style="border-left: 4px solid var(--text-muted);">
+                <div class="comando-info">
+                    <h3>Instalação de Aplicativos Recomendados</h3>
+                    <p>Abra a central de software do seu sistema para gerenciar os apps de forma independente:</p>
+                    <div style="margin-bottom: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                        <button class="btn-executar" style="background-color: #357a38;" onclick="abrirCentralApps()">🛍️ Abrir Central de Apps</button>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                        🖥️ Desktop detectado: <span id="desktop-detectado" style="color: #60a5fa;">carregando...</span>
+                    </div>
+                    <ul style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin: 0 0 0 1rem; padding: 0;">
+                        <li><strong>Haruna</strong> (Player de vídeo moderno)</li>
+                        <li><strong>OnlyOffice</strong> (Suíte de escritório)</li>
+                        <li><strong>Opera</strong> (Navegador)</li>
+                        <li><strong>OBS Studio</strong> (Gravação e stream)</li>
+                        <li><strong>Krita</strong> (Pintura digital)</li>
+                        <li><strong>Kdenlive</strong> (Editor de vídeo)</li>
+                    </ul>
+                </div>
+                <div class="terminal-log" id="log-abrir-central"></div>
+            </div>
+
+            <!-- OBS Cam -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Ativar Câmera Virtual no OBS Studio</h3>
+                    <p>Instala o v4l2loopback do kernel para que o OBS gere webcams virtuais para chamadas de vídeo.</p>
+                    <div class="aviso-caixa">⚠️ Exige que o Secure Boot esteja configurado corretamente ou desativado.</div>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarOBSCam()" data-comando="obs-cam">Instalar Câmera Virtual</button>
+                        <button class="btn-reverter" onclick="reverterOBSCam()" style="display:none;">↩️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-obs-cam">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-obs-cam"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-obs-cam">⏳ Iniciando...</span><span class="percentage" id="progress-percent-obs-cam">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-obs-cam"></div>
+            </div>
+
+            <!-- EasyEffects - CORRIGIDO com botão de desfazer -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Melhoria de Áudio com EasyEffects</h3>
+                    <p>Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarEasyEffects()" data-comando="instalar-easyeffects">Instalar EasyEffects (Flatpak)</button>
+                        <button class="btn-reverter" onclick="reverterEasyEffects()" style="display:none;">↩️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-instalar-easyeffects">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-instalar-easyeffects"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-instalar-easyeffects">⏳ Iniciando...</span><span class="percentage" id="progress-percent-instalar-easyeffects">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-instalar-easyeffects"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SESSÃO 07: MANUTENÇÃO (CORRIGIDA - Kernels + Upgrade)        -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="sessao-07-manutencao">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-07-manutencao">Sessão 8</span>
+                🛠️ Manutenção e Tarefas Avançadas
+            </div>
+
+            <!-- Limpeza -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Limpar Arquivos Temporários e Resíduos</h3>
+                    <p>Limpa o cache do DNF, dependências órfãs e runtimes de flatpak não utilizados.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarLimpeza()" data-comando="limpeza-sistema">Executar Limpeza</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-limpeza-sistema">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-limpeza-sistema"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-limpeza-sistema">⏳ Iniciando...</span><span class="percentage" id="progress-percent-limpeza-sistema">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-limpeza-sistema"></div>
+            </div>
+
+            <!-- Kernels - CORRIGIDO -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Gerenciamento de Kernels</h3>
+                    <p>Gerencie os kernels instalados no seu sistema.</p>
+                    <div class="aviso-caixa">⚠️ IMPORTANTE: Não é recomendado remover nenhuma versão anterior do kernel pois o Fedora mantém apenas os 3 últimos kernels.</div>
+                    <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+                        <button class="btn-executar" onclick="listarKernels()">📋 Verificar Kernels</button>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <label for="kernel-select" style="font-size: 0.9rem; color: var(--text-muted);">Selecionar:</label>
+                            <select id="kernel-select" class="kernel-dropdown" disabled>
+                                <option value="">Nenhum kernel detectado</option>
+                            </select>
+                        </div>
+                        <button class="btn-executar" style="background-color: #ef4444;" onclick="removerKernel()" id="btn-remover-kernel" disabled>🗑️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-listar-kernels">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-listar-kernels"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-listar-kernels">⏳ Iniciando...</span><span class="percentage" id="progress-percent-listar-kernels">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-listar-kernels"></div>
+            </div>
+
+            <!-- Upgrade - CORRIGIDO (selected no 47 + botão Verificar) -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Upgrade de Versão do Fedora</h3>
+                    <p>Prepara e baixa os pacotes para a próxima grande versão do Fedora.</p>
+                    <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <label for="select-fedora-version" style="font-size: 0.9rem; color: var(--text-muted);">Versão de destino:</label>
+                        <div class="custom-select" id="custom-select-fedora-container">
+                            <div class="custom-select-trigger" id="custom-select-fedora-trigger">
+                                <span id="custom-select-fedora-value">Fedora 47</span>
+                                <span class="custom-select-arrow">▼</span>
+                            </div>
+                            <ul class="custom-select-options" id="custom-select-fedora-options">
+                                <li data-value="45">Fedora 45</li>
+                                <li data-value="46">Fedora 46</li>
+                                <li data-value="47" class="selected">Fedora 47</li>
+                                <li data-value="48">Fedora 48</li>
+                            </ul>
+                            <input type="hidden" id="select-fedora-version" value="47">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn-executar" onclick="executarUpgradeFedora()" data-comando="system-upgrade" style="background-color: #d97706;">
+                            📥 Baixar Nova Versão
+                        </button>
+                        <button class="btn-executar" onclick="verificarVersaoFedora()" data-comando="check-version" style="background-color: #4b5563;">
+                            🔍 Verificar Versão Atual
+                        </button>
+                    </div>
+                    <div id="upgrade-status" style="margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; display: none;"></div>
+                </div>
+                <div class="progress-container" id="progress-system-upgrade">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-system-upgrade"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-system-upgrade">⏳ Iniciando...</span><span class="percentage" id="progress-percent-system-upgrade">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-system-upgrade"></div>
+            </div>
+
+            <!-- Distro Sync -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Migrar do Canal Beta para o Estável (Release)</h3>
+                    <p>Sincroniza os pacotes locais com a release estável de produção.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarDistroSync()" data-comando="distro-sync">Sincronizar Canal Estável</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-distro-sync">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-distro-sync"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-distro-sync">⏳ Iniciando...</span><span class="percentage" id="progress-percent-distro-sync">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-distro-sync"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SESSÃO 08: MANUTENÇÃO DO FOF                                 -->
+        <!-- ============================================================ -->
+        <section class="etapa-card" id="sessao-08-fof-manutencao" style="border-left: 4px solid var(--accent);">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-08-fof-manutencao">Sessão 9</span>
+                🔧 Manutenção do FOF
+            </div>
+
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>🔄 Atualizar Fedora Only Fans</h3>
+                    <p>Baixa e instala a versão mais recente do FOF diretamente do GitHub. Mantenha seu app sempre atualizado!</p>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn-executar" style="background-color: #3c67e3;" onclick="atualizarFOF()">🔄 Atualizar FOF</button>
+                    </div>
+                    <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                        ℹ️ A atualização mantém suas configurações e histórico.
+                    </div>
+                </div>
+                <div class="terminal-log" id="log-atualizar-fof"></div>
+            </div>
+
+            <div class="bloco-comando" style="border-left: 4px solid #ef4444;">
+                <div class="comando-info">
+                    <h3>🗑️ Desinstalar Fedora Only Fans</h3>
+                    <p>Remove completamente o FOF do seu sistema, incluindo todos os arquivos, configurações e atalhos.</p>
+                    <div class="aviso-caixa">⚠️ ATENÇÃO: Esta ação é irreversível! Todos os dados do FOF serão removidos.</div>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn-executar" style="background-color: #ef4444;" onclick="desinstalarFOF()">🗑️ Desinstalar FOF</button>
+                    </div>
+                </div>
+                <div class="terminal-log" id="log-desinstalar-fof"></div>
+            </div>
+        </section>
+
+        <!-- ===== BOTÃO VOLTAR AO TOPO ===== -->
+        <button class="btn-topo" id="btn-topo" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
+
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // ============================================================
+        // INICIALIZAÇÃO DO MODO AVANÇADO
+        // ============================================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detecta desktop para central de apps
+            const desktop = detectarDesktopFrontend();
+            const spanDesktop = document.getElementById('desktop-detectado');
+            if (spanDesktop) {
+                const nomes = {
+                    'KDE': '🪟 KDE Plasma (Discover)',
+                    'GNOME': '🐧 GNOME (GNOME Software)',
+                    'XFCE': '🐭 XFCE (AppFinder)',
+                    'CINNAMON': '🍃 Cinnamon (Software Center)',
+                    'MATE': '🦎 MATE (Software Boutique)',
+                    'LXQT': '💠 LXQt (LXQt Software Center)',
+                    'LXDE': '💠 LXDE (LXDE Software Center)',
+                    'UNKNOWN': '❓ Não detectado (modo automático)'
+                };
+                spanDesktop.textContent = nomes[desktop] || `Desktop: ${desktop}`;
+                spanDesktop.style.color = desktop === 'UNKNOWN' ? '#f59e0b' : '#34d399';
+            }
+
+            // Inicializa selects personalizados
+            initCustomSelect('custom-select-trigger', 'custom-select-options', 'select-downloads', 'custom-select-value');
+            initCustomSelect('custom-select-fedora-trigger', 'custom-select-fedora-options', 'select-fedora-version', 'custom-select-fedora-value');
+
+            // Carrega progresso salvo
+            const progress = getProgress();
+            progress.executados.forEach(id => {
+                marcarBotaoComoExecutado(id);
+            });
+
+            // Atualiza interface
+            atualizarInterfaceProgresso();
+            atualizarStats();
+
+            // Atualiza versão
+            document.querySelectorAll('.fof-version').forEach(el => {
+                el.textContent = FOF_VERSION;
+            });
+
+            // Botão voltar ao topo
+            const btnTopo = document.getElementById('btn-topo');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 400) {
+                    btnTopo.classList.add('visivel');
+                } else {
+                    btnTopo.classList.remove('visivel');
+                }
+            });
+
+            console.log(`🚀 Fedora Only Fans v${FOF_VERSION} - Modo Avançado carregado!`);
+        });
+
+        // ============================================================
+        // ATUALIZAR STATS
+        // ============================================================
+
+        function atualizarStats() {
+            const progress = getProgress();
+            const total = 9;
+            const executados = progress.executados.length;
+            const pulados = progress.pulados.length;
+            const pendentes = total - executados - pulados;
+
+            document.getElementById('stats-executados').textContent = executados;
+            document.getElementById('stats-pulados').textContent = pulados;
+            document.getElementById('stats-pendentes').textContent = pendentes;
+
+            const percentual = Math.round((executados / total) * 100);
+            const fill = document.getElementById('progress-geral-fill-avancado');
+            const count = document.getElementById('progress-count');
+            const percent = document.getElementById('progress-percent-label');
+
+            if (fill) fill.style.width = `${percentual}%`;
+            if (count) count.textContent = `${executados}/${total}`;
+            if (percent) percent.textContent = `${percentual}%`;
+        }
+
+        // ============================================================
+        // SOBRESCRITA DE FUNÇÕES PARA ATUALIZAR STATS
+        // ============================================================
+
+        const marcarBotaoComoExecutadoOriginalAvancado = marcarBotaoComoExecutado;
+        marcarBotaoComoExecutado = function(idComando) {
+            marcarBotaoComoExecutadoOriginalAvancado(idComando);
+            setTimeout(atualizarStats, 100);
+        };
+
+        const restaurarBotaoOriginalOriginalAvancado = restaurarBotaoOriginal;
+        restaurarBotaoOriginal = function(idComando) {
+            restaurarBotaoOriginalOriginalAvancado(idComando);
+            setTimeout(atualizarStats, 100);
+        };
+
+        const marcarComoPuladoOriginalAvancado = marcarComoPulado;
+        marcarComoPulado = function(idComando) {
+            marcarComoPuladoOriginalAvancado(idComando);
+            setTimeout(atualizarStats, 100);
+        };
+
+        const desmarcarComoPuladoOriginalAvancado = desmarcarComoPulado;
+        desmarcarComoPulado = function(idComando) {
+            desmarcarComoPuladoOriginalAvancado(idComando);
+            setTimeout(atualizarStats, 100);
+        };
+
+        // Atualiza stats quando a interface for atualizada
+        const atualizarInterfaceProgressoOriginal = atualizarInterfaceProgresso;
+        atualizarInterfaceProgresso = function() {
+            atualizarInterfaceProgressoOriginal();
+            atualizarStats();
+        };
+
+        // Atualiza labels das sessões
+        const atualizarLabels = function() {
+            const sessoesLabels = [
+                '00-boas-vindas',
+                '01-restauracao',
+                '02-otimizacao',
+                '03-repositorios',
+                '04-fontes',
+                '05-launchers',
+                '06-loja',
+                '07-manutencao',
+                '08-fof-manutencao'
+            ];
+
+            sessoesLabels.forEach(nome => {
+                const label = document.getElementById(`label-${nome}`);
+                if (label) {
+                    const status = getStatusComando(nome);
+                    label.className = 'sessao-label';
+                    if (status === 'executado') label.classList.add('concluida');
+                    if (status === 'pulado') label.classList.add('pulada');
+                }
+            });
+        };
+
+        // Sobrescreve para atualizar labels também
+        const marcarBotaoComoExecutadoComLabels = marcarBotaoComoExecutado;
+        marcarBotaoComoExecutado = function(idComando) {
+            marcarBotaoComoExecutadoComLabels(idComando);
+            setTimeout(() => {
+                atualizarStats();
+                atualizarLabels();
+            }, 100);
+        };
+
+        const restaurarBotaoOriginalComLabels = restaurarBotaoOriginal;
+        restaurarBotaoOriginal = function(idComando) {
+            restaurarBotaoOriginalComLabels(idComando);
+            setTimeout(() => {
+                atualizarStats();
+                atualizarLabels();
+            }, 100);
+        };
+
+        // Chama labels na inicialização
+        setTimeout(atualizarLabels, 200);
+    </script>
+</body>
+</html>

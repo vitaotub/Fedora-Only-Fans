@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Fontes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <section class="etapa-card" id="sessao-04-fontes">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-04-fontes">Sessão 5</span>
+                🔤 Fontes para Compatibilidade
+            </div>
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Instalar fontes Microsoft para compatibilidade</h3>
+                    <p>Instala o instalador de fontes Microsoft do SourceForge para obter Arial, Times, Calibri, etc.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarFontesMS()" data-comando="fontes-ms-all">Instalar Fontes MS</button>
+                        <button class="btn-reverter" onclick="reverterFontesMS()" style="display:none;">↩️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-fontes-ms-all">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-fontes-ms-all"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-fontes-ms-all">⏳ Iniciando...</span><span class="percentage" id="progress-percent-fontes-ms-all">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-fontes-ms-all"></div>
+            </div>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

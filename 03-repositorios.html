@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Repositórios</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <section class="etapa-card" id="sessao-03-repositorios">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-03-repositorios">Sessão 4</span>
+                📦 Repositórios, Codecs e Aceleração Gráfica
+            </div>
+
+            <!-- RPM Fusion -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
+                    <p>Instala e sincroniza os repositórios oficiais RPM Fusion, adiciona suporte a metadados do AppStream e executa um ajuste de segurança.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarRPMFusion()" data-comando="rpm-fusion">Ativar RPM Fusion</button>
+                        <button class="btn-reverter" onclick="reverterRPMFusion()" style="display:none;">↩️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-rpm-fusion">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-rpm-fusion"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-rpm-fusion">⏳ Iniciando...</span><span class="percentage" id="progress-percent-rpm-fusion">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-rpm-fusion"></div>
+            </div>
+
+            <!-- Flatpak -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
+                    <p>Adiciona o repositório global Flathub e garante a instalação do gerenciador de pacotes Flatpak no sistema.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarFlatpak()" data-comando="flatpak-setup">Configurar Flatpak</button>
+                        <button class="btn-reverter" onclick="reverterFlatpak()" style="display:none;">↩️ Remover</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-flatpak-setup">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-flatpak-setup"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-flatpak-setup">⏳ Iniciando...</span><span class="percentage" id="progress-percent-flatpak-setup">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-flatpak-setup"></div>
+            </div>
+
+            <!-- Codecs -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Instalar Codecs Multimídia Essenciais</h3>
+                    <p>Substitui o ffmpeg-free pela versão completa sem restrições, instala plugins gstreamer essenciais e habilita o Cisco OpenH264.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarCodecs()" data-comando="codecs-essenciais">Instalar Codecs</button>
+                        <button class="btn-reverter" onclick="reverterCodecs()" style="display:none;">↩️ Reverter</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-codecs-essenciais">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-codecs-essenciais"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-codecs-essenciais">⏳ Iniciando...</span><span class="percentage" id="progress-percent-codecs-essenciais">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-codecs-essenciais"></div>
+            </div>
+
+            <!-- Extras Tainted -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Extras e DVD Play (Repositórios Tainted)</h3>
+                    <p>Habilita sub-repositórios restritos para habilitar reprodução de DVDs comerciais e firmware proprietário.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarExtrasTainted()" data-comando="extras-tainted">Instalar Extras</button>
+                        <button class="btn-reverter" onclick="reverterExtrasTainted()" style="display:none;">↩️ Reverter</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-extras-tainted">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-extras-tainted"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-extras-tainted">⏳ Iniciando...</span><span class="percentage" id="progress-percent-extras-tainted">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-extras-tainted"></div>
+            </div>
+
+            <!-- VA-API -->
+            <div class="bloco-comando" style="border-left: 4px solid var(--accent);">
+                <div class="comando-info">
+                    <h3>VA-API e Codecs para Aceleração Gráfica</h3>
+                    <p>Instala drivers e utilitários de aceleração de vídeo em hardware para placas de vídeo AMD e Intel.</p>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn-executar" onclick="executarVaapi()" data-comando="vaapi-amd">🚀 Instalação Padrão</button>
+                        <button class="btn-executar" style="background-color: #4b5563;" onclick="executarVaapiSwap()" data-comando="vaapi-swap">🔄 Alternativa</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-vaapi-amd">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-vaapi-amd"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-vaapi-amd">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vaapi-amd">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-vaapi-amd"></div>
+                <div class="progress-container" id="progress-vaapi-swap">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-vaapi-swap"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-vaapi-swap">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vaapi-swap">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-vaapi-swap"></div>
+            </div>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

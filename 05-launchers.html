@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Launchers</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <section class="etapa-card" id="sessao-05-launchers">
+            <div class="etapa-titulo">
+                <span class="sessao-label" id="label-05-launchers">Sessão 6</span>
+                🎮 Launchers e Pacotes Essenciais
+            </div>
+
+            <!-- Vulkan -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Drivers Vulkan Completos (Para GPUs AMD)</h3>
+                    <p>Instala as ferramentas e bibliotecas Vulkan em versões de 32 e 64 bits para suporte nativo ao Proton.</p>
+                    <div class="grupo-botoes">
+                        <button class="btn-executar" onclick="executarVulkan()" data-comando="vulkan-amd">Instalar Drivers Vulkan</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-vulkan-amd">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-vulkan-amd"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-vulkan-amd">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vulkan-amd">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-vulkan-amd"></div>
+            </div>
+
+            <!-- Launchers -->
+            <div class="bloco-comando">
+                <div class="comando-info">
+                    <h3>Instalar Launchers e Pacotes Essenciais</h3>
+                    <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn-executar" onclick="executarSteam()" data-comando="steam-install">🎮 Steam</button>
+                        <button class="btn-reverter" onclick="reverterSteam()" style="display:none;">↩️</button>
+                        <button class="btn-executar" style="background-color: #10b981;" onclick="executarHeroic()" data-comando="heroic-install">⚡ Heroic Games</button>
+                        <button class="btn-reverter" onclick="reverterHeroic()" style="display:none;">↩️</button>
+                        <button class="btn-executar" style="background-color: #8b5cf6;" onclick="executarLutris()" data-comando="lutris-install">🎯 Lutris</button>
+                        <button class="btn-reverter" onclick="reverterLutris()" style="display:none;">↩️</button>
+                        <button class="btn-executar" style="background-color: #f59e0b;" onclick="executarProtonUp()" data-comando="protonup-install">🔄 ProtonUp-Qt</button>
+                        <button class="btn-reverter" onclick="reverterProtonUp()" style="display:none;">↩️</button>
+                    </div>
+                </div>
+                <div class="progress-container" id="progress-steam-install">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-steam-install"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-steam-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-steam-install">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-steam-install"></div>
+                <div class="terminal-log" id="log-heroic-install"></div>
+                <div class="terminal-log" id="log-lutris-install"></div>
+                <div class="terminal-log" id="log-protonup-install"></div>
+            </div>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
