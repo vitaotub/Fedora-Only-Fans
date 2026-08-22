@@ -208,7 +208,7 @@
                 <img src="icone_app.png" alt="FOF" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain;" onerror="this.style.display='none'">
                 <h1>Modo Avançado</h1>
                 <span class="badge-modo">⚡ Todas as Sessões</span>
-                <span style="color: var(--text-muted); font-size: 0.8rem;">v<span class="fof-version">0.5.0 alpha</span></span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">v<span class="fof-version">0.7.0 alpha</span></span>
             </div>
             <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                 <div class="stats-rapidas">
@@ -281,17 +281,21 @@
                 <div class="comando-info">
                     <h3>🔄 Btrfs-Assistant - Gerenciador de Snapshots</h3>
                     <p>O Btrfs-Assistant é uma ferramenta gráfica para gerenciar snapshots do sistema de arquivos Btrfs, permitindo criar e restaurar backups do seu sistema.</p>
-                    <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
-                        <button class="btn-executar" style="background-color: #8b5cf6;" onclick="instalarBtrfsAssistant()" data-comando="btrfs-install">
-                            📦 Instalar Btrfs-Assistant
-                        </button>
-                        <button class="btn-executar" style="background-color: #10b981;" onclick="abrirBtrfsAssistant()">
-                            🚀 Abrir Btrfs-Assistant
-                        </button>
-                        <button class="btn-reverter" onclick="reverterBtrfsAssistant()" style="display:none;">
-                            ↩️ Desinstalar
-                        </button>
-                    </div>
+<div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+    <button class="btn-executar" style="background-color: #8b5cf6;" onclick="instalarBtrfsAssistant()" data-comando="btrfs-install">
+        📦 Instalar Btrfs-Assistant
+    </button>
+    <button class="btn-executar" style="background-color: #10b981;" onclick="abrirBtrfsAssistant()">
+        🚀 Abrir Btrfs-Assistant
+    </button>
+    <!-- Adicione esta linha abaixo -->
+    <button class="btn-executar" id="btn-gerenciar-snapshots" onclick="abrirGerenciadorSnapshots()" style="display:none; background-color: #0ea5e9;">
+        📸 Gerenciar Snapshots
+    </button>
+    <button class="btn-reverter" onclick="reverterBtrfsAssistant()" style="display:none;">
+        ↩️ Desinstalar
+    </button>
+</div>
                     <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
                         ℹ️ O Btrfs-Assistant permite criar snapshots antes de fazer alterações no sistema, garantindo que você possa restaurar se algo der errado.
                     </div>
@@ -408,7 +412,7 @@
         </section>
 
         <!-- ============================================================ -->
-        <!-- SESSÃO 03: REPOSITÓRIOS                                       -->
+        <!-- SESSÃO 03: REPOSITÓRIOS (com botão remover Flatpak Fedora)   -->
         <!-- ============================================================ -->
         <section class="etapa-card" id="sessao-03-repositorios">
             <div class="etapa-titulo">
@@ -557,32 +561,23 @@
                 <div class="terminal-log" id="log-vulkan-amd"></div>
             </div>
 
-            <!-- Launchers - CORRIGIDO com sistema de toggle -->
+            <!-- Launchers -->
             <div class="bloco-comando">
                 <div class="comando-info">
                     <h3>Instalar Launchers e Pacotes Essenciais</h3>
                     <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                        ℹ️ Todos os launchers são instalados via Flatpak (não requerem senha de root).
+                    </p>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem;">
                         <!-- Steam -->
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
-                            <button class="btn-executar" onclick="executarSteam()" data-comando="steam-install" style="width: 100%;">🎮 Steam</button>
-                            <button class="btn-reverter" onclick="executarSteam()" data-comando="steam-install-uninstall" style="display:none; width: 100%; font-size: 0.75rem; padding: 0.3rem 0.6rem;">↩️ Remover Steam</button>
-                        </div>
+                        <button class="btn-executar" onclick="executarSteam()" data-comando="steam-install" style="width: 100%;">🎮 Steam</button>
                         <!-- Heroic -->
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
-                            <button class="btn-executar" style="background-color: #10b981; width: 100%;" onclick="executarHeroic()" data-comando="heroic-install">⚡ Heroic Games</button>
-                            <button class="btn-reverter" onclick="executarHeroic()" data-comando="heroic-install-uninstall" style="display:none; width: 100%; font-size: 0.75rem; padding: 0.3rem 0.6rem;">↩️ Remover Heroic</button>
-                        </div>
+                        <button class="btn-executar" style="background-color: #10b981; width: 100%;" onclick="executarHeroic()" data-comando="heroic-install">⚡ Heroic Games</button>
                         <!-- Lutris -->
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
-                            <button class="btn-executar" style="background-color: #8b5cf6; width: 100%;" onclick="executarLutris()" data-comando="lutris-install">🎯 Lutris</button>
-                            <button class="btn-reverter" onclick="executarLutris()" data-comando="lutris-install-uninstall" style="display:none; width: 100%; font-size: 0.75rem; padding: 0.3rem 0.6rem;">↩️ Remover Lutris</button>
-                        </div>
+                        <button class="btn-executar" style="background-color: #8b5cf6; width: 100%;" onclick="executarLutris()" data-comando="lutris-install">🎯 Lutris</button>
                         <!-- ProtonUp -->
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
-                            <button class="btn-executar" style="background-color: #f59e0b; width: 100%;" onclick="executarProtonUp()" data-comando="protonup-install">🔄 ProtonUp-Qt</button>
-                            <button class="btn-reverter" onclick="executarProtonUp()" data-comando="protonup-install-uninstall" style="display:none; width: 100%; font-size: 0.75rem; padding: 0.3rem 0.6rem;">↩️ Remover ProtonUp</button>
-                        </div>
+                        <button class="btn-executar" style="background-color: #f59e0b; width: 100%;" onclick="executarProtonUp()" data-comando="protonup-install">🔄 ProtonUp-Qt</button>
                     </div>
                 </div>
                 <div class="progress-container" id="progress-steam-install">
@@ -597,47 +592,47 @@
         </section>
 
         <!-- ============================================================ -->
-        <!-- SESSÃO 06: LOJA (CORRIGIDA - EasyEffects com desfazer)       -->
+        <!-- SESSÃO 06: LOJA                                              -->
         <!-- ============================================================ -->
         <section class="etapa-card" id="sessao-06-loja">
             <div class="etapa-titulo">
                 <span class="sessao-label" id="label-06-loja">Sessão 7</span>
-                🛍️ Loja de Aplicativos do Fedora
+                🎬 Produção Multimídia
             </div>
 
-            <div class="bloco-comando" style="border-left: 4px solid var(--text-muted);">
+            <!-- OBS Studio e Produção Multimídia -->
+            <div class="bloco-comando" style="border-left: 4px solid var(--accent);">
                 <div class="comando-info">
-                    <h3>Instalação de Aplicativos Recomendados</h3>
-                    <p>Abra a central de software do seu sistema para gerenciar os apps de forma independente:</p>
-                    <div style="margin-bottom: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-                        <button class="btn-executar" style="background-color: #357a38;" onclick="abrirCentralApps()">🛍️ Abrir Central de Apps</button>
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                        🖥️ Desktop detectado: <span id="desktop-detectado" style="color: #60a5fa;">carregando...</span>
-                    </div>
-                    <ul style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin: 0 0 0 1rem; padding: 0;">
-                        <li><strong>Haruna</strong> (Player de vídeo moderno)</li>
-                        <li><strong>OnlyOffice</strong> (Suíte de escritório)</li>
-                        <li><strong>Opera</strong> (Navegador)</li>
-                        <li><strong>OBS Studio</strong> (Gravação e stream)</li>
-                        <li><strong>Krita</strong> (Pintura digital)</li>
-                        <li><strong>Kdenlive</strong> (Editor de vídeo)</li>
-                    </ul>
-                </div>
-                <div class="terminal-log" id="log-abrir-central"></div>
-            </div>
+                    <h3>🎬 OBS Studio - Instalação e Câmera Virtual</h3>
+                    <p>Instale o OBS Studio para gravação/streaming e ative a câmera virtual para chamadas de vídeo.</p>
 
-            <!-- OBS Cam -->
-            <div class="bloco-comando">
-                <div class="comando-info">
-                    <h3>Ativar Câmera Virtual no OBS Studio</h3>
-                    <p>Instala o v4l2loopback do kernel para que o OBS gere webcams virtuais para chamadas de vídeo.</p>
-                    <div class="aviso-caixa">⚠️ Exige que o Secure Boot esteja configurado corretamente ou desativado.</div>
-                    <div class="grupo-botoes">
-                        <button class="btn-executar" onclick="executarOBSCam()" data-comando="obs-cam">Instalar Câmera Virtual</button>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem;">
+                        <!-- Botão: Instalar OBS Studio -->
+                        <button class="btn-executar" style="background-color: #357a38;" onclick="executarOBSStudio()" data-comando="instalar-obs-studio">
+                            📹 Instalar OBS Studio
+                        </button>
+                        <button class="btn-reverter" onclick="reverterOBSStudio()" style="display:none;">↩️ Remover</button>
+
+                        <!-- Botão: Câmera Virtual -->
+                        <button class="btn-executar" onclick="executarOBSCam()" data-comando="obs-cam">
+                            🎥 Ativar Câmera Virtual
+                        </button>
                         <button class="btn-reverter" onclick="reverterOBSCam()" style="display:none;">↩️ Remover</button>
                     </div>
+
+                    <div class="aviso-caixa" style="margin-top: 0.5rem; font-size: 0.85rem;">
+                        ⚠️ A câmera virtual exige que o Secure Boot esteja configurado corretamente ou desativado.
+                    </div>
                 </div>
+
+                <!-- Progresso OBS Studio -->
+                <div class="progress-container" id="progress-instalar-obs-studio">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-instalar-obs-studio"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-instalar-obs-studio">⏳ Iniciando...</span><span class="percentage" id="progress-percent-instalar-obs-studio">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-instalar-obs-studio"></div>
+
+                <!-- Progresso Câmera Virtual -->
                 <div class="progress-container" id="progress-obs-cam">
                     <div class="progress-bar"><div class="progress-fill" id="progress-fill-obs-cam"></div></div>
                     <div class="progress-text"><span class="status" id="progress-status-obs-cam">⏳ Iniciando...</span><span class="percentage" id="progress-percent-obs-cam">0%</span></div>
@@ -645,10 +640,10 @@
                 <div class="terminal-log" id="log-obs-cam"></div>
             </div>
 
-            <!-- EasyEffects - CORRIGIDO com botão de desfazer -->
+            <!-- EasyEffects -->
             <div class="bloco-comando">
                 <div class="comando-info">
-                    <h3>Melhoria de Áudio com EasyEffects</h3>
+                    <h3>🎵 Melhoria de Áudio com EasyEffects</h3>
                     <p>Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
                     <div class="grupo-botoes">
                         <button class="btn-executar" onclick="executarEasyEffects()" data-comando="instalar-easyeffects">Instalar EasyEffects (Flatpak)</button>

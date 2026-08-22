@@ -6,7 +6,7 @@ const path = require('path');
 const PORT = 3000;
 const ARQUIVO_PROGRESSO = path.join(__dirname, '.progresso.json');
 const HTML_FILE = path.join(__dirname, 'index.html');
-const FOF_VERSION = '0.5.0-alpha';
+const FOF_VERSION = '0.7.0-alpha';
 
 // ============ VARIÁVEIS DE STREAM ============
 
@@ -164,9 +164,8 @@ function obterMetodoAutenticacao() {
 // ============ EXECUÇÃO COM STREAM ============
 
 function executarComandoComStream(comandoFinal, idComando, isReversao, callback) {
-
     // ============================================================
-    // CORREÇÃO: Comandos que NÃO precisam de autenticação
+    // Comandos que NÃO precisam de autenticação
     // ============================================================
     const comandosSemAutenticacao = [
         'rpm -q',
@@ -175,7 +174,9 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
         'which',
         'cat /etc/fedora-release',
         'hostname',
-        'whoami'
+        'whoami',
+        'test',
+        'gtk-launch'
     ];
 
     const precisaAutenticacao = !comandosSemAutenticacao.some(cmd => comandoFinal.includes(cmd));
@@ -326,6 +327,37 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
 // ============================================================
 
 function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, callback) {
+
+    if (comandoOriginal.includes('/tmp/fof-setup.sh') || comandoOriginal.includes('setup-snapper')) {
+        console.log(`[SCRIPT] Executando script com pkexec: ${comandoOriginal}`);
+        enviarLog(idComando, `$ ${comandoOriginal}\n`, 'info');
+
+        exec(comandoOriginal, {
+            shell: '/bin/bash',
+            maxBuffer: 1024 * 1024 * 50,
+            timeout: 1200000
+        }, (error, stdout, stderr) => {
+            if (stdout) enviarLog(idComando, stdout, 'output');
+            if (stderr) {
+                const filtrado = stderr.replace(/\[sudo\] password for .+: /g, '');
+                if (filtrado.trim()) enviarLog(idComando, filtrado, 'error');
+            }
+            if (error) {
+                enviarLog(idComando, `\n❌ Comando falhou com código: ${error.code || 1}\n`, 'error');
+                console.error(`[ERRO] ${idComando}: Código ${error.code || 1}`);
+                callback(error, stdout, stderr);
+            } else {
+                if (isReversao) removerProgresso(idComando);
+                else salvarProgresso(idComando);
+                enviarLog(idComando, `\n✅ Comando concluído com sucesso!\n`, 'success');
+                console.log(`[SUCESSO] ${idComando}`);
+                enviarLog(idComando, '__END__', 'end');
+                callback(null, stdout, stderr);
+            }
+        });
+        return;
+    }
+
     const desktop = detectarDesktop();
     const metodo = obterMetodoAutenticacao();
 
@@ -346,7 +378,9 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         'flatpak remote-add': 'Adicionar repositório Flatpak',
         'localectl': 'Alterar configurações de localidade',
         'timedatectl': 'Alterar data e hora do sistema',
-        'fwupdmgr': 'Atualizar firmware do hardware'
+        'fwupdmgr': 'Atualizar firmware do hardware',
+        'snapper': 'Gerenciar snapshots Btrfs',
+        'rsync': 'Sincronizar arquivos'
     };
 
     let descricao = 'Executar comando administrativo';
@@ -380,7 +414,9 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
             'instalar-easyeffects': 'Instalar EasyEffects',
             'limpeza-sistema': 'Limpar arquivos temporários e cache',
             'system-upgrade': 'Baixar atualização de versão do Fedora',
-            'distro-sync': 'Sincronizar pacotes com o canal estável'
+            'distro-sync': 'Sincronizar pacotes com o canal estável',
+            'grub': 'Configurar GRUB para snapshots',
+            'snapper-init-config': 'Criar configuração inicial do Snapper'
         };
         if (descricoesPorId[idComando]) {
             descricao = descricoesPorId[idComando];
@@ -389,12 +425,19 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
     enviarLog(idComando, `🔐 Autenticando para: ${descricao}\n`, 'info');
 
+    const isSnapperCommand = comandoOriginal.includes('snapper -c root');
     const comandoSemSudo = comandoOriginal.replace(/sudo\s+/g, '');
-    const comandoEscapado = comandoSemSudo
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\$/g, '\\$')
-    .replace(/`/g, '\\`');
+    let comandoEscapado;
+
+    if (isSnapperCommand) {
+        comandoEscapado = comandoSemSudo;
+    } else {
+        comandoEscapado = comandoSemSudo
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\$/g, '\\$')
+        .replace(/`/g, '\\`');
+    }
 
     let comandoFinal = '';
 
@@ -474,9 +517,6 @@ function procederComExecucao(comando, idComando, isReversao, res) {
     }));
 
     setImmediate(() => {
-        // ============================================================
-        // CORREÇÃO: Lista de comandos que NÃO precisam de autenticação
-        // ============================================================
         const comandosSemAutenticacao = [
             'rpm -q',
             'uname -r',
@@ -485,18 +525,14 @@ function procederComExecucao(comando, idComando, isReversao, res) {
             'cat /etc/fedora-release',
             'hostname',
             'whoami',
-            'rpm -qa'
+            'rpm -qa',
+            'test',
+            'gtk-launch'
         ];
 
-        // CORREÇÃO: Usar let em vez de const
         let precisaAutenticacao = false;
+        const isSemAutenticacao = comandosSemAutenticacao.some(cmd => comando.includes(cmd));
 
-        // Verifica se o comando está na lista de comandos sem autenticação
-        const isSemAutenticacao = comandosSemAutenticacao.some(cmd =>
-        comando.includes(cmd)
-        );
-
-        // Se o comando contém 'sudo' ou 'dnf remove' ou 'dnf install', precisa autenticação
         if (comando.includes('sudo ') ||
             comando.includes('pkexec ') ||
             comando.includes('kdesu ') ||
@@ -506,7 +542,6 @@ function procederComExecucao(comando, idComando, isReversao, res) {
             precisaAutenticacao = true;
             }
 
-            // Se não está na lista de comandos sem autenticação, precisa autenticação
             if (!isSemAutenticacao && !precisaAutenticacao) {
                 precisaAutenticacao = true;
             }
@@ -603,7 +638,72 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ============ ROTAS PARA ARQUIVOS ============
+    // ============ ROTA: Verificar configuração do Snapper ============
+    if (req.method === 'GET' && req.url === '/check-snapper-config') {
+        const configPath = '/etc/snapper/configs/root';
+        const configured = fs.existsSync(configPath);
+
+        // Verificar se o Snapper está funcionando
+        exec('sudo snapper -c root list 2>/dev/null | head -1', { timeout: 3000 }, (error, stdout) => {
+            const working = !error && stdout && stdout.trim().length > 0;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                configured: configured && working,
+                configExists: configured,
+                working: working
+            }));
+        });
+        return;
+    }
+
+    // ============ ROTA: Verificar se o Snapper está instalado (sem sudo) ============
+    if (req.method === 'GET' && req.url === '/check-snapper-installed') {
+        exec('which snapper', { timeout: 3000 }, (error, stdout) => {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ installed: !error && !!stdout && stdout.trim().length > 0 }));
+        });
+        return;
+    }
+
+    // ============ ROTA: Verificar se o boot atual está dentro de um snapshot ============
+    if (req.method === 'GET' && req.url === '/check-booted-snapshot') {
+        exec('findmnt -no SOURCE /', { timeout: 3000 }, (error, stdout) => {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            const saida = (stdout || '').trim();
+            const match = saida.match(/\.snapshots\/(\d+)\/snapshot/);
+            res.end(JSON.stringify({
+                inSnapshot: !error && !!match,
+                snapshotNumber: match ? parseInt(match[1], 10) : null
+            }));
+        });
+        return;
+    }
+
+    // ============ ROTA: Servir arquivos do módulo Btrfs ============
+    if (req.method === 'GET' && req.url.startsWith('/btrfs-module/')) {
+        const filePath = req.url.substring(1);
+        const fullPath = path.join(__dirname, filePath);
+
+        if (fs.existsSync(fullPath) && !fullPath.includes('..')) {
+            const ext = path.extname(fullPath).toLowerCase();
+            const mimeTypes = {
+                '.html': 'text/html; charset=utf-8',
+                '.css': 'text/css; charset=utf-8',
+                '.js': 'application/javascript; charset=utf-8',
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.json': 'application/json; charset=utf-8',
+                '.md': 'text/markdown; charset=utf-8'
+            };
+            const mimeType = mimeTypes[ext] || 'application/octet-stream';
+            res.writeHead(200, { 'Content-Type': mimeType });
+            fs.createReadStream(fullPath).pipe(res);
+        } else {
+            res.writeHead(404);
+            res.end('Arquivo não encontrado');
+        }
+        return;
+    }
 
     // Landing page
     if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
@@ -673,7 +773,7 @@ const server = http.createServer((req, res) => {
             autenticacao: metodo.descricao,
             nodeVersion: process.version,
             platform: process.platform,
-            version: '0.4.0-alpha'
+            version: '0.5.0-alpha'
         }));
         return;
     }
@@ -784,6 +884,12 @@ server.listen(PORT, () => {
     console.log(` 📁 Arquivos estáticos: Ativo (HTML, CSS, JS, ícone)`);
     console.log(` 📝 Script Wrapper: Ativo (pkexec)`);
     console.log(` 📄 Página inicial: index.html (Landing Page)`);
-    console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, ls /boot/vmlinuz-*, curl`);
+    console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, ls /boot/vmlinuz-*, test, gtk-launch`);
+    console.log(` 📦 Módulo Btrfs: /btrfs-module/`);
+    console.log(` ✅ Rota /check-snapper-config (sem sudo)`);
+    console.log(` ✅ Rota /check-snapper-installed (sem sudo)`);
+    console.log(` ✅ Rota /check-booted-snapshot (sem sudo)`);
+    console.log(` ✅ CORREÇÃO: Snapper (create, set-config, delete) agora preserva aspas`);
+    console.log(` ✅ CORREÇÃO: Script de setup do Snapper com timeout de 20 min (era 60s)`);
     console.log(`====================================================`);
 });

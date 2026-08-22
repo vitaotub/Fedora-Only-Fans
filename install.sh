@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Instalação
-# Versão: 0.5.0-alpha
+# Versão: 0.7.0-alpha
 # ============================================================
 #
 # Este script instala o FOF no sistema
@@ -31,7 +31,7 @@ NC='\033[0m' # No Color
 # CONFIGURAÇÕES
 # ============================================================
 
-VERSION="0.5.0-alpha"
+VERSION="0.7.0-alpha"
 INSTALL_DIR="$HOME/.local/share/fedora-only-fans"
 BIN_DIR="$HOME/.local/bin"
 DESKTOP_FILE="$HOME/.local/share/applications/fedora-only-fans.desktop"

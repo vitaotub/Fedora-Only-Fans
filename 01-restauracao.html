@@ -17,17 +17,24 @@
                 <div class="comando-info">
                     <h3>🔄 Btrfs-Assistant - Gerenciador de Snapshots</h3>
                     <p>O Btrfs-Assistant é uma ferramenta gráfica para gerenciar snapshots do sistema de arquivos Btrfs, permitindo criar e restaurar backups do seu sistema.</p>
-                    <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
-                        <button class="btn-executar" style="background-color: #8b5cf6;" onclick="instalarBtrfsAssistant()" data-comando="btrfs-install">
-                            📦 Instalar Btrfs-Assistant
-                        </button>
-                        <button class="btn-executar" style="background-color: #10b981;" onclick="abrirBtrfsAssistant()">
-                            🚀 Abrir Btrfs-Assistant
-                        </button>
-                        <button class="btn-reverter" onclick="reverterBtrfsAssistant()" style="display:none;">
-                            ↩️ Desinstalar
-                        </button>
-                    </div>
+<div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+    <!-- Botão 1: Instalar -->
+    <button class="btn-executar" style="background-color: #8b5cf6;" onclick="instalarBtrfsAssistant()" data-comando="btrfs-install">
+        📦 Instalar Btrfs-Assistant
+    </button>
+    <!-- Botão 2: Abrir -->
+    <button class="btn-executar" style="background-color: #10b981;" onclick="abrirBtrfsAssistant()">
+        🚀 Abrir Btrfs-Assistant
+    </button>
+    <!-- Botão 3: Gerenciar Snapshots (NOVO) -->
+    <button class="btn-executar" id="btn-gerenciar-snapshots" onclick="abrirGerenciadorSnapshots()" style="display:none; background-color: #0ea5e9;">
+        📸 Gerenciar Snapshots
+    </button>
+    <!-- Botão 4: Desinstalar (reverter) -->
+    <button class="btn-reverter" onclick="reverterBtrfsAssistant()" style="display:none;">
+        ↩️ Desinstalar
+    </button>
+</div>
                     <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
                         ℹ️ O Btrfs-Assistant permite criar snapshots antes de fazer alterações no sistema, garantindo que você possa restaurar se algo der errado.
                     </div>

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Inicialização
-# Versão: 0.5.0-alpha
+# Versão: 0.7.0-alpha
 # ============================================================
 #
 # Este script inicia o servidor e abre a interface do FOF
@@ -19,7 +19,7 @@ set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
 cd "$DIR"
 
-VERSION="0.5.0-alpha"
+VERSION="0.7.0-alpha"
 DEBUG=false
 NO_CLEAN=false
 LOG_FILE="/tmp/fof-$(date +%Y%m%d-%H%M%S).log"

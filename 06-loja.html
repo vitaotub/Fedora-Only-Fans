@@ -11,42 +11,42 @@
         <section class="etapa-card" id="sessao-06-loja">
             <div class="etapa-titulo">
                 <span class="sessao-label" id="label-06-loja">Sessão 7</span>
-                🛍️ Loja de Aplicativos do Fedora
+                🎬 Produção Multimídia
             </div>
 
-            <div class="bloco-comando" style="border-left: 4px solid var(--text-muted);">
+            <!-- OBS Studio e Produção Multimídia -->
+            <div class="bloco-comando" style="border-left: 4px solid var(--accent);">
                 <div class="comando-info">
-                    <h3>Instalação de Aplicativos Recomendados</h3>
-                    <p>Abra a central de software do seu sistema para gerenciar os apps de forma independente:</p>
-                    <div style="margin-bottom: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-                        <button class="btn-executar" style="background-color: #357a38;" onclick="abrirCentralApps()">🛍️ Abrir Central de Apps</button>
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                        🖥️ Desktop detectado: <span id="desktop-detectado" style="color: #60a5fa;">carregando...</span>
-                    </div>
-                    <ul style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin: 0 0 0 1rem; padding: 0;">
-                        <li><strong>Haruna</strong> (Player de vídeo moderno)</li>
-                        <li><strong>OnlyOffice</strong> (Suíte de escritório)</li>
-                        <li><strong>Opera</strong> (Navegador)</li>
-                        <li><strong>OBS Studio</strong> (Gravação e stream)</li>
-                        <li><strong>Krita</strong> (Pintura digital)</li>
-                        <li><strong>Kdenlive</strong> (Editor de vídeo)</li>
-                    </ul>
-                </div>
-                <div class="terminal-log" id="log-abrir-central"></div>
-            </div>
+                    <h3>🎬 OBS Studio - Instalação e Câmera Virtual</h3>
+                    <p>Instale o OBS Studio para gravação/streaming e ative a câmera virtual para chamadas de vídeo.</p>
 
-            <!-- OBS Cam -->
-            <div class="bloco-comando">
-                <div class="comando-info">
-                    <h3>Ativar Câmera Virtual no OBS Studio</h3>
-                    <p>Instala o v4l2loopback do kernel para que o OBS gere webcams virtuais para chamadas de vídeo.</p>
-                    <div class="aviso-caixa">⚠️ Exige que o Secure Boot esteja configurado corretamente ou desativado.</div>
-                    <div class="grupo-botoes">
-                        <button class="btn-executar" onclick="executarOBSCam()" data-comando="obs-cam">Instalar Câmera Virtual</button>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem;">
+                        <!-- Botão: Instalar OBS Studio -->
+                        <button class="btn-executar" style="background-color: #357a38;" onclick="executarOBSStudio()" data-comando="instalar-obs-studio">
+                            📹 Instalar OBS Studio
+                        </button>
+                        <button class="btn-reverter" onclick="reverterOBSStudio()" style="display:none;">↩️ Remover</button>
+
+                        <!-- Botão: Câmera Virtual -->
+                        <button class="btn-executar" onclick="executarOBSCam()" data-comando="obs-cam">
+                            🎥 Ativar Câmera Virtual
+                        </button>
                         <button class="btn-reverter" onclick="reverterOBSCam()" style="display:none;">↩️ Remover</button>
                     </div>
+
+                    <div class="aviso-caixa" style="margin-top: 0.5rem; font-size: 0.85rem;">
+                        ⚠️ A câmera virtual exige que o Secure Boot esteja configurado corretamente ou desativado.
+                    </div>
                 </div>
+
+                <!-- Progresso OBS Studio -->
+                <div class="progress-container" id="progress-instalar-obs-studio">
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-instalar-obs-studio"></div></div>
+                    <div class="progress-text"><span class="status" id="progress-status-instalar-obs-studio">⏳ Iniciando...</span><span class="percentage" id="progress-percent-instalar-obs-studio">0%</span></div>
+                </div>
+                <div class="terminal-log" id="log-instalar-obs-studio"></div>
+
+                <!-- Progresso Câmera Virtual -->
                 <div class="progress-container" id="progress-obs-cam">
                     <div class="progress-bar"><div class="progress-fill" id="progress-fill-obs-cam"></div></div>
                     <div class="progress-text"><span class="status" id="progress-status-obs-cam">⏳ Iniciando...</span><span class="percentage" id="progress-percent-obs-cam">0%</span></div>
@@ -57,7 +57,7 @@
             <!-- EasyEffects -->
             <div class="bloco-comando">
                 <div class="comando-info">
-                    <h3>Melhoria de Áudio com EasyEffects</h3>
+                    <h3>🎵 Melhoria de Áudio com EasyEffects</h3>
                     <p>Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
                     <div class="grupo-botoes">
                         <button class="btn-executar" onclick="executarEasyEffects()" data-comando="instalar-easyeffects">Instalar EasyEffects (Flatpak)</button>

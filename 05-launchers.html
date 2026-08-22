@@ -35,15 +35,14 @@
                 <div class="comando-info">
                     <h3>Instalar Launchers e Pacotes Essenciais</h3>
                     <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                        ℹ️ Todos os launchers são instalados via Flatpak (não requerem senha de root).
+                    </p>
                     <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button class="btn-executar" onclick="executarSteam()" data-comando="steam-install">🎮 Steam</button>
-                        <button class="btn-reverter" onclick="reverterSteam()" style="display:none;">↩️</button>
                         <button class="btn-executar" style="background-color: #10b981;" onclick="executarHeroic()" data-comando="heroic-install">⚡ Heroic Games</button>
-                        <button class="btn-reverter" onclick="reverterHeroic()" style="display:none;">↩️</button>
                         <button class="btn-executar" style="background-color: #8b5cf6;" onclick="executarLutris()" data-comando="lutris-install">🎯 Lutris</button>
-                        <button class="btn-reverter" onclick="reverterLutris()" style="display:none;">↩️</button>
                         <button class="btn-executar" style="background-color: #f59e0b;" onclick="executarProtonUp()" data-comando="protonup-install">🔄 ProtonUp-Qt</button>
-                        <button class="btn-reverter" onclick="reverterProtonUp()" style="display:none;">↩️</button>
                     </div>
                 </div>
                 <div class="progress-container" id="progress-steam-install">
