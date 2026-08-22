@@ -1,6 +1,13 @@
 /**
  * Módulo Btrfs - Gerenciador de Snapshots
- * Versão: 0.7.0-alpha
+ * Versão: 0.7.1-alpha - CORREÇÕES
+ *
+ * CORREÇÕES v0.7.1-alpha:
+ *   - Botões "Tornar Padrão" agora usam snapshot selecionado na lista
+ *   - Correção do comando para definir snapshot como padrão de boot (btrfs subvolume set-default)
+ *   - Adicionada função para obter Subvolume ID
+ *   - Botão "Tornar Padrão (Read-Write)" agora funciona corretamente
+ *   - Remove dependência do botão "Ver Snapshot Atual"
  *
  * Comunica com o servidor FOF via API /executar
  * Todos os comandos usam 'sudo' e acionam autenticação (pkexec)
@@ -106,6 +113,32 @@ async function obterSnapshotAtual() {
         console.error('Erro ao obter snapshot atual:', e);
         return null;
     }
+}
+
+// ============================================================
+// NOVA FUNÇÃO: Obter Subvolume ID
+// ============================================================
+
+/**
+ * Obtém o Subvolume ID de um snapshot
+ * @param {number} snapshotNumber - Número do snapshot
+ * @returns {string} Subvolume ID (ex: "256")
+ */
+async function obterSubvolumeId(snapshotNumber) {
+    if (!snapshotNumber || snapshotNumber <= 0) {
+        throw new Error('Número do snapshot inválido');
+    }
+
+    const comando = `btrfs subvolume show /.snapshots/${snapshotNumber}/snapshot 2>/dev/null | grep "Subvolume ID:" | awk '{print $3}'`;
+    const id = 'get-subvolume-id-' + Date.now();
+    const output = await executarComandoSSE(comando, id);
+    const subvolumeId = output.trim();
+
+    if (!subvolumeId || isNaN(parseInt(subvolumeId, 10))) {
+        throw new Error(`Não foi possível obter o Subvolume ID do snapshot #${snapshotNumber}`);
+    }
+
+    return subvolumeId;
 }
 
 // ============================================================
@@ -815,7 +848,7 @@ async function setSnapshotDefault(snapshotNumber) {
 
     const comando = `sudo snapper -c root set-default ${snapshotNumber}`;
     const id = 'snapper-set-default-' + Date.now();
-    console.log(`📌 Tornando snapshot #${snapshotNumber} o padrão...`);
+    console.log(`📌 Tornando snapshot #${snapshotNumber} o padrão (snapper)...`);
 
     await executarComandoSSE(comando, id);
 
@@ -824,11 +857,11 @@ async function setSnapshotDefault(snapshotNumber) {
 
 
 // ============================================================
-// 7. TORNAR SNAPSHOT PADRÃO + READ-WRITE (COMPLETO)
+// 7. TORNAR SNAPSHOT PADRÃO + READ-WRITE (COMPLETO) - CORRIGIDO
 // ============================================================
 
 /**
- * Torna um snapshot read-write e o define como padrão
+ * Torna um snapshot read-write e o define como padrão de boot
  * @param {number} snapshotNumber - Número do snapshot
  */
 async function tornarSnapshotPadraoCompleto(snapshotNumber) {
@@ -859,15 +892,23 @@ async function tornarSnapshotPadraoCompleto(snapshotNumber) {
         console.log(`✅ Snapshot #${snapshotNumber} já é read-write.`);
     }
 
-    // 4. Definir como padrão
-    const defaultCmd = `sudo snapper -c root set-default ${snapshotNumber}`;
-    const defaultId = 'snapper-set-default-' + Date.now();
+    // 4. CORREÇÃO: Obter o Subvolume ID do snapshot
+    console.log(`📌 Obtendo Subvolume ID do snapshot #${snapshotNumber}...`);
+    const subvolumeId = await obterSubvolumeId(snapshotNumber);
+    console.log(`✅ Subvolume ID: ${subvolumeId}`);
+
+    // 5. CORREÇÃO: Definir como padrão de boot usando btrfs subvolume set-default
+    console.log(`📌 Definindo subvolume ${subvolumeId} como padrão de boot...`);
+    const defaultCmd = `sudo btrfs subvolume set-default ${subvolumeId} /`;
+    const defaultId = 'btrfs-set-default-' + Date.now();
     await executarComandoSSE(defaultCmd, defaultId);
+    console.log(`✅ Subvolume ${subvolumeId} definido como padrão de boot!`);
 
     return {
         success: true,
         number: snapshotNumber,
-        message: `Snapshot #${snapshotNumber} agora é read-write e definido como padrão!`
+        subvolumeId: subvolumeId,
+        message: `Snapshot #${snapshotNumber} agora é read-write e definido como padrão de boot!`
     };
 }
 
@@ -881,7 +922,18 @@ async function tornarSnapshotPadraoCompleto(snapshotNumber) {
  */
 async function restoreNormalBoot() {
     try {
+        // Obter o Subvolume ID do sistema principal (subvolume @)
+        const subvolumeId = await obterSubvolumeId(0);
+        console.log(`📌 Subvolume ID do sistema principal: ${subvolumeId}`);
+
+        // Definir o subvolume @ como padrão
+        const defaultCmd = `sudo btrfs subvolume set-default ${subvolumeId} /`;
+        const defaultId = 'btrfs-set-default-root-' + Date.now();
+        await executarComandoSSE(defaultCmd, defaultId);
+
+        // Também definir no Snapper para consistência
         await executarComandoSSE('sudo snapper -c root set-default 0', 'snapper-set-default-0');
+
         return { success: true, message: 'Boot normal restaurado!' };
     } catch (e) {
         throw new Error(`Erro ao restaurar boot normal: ${e.message}`);
@@ -914,10 +966,11 @@ window.atualizarBotoesPadrao = function() {
             } else {
                 btnTornarPadrao.disabled = false;
                 btnTornarPadrao.title = 'Tornar este snapshot o padrão (readonly)';
+                btnTornarPadrao.dataset.snapshotNumber = snapshotNumber;
             }
         } else {
             btnTornarPadrao.disabled = true;
-            btnTornarPadrao.title = 'Selecione exatamente um snapshot';
+            btnTornarPadrao.title = selected.length === 0 ? 'Selecione um snapshot' : 'Selecione apenas um snapshot';
         }
     }
 
@@ -929,19 +982,20 @@ window.atualizarBotoesPadrao = function() {
                 btnTornarPadraoCompleto.title = 'Não é possível tornar o snapshot atual (0) o padrão';
             } else {
                 btnTornarPadraoCompleto.disabled = false;
-                btnTornarPadraoCompleto.title = 'Tornar este snapshot read-write e padrão';
+                btnTornarPadraoCompleto.title = 'Tornar este snapshot read-write e padrão de boot';
+                btnTornarPadraoCompleto.dataset.snapshotNumber = snapshotNumber;
             }
         } else {
             btnTornarPadraoCompleto.disabled = true;
-            btnTornarPadraoCompleto.title = 'Selecione exatamente um snapshot';
+            btnTornarPadraoCompleto.title = selected.length === 0 ? 'Selecione um snapshot' : 'Selecione apenas um snapshot';
         }
     }
 };
 
 /**
- * Função para obter o número do snapshot selecionado ou atual
+ * Função para obter o número do snapshot selecionado
  */
-window.obterNumeroSnapshotParaPadrao = function() {
+window.obterNumeroSnapshotSelecionado = function() {
     const selected = document.querySelectorAll('.snapshot-checkbox:checked:not([disabled])');
     if (selected.length === 1) {
         return parseInt(selected[0].dataset.number);
@@ -1305,7 +1359,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- Tornar Snapshot Padrão (Versão Simples) ---
+    // --- Tornar Snapshot Padrão (Versão Simples) - CORRIGIDO ---
     const btnSnapshotAtual = document.getElementById('btn-snapshot-atual');
     const defaultStatus = document.getElementById('default-status');
 
@@ -1324,15 +1378,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         snapshotAtualNumber = data.snapshotNumber;
                         defaultStatus.innerHTML = `🔄 Você está rodando no snapshot <strong>#${data.snapshotNumber}</strong>`;
                         defaultStatus.style.color = '#f59e0b';
-                        // Habilitar botões usando o snapshot atual
+                        // Habilitar botões usando o snapshot atual (como fallback)
                         if (btnTornarPadrao) {
-                            btnTornarPadrao.disabled = false;
-                            btnTornarPadrao.title = 'Tornar este snapshot o padrão (readonly)';
                             btnTornarPadrao.dataset.snapshotNumber = data.snapshotNumber;
                         }
                         if (btnTornarPadraoCompleto) {
-                            btnTornarPadraoCompleto.disabled = false;
-                            btnTornarPadraoCompleto.title = 'Tornar este snapshot read-write e padrão';
                             btnTornarPadraoCompleto.dataset.snapshotNumber = data.snapshotNumber;
                         }
                         // Mostrar botão de restaurar
@@ -1343,14 +1393,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         snapshotAtualNumber = null;
                         defaultStatus.innerHTML = `✅ Você está rodando no sistema principal (fora de um snapshot)`;
                         defaultStatus.style.color = '#34d399';
-                        if (btnTornarPadrao) {
-                            btnTornarPadrao.disabled = true;
-                            btnTornarPadrao.title = 'Você está no sistema principal (não em um snapshot)';
-                        }
-                        if (btnTornarPadraoCompleto) {
-                            btnTornarPadraoCompleto.disabled = true;
-                            btnTornarPadraoCompleto.title = 'Você está no sistema principal (não em um snapshot)';
-                        }
                         if (btnRestaurarPadrao) {
                             btnRestaurarPadrao.style.display = 'none';
                         }
@@ -1367,17 +1409,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- CORREÇÃO: Tornar snapshot ATUAL o padrão (versão simples) ---
+    // --- CORREÇÃO: Tornar snapshot selecionado o padrão (versão simples) ---
     if (btnTornarPadrao) {
         btnTornarPadrao.addEventListener('click', async function() {
-            // Obter número do snapshot
+            // Obter número do snapshot do dataset (definido pela seleção ou pelo btn-snapshot-atual)
             let snapshotNumber = null;
 
-            // Primeiro, tentar obter do dataset (definido pelo btn-snapshot-atual)
             if (this.dataset.snapshotNumber) {
                 snapshotNumber = parseInt(this.dataset.snapshotNumber);
             } else {
-                // Tentar obter via API
+                // Fallback: tentar obter via API
                 try {
                     const response = await fetch(API_URL + '/check-booted-snapshot');
                     if (response.ok) {
@@ -1391,16 +1432,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Se ainda não tiver, tentar via seleção manual
-            if (!snapshotNumber) {
-                const selected = document.querySelectorAll('.snapshot-checkbox:checked:not([disabled])');
-                if (selected.length === 1) {
-                    snapshotNumber = parseInt(selected[0].dataset.number);
-                }
-            }
-
             if (!snapshotNumber || snapshotNumber <= 0) {
-                defaultStatus.textContent = '❌ Nenhum snapshot válido selecionado ou detectado.';
+                defaultStatus.textContent = '❌ Selecione um snapshot na lista acima.';
                 defaultStatus.style.color = '#ef4444';
                 return;
             }
@@ -1440,17 +1473,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- CORREÇÃO: Tornar snapshot ATUAL o padrão + read-write (versão completa) ---
+    // --- CORREÇÃO: Tornar snapshot selecionado o padrão + read-write (versão completa) ---
     if (btnTornarPadraoCompleto) {
         btnTornarPadraoCompleto.addEventListener('click', async function() {
-            // Obter número do snapshot
+            // Obter número do snapshot do dataset (definido pela seleção ou pelo btn-snapshot-atual)
             let snapshotNumber = null;
 
-            // Primeiro, tentar obter do dataset (definido pelo btn-snapshot-atual)
             if (this.dataset.snapshotNumber) {
                 snapshotNumber = parseInt(this.dataset.snapshotNumber);
             } else {
-                // Tentar obter via API
+                // Fallback: tentar obter via API
                 try {
                     const response = await fetch(API_URL + '/check-booted-snapshot');
                     if (response.ok) {
@@ -1464,16 +1496,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Se ainda não tiver, tentar via seleção manual
-            if (!snapshotNumber) {
-                const selected = document.querySelectorAll('.snapshot-checkbox:checked:not([disabled])');
-                if (selected.length === 1) {
-                    snapshotNumber = parseInt(selected[0].dataset.number);
-                }
-            }
-
             if (!snapshotNumber || snapshotNumber <= 0) {
-                defaultStatus.textContent = '❌ Nenhum snapshot válido selecionado ou detectado.';
+                defaultStatus.textContent = '❌ Selecione um snapshot na lista acima.';
                 defaultStatus.style.color = '#ef4444';
                 return;
             }
@@ -1489,7 +1513,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `Você está prestes a tornar o snapshot #${snapshotNumber} o PADRÃO com permissões READ-WRITE.\n\n` +
             `Isso significa:\n` +
             `• O snapshot será TORNADO read-write (para permitir instalações e alterações)\n` +
-            `• DEFINIDO como padrão para o próximo boot\n\n` +
+            `• DEFINIDO como padrão de boot no Btrfs\n\n` +
             `Este snapshot se tornará seu NOVO SISTEMA PRINCIPAL.\n\n` +
             `Tem certeza?`;
 
@@ -1522,7 +1546,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const confirmMsg =
             `⚠️ ATENÇÃO!\n\n` +
             `Você está prestes a restaurar o boot normal.\n\n` +
-            `Isso significa que o sistema voltará a iniciar pelo sistema principal (#0).\n\n` +
+            `Isso significa que o sistema voltará a iniciar pelo sistema principal (subvolume @).\n\n` +
             `Tem certeza que deseja continuar?`;
 
             if (!confirm(confirmMsg)) return;
@@ -1536,8 +1560,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 defaultStatus.textContent = `✅ ${result.message}`;
                 defaultStatus.style.color = '#34d399';
                 this.style.display = 'none';
-                if (btnTornarPadrao) btnTornarPadrao.disabled = true;
-                if (btnTornarPadraoCompleto) btnTornarPadraoCompleto.disabled = true;
+                if (btnTornarPadrao) {
+                    btnTornarPadrao.disabled = true;
+                    delete btnTornarPadrao.dataset.snapshotNumber;
+                }
+                if (btnTornarPadraoCompleto) {
+                    btnTornarPadraoCompleto.disabled = true;
+                    delete btnTornarPadraoCompleto.dataset.snapshotNumber;
+                }
             } catch (err) {
                 defaultStatus.textContent = '❌ Erro: ' + err.message;
                 defaultStatus.style.color = '#ef4444';
@@ -1559,5 +1589,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    console.log('🚀 Módulo Btrfs v0.7.0-alpha carregado!');
+    console.log('🚀 Módulo Btrfs v0.7.1-alpha carregado!');
 });
