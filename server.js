@@ -763,7 +763,7 @@ const server = http.createServer((req, res) => {
             autenticacao: metodo.descricao,
             nodeVersion: process.version,
             platform: process.platform,
-            version: '0.5.0-alpha'
+            version: '0.7.0-alpha'
         }));
         return;
     }
