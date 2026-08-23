@@ -344,7 +344,7 @@ Este projeto está licenciado sob a **GPL-3.0 License** - veja o arquivo [LICENS
 
 **VitãoTub**
 - 🌐 [Website](https://www.vitaotub.com)
-- 🐙 [GitHub](https://github.com/vitaotek)
+- 🐙 [GitHub](https://github.com/vitaotub)
 
 ---
 
