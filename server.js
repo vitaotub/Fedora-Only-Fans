@@ -517,6 +517,9 @@ function procederComExecucao(comando, idComando, isReversao, res) {
     }));
 
     setImmediate(() => {
+        // ============================================================
+        // COMANDOS QUE NÃO PRECISAM DE AUTENTICAÇÃO
+        // ============================================================
         const comandosSemAutenticacao = [
             'rpm -q',
             'uname -r',
@@ -527,40 +530,87 @@ function procederComExecucao(comando, idComando, isReversao, res) {
             'whoami',
             'rpm -qa',
             'test',
-            'gtk-launch'
+            'gtk-launch',
+            // CORREÇÃO: Adicionar comandos flatpak que NÃO precisam de sudo
+            'flatpak install',
+            'flatpak uninstall',
+            'flatpak update',
+            'flatpak remote-add',
+            'flatpak remote-delete',
+            'flatpak list',
+            'flatpak info',
+            'flatpak search',
+            'flatpak run'
+        ];
+
+        // ============================================================
+        // COMANDOS QUE PRECISAM DE AUTENTICAÇÃO
+        // ============================================================
+        const comandosComAutenticacao = [
+            'sudo ',
+            'pkexec ',
+            'kdesu ',
+            'dnf remove',
+            'dnf install',
+            'dnf autoremove',
+            'dnf upgrade',
+            'dnf update',
+            'dnf config-manager',
+            'dnf swap',
+            'dnf distro-sync',
+            'dnf system-upgrade',
+            'localectl',
+            'timedatectl',
+            'btrfs',
+            'snapper',
+            'grub2-mkconfig',
+            'grub2-editenv'
         ];
 
         let precisaAutenticacao = false;
-        const isSemAutenticacao = comandosSemAutenticacao.some(cmd => comando.includes(cmd));
+        let isSemAutenticacao = false;
 
-        if (comando.includes('sudo ') ||
-            comando.includes('pkexec ') ||
-            comando.includes('kdesu ') ||
-            comando.includes('dnf remove') ||
-            comando.includes('dnf install') ||
-            comando.includes('dnf autoremove')) {
-            precisaAutenticacao = true;
+        // Verificar se o comando está na lista de comandos sem autenticação
+        for (const cmd of comandosSemAutenticacao) {
+            if (comando.includes(cmd)) {
+                isSemAutenticacao = true;
+                break;
+            }
+        }
+
+        // Se NÃO estiver na lista de sem autenticação, verificar se precisa de autenticação
+        if (!isSemAutenticacao) {
+            // Verificar se o comando está na lista de comandos que precisam de autenticação
+            for (const cmd of comandosComAutenticacao) {
+                if (comando.includes(cmd)) {
+                    precisaAutenticacao = true;
+                    break;
+                }
             }
 
-            if (!isSemAutenticacao && !precisaAutenticacao) {
+            // Se não está em nenhuma lista específica, marcar como precisa autenticação (fallback seguro)
+            if (!precisaAutenticacao) {
                 precisaAutenticacao = true;
             }
+        }
 
-            if (precisaAutenticacao) {
-                console.log(`[AUTH] Comando requer autenticação: ${comando}`);
-                executarComAutenticacaoSegura(comando, idComando, isReversao, (error, stdout, stderr) => {
-                    if (error) {
-                        console.error(`[ERRO] ${idComando}:`, error.message);
-                    }
-                });
-            } else {
-                console.log(`[NOAUTH] Comando NÃO requer autenticação: ${comando}`);
-                executarComandoComStream(comando, idComando, isReversao, (error, stdout, stderr) => {
-                    if (error) {
-                        console.error(`[ERRO] ${idComando}:`, error.message);
-                    }
-                });
-            }
+        console.log(`[AUTH CHECK] Comando: ${comando.substring(0, 50)}... | SemAuth: ${isSemAutenticacao} | PrecisaAuth: ${precisaAutenticacao}`);
+
+        if (precisaAutenticacao) {
+            console.log(`[AUTH] Comando requer autenticação: ${comando}`);
+            executarComAutenticacaoSegura(comando, idComando, isReversao, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`[ERRO] ${idComando}:`, error.message);
+                }
+            });
+        } else {
+            console.log(`[NOAUTH] Comando NÃO requer autenticação: ${comando}`);
+            executarComandoComStream(comando, idComando, isReversao, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`[ERRO] ${idComando}:`, error.message);
+                }
+            });
+        }
     });
 }
 

@@ -789,7 +789,11 @@ async function toggleLauncher(nome, idComando, comandoInstalar, comandoDesinstal
 
 async function executarSteam() {
     const idComando = 'steam-install';
-    const comando = 'flatpak install flathub com.valvesoftware.Steam -y';
+
+    // Comando para instalar o Steam via Flatpak E os pacotes steam-devices
+    // Nota: steam-devices requer sudo, então separamos em dois comandos
+    const comandoSteam = 'flatpak install flathub com.valvesoftware.Steam -y';
+    const comandoDevices = 'sudo dnf install -y steam-devices 2>/dev/null || true';
 
     const logBox = document.getElementById('log-' + idComando);
     if (!logBox) {
@@ -806,7 +810,7 @@ async function executarSteam() {
 
     const header = document.createElement('div');
     header.className = 'log-line info';
-    header.textContent = '🎮 Instalando Steam via Flatpak... (' + new Date().toLocaleTimeString() + ')';
+    header.textContent = '🎮 Instalando Steam e steam-devices... (' + new Date().toLocaleTimeString() + ')';
     logBox.appendChild(header);
     logBox.scrollTop = logBox.scrollHeight;
 
@@ -820,19 +824,21 @@ async function executarSteam() {
     }
 
     try {
-        const response = await fetch(API_URL + '/executar', {
+        // Passo 1: Instalar Steam via Flatpak
+        const response1 = await fetch(API_URL + '/executar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando })
+            body: JSON.stringify({ comando: comandoSteam, idComando: idComando + '-flatpak' })
         });
 
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
+        if (!response1.ok) {
+            throw new Error(`Erro HTTP na instalação do Steam: ${response1.status}`);
         }
 
+        // Aguardar conclusão do Steam
         await new Promise((resolve) => {
             const checkInterval = setInterval(() => {
-                const status = getStatusComando(idComando);
+                const status = getStatusComando(idComando + '-flatpak');
                 if (status === 'executado') {
                     clearInterval(checkInterval);
                     resolve();
@@ -845,22 +851,72 @@ async function executarSteam() {
             }, 120000);
         });
 
-        const successLine = document.createElement('div');
-        successLine.className = 'log-line success';
-        successLine.textContent = '✅ Steam instalado com sucesso!';
-        logBox.appendChild(successLine);
+        // Log de sucesso do Steam
+        const successLine1 = document.createElement('div');
+        successLine1.className = 'log-line success';
+        successLine1.textContent = '✅ Steam instalado com sucesso!';
+        logBox.appendChild(successLine1);
         logBox.scrollTop = logBox.scrollHeight;
 
+        // Passo 2: Instalar steam-devices (requer sudo)
+        const infoLine = document.createElement('div');
+        infoLine.className = 'log-line info';
+        infoLine.textContent = '🔧 Instalando steam-devices (requer autenticação)...';
+        logBox.appendChild(infoLine);
+        logBox.scrollTop = logBox.scrollHeight;
+
+        const response2 = await fetch(API_URL + '/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ comando: comandoDevices, idComando: idComando + '-devices' })
+        });
+
+        if (!response2.ok) {
+            // steam-devices pode falhar, não é crítico
+            console.warn('Aviso: steam-devices pode não ter sido instalado');
+        }
+
+        // Aguardar conclusão do steam-devices
+        await new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+                const status = getStatusComando(idComando + '-devices');
+                if (status === 'executado') {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 1000);
+
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                resolve();
+            }, 30000);
+        });
+
+        const successLine2 = document.createElement('div');
+        successLine2.className = 'log-line success';
+        successLine2.textContent = '✅ steam-devices instalado com sucesso!';
+        logBox.appendChild(successLine2);
+        logBox.scrollTop = logBox.scrollHeight;
+
+        // Finalizar progresso
         completarProgresso(idComando, true);
 
-        // Marcar como concluído permanentemente (sem desfazer)
+        // Marcar como concluído
         if (btnExecutar) {
             btnExecutar.innerHTML = '✅ Steam instalado';
             btnExecutar.style.backgroundColor = '#4b5563';
             btnExecutar.style.cursor = 'default';
+            btnExecutar.style.opacity = '1';
             btnExecutar.disabled = true;
         }
         marcarComoExecutado(idComando);
+
+        // Mensagem final
+        const finalLine = document.createElement('div');
+        finalLine.className = 'log-line success';
+        finalLine.textContent = '🎮 Steam + steam-devices instalados com sucesso!';
+        logBox.appendChild(finalLine);
+        logBox.scrollTop = logBox.scrollHeight;
 
     } catch (e) {
         console.error('Erro ao instalar Steam:', e);
@@ -1271,10 +1327,130 @@ function abrirCentralApps() {
     });
 }
 
+/**
+ * Instala a câmera virtual para OBS Studio
+ */
 async function executarOBSCam() {
     const idComando = 'obs-cam';
     const comando = 'sudo dnf install akmod-v4l2loopback v4l-utils -y 2>/dev/null || sudo dnf install v4l2loopback v4l-utils -y';
-    await executarComandoPadrao(idComando, comando);
+
+    const logBox = document.getElementById('log-' + idComando);
+    if (!logBox) {
+        console.error('Log box não encontrado: log-' + idComando);
+        return;
+    }
+
+    iniciarProgresso(idComando);
+
+    logBox.innerHTML = '';
+    logBox.style.display = 'block';
+    logBox.style.height = '100px';
+    logBox.style.maxHeight = '100px';
+
+    const header = document.createElement('div');
+    header.className = 'log-line info';
+    header.textContent = '🎥 Instalando câmera virtual... (' + new Date().toLocaleTimeString() + ')';
+    logBox.appendChild(header);
+    logBox.scrollTop = logBox.scrollHeight;
+
+    conectarSSE(idComando, logBox);
+
+    const botoes = obterBotoesPorId(idComando);
+    const btnExecutar = botoes.btnExecutar;
+    const btnReverter = botoes.btnReverter;
+
+    if (btnExecutar && !btnExecutar.hasAttribute('data-texto-original')) {
+        btnExecutar.setAttribute('data-texto-original', btnExecutar.textContent);
+    }
+
+    if (btnExecutar) {
+        btnExecutar.disabled = true;
+        btnExecutar.textContent = '⏳ Instalando...';
+        btnExecutar.style.opacity = '0.6';
+    }
+
+    try {
+        const response = await fetch(API_URL + '/executar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ comando: comando, idComando: idComando })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+
+        await new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+                const status = getStatusComando(idComando);
+                if (status === 'executado') {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 1000);
+
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                resolve();
+            }, 60000);
+        });
+
+        const successLine = document.createElement('div');
+        successLine.className = 'log-line success';
+        successLine.textContent = '✅ Câmera virtual instalada com sucesso!';
+        logBox.appendChild(successLine);
+        logBox.scrollTop = logBox.scrollHeight;
+
+        completarProgresso(idComando, true);
+
+        // CORREÇÃO: Texto alterado para "✅ Câmera Virtual Habilitada"
+        if (btnExecutar) {
+            const original = btnExecutar.getAttribute('data-texto-original') || '🎥 Ativar Câmera Virtual';
+            btnExecutar.innerHTML = '✅ Câmera Virtual Habilitada';
+            btnExecutar.style.backgroundColor = '#4b5563';
+            btnExecutar.style.cursor = 'default';
+            btnExecutar.style.opacity = '1';
+            btnExecutar.disabled = true;
+        }
+
+        if (btnReverter) {
+            btnReverter.style.display = 'inline-block';
+            btnReverter.disabled = false;
+            btnReverter.innerHTML = '↩️ Remover';
+            btnReverter.style.backgroundColor = '#ef4444';
+            btnReverter.style.padding = '0.5rem 1rem';
+            btnReverter.style.fontSize = '0.85rem';
+            btnReverter.style.borderRadius = '6px';
+            btnReverter.style.border = 'none';
+            btnReverter.style.cursor = 'pointer';
+            btnReverter.style.color = 'white';
+            btnReverter.style.width = 'auto';
+        }
+
+        marcarComoExecutado(idComando);
+
+    } catch (e) {
+        console.error('Erro ao instalar câmera virtual:', e);
+        const errorLine = document.createElement('div');
+        errorLine.className = 'log-line error';
+        errorLine.textContent = '❌ Erro: ' + e.message;
+        logBox.appendChild(errorLine);
+        logBox.scrollTop = logBox.scrollHeight;
+        completarProgresso(idComando, false);
+
+        if (btnExecutar) {
+            const original = btnExecutar.getAttribute('data-texto-original') || '🎥 Ativar Câmera Virtual';
+            btnExecutar.innerHTML = original;
+            btnExecutar.style.backgroundColor = 'var(--accent)';
+            btnExecutar.style.cursor = 'pointer';
+            btnExecutar.style.opacity = '1';
+            btnExecutar.disabled = false;
+        }
+        if (btnReverter) {
+            btnReverter.style.display = 'none';
+            btnReverter.disabled = true;
+        }
+    }
 }
 
 async function reverterOBSCam() {
@@ -1323,7 +1499,6 @@ async function executarOBSStudio() {
     const btnExecutar = botoes.btnExecutar;
     const btnReverter = botoes.btnReverter;
 
-    // Guardar o texto original antes de mudar
     if (btnExecutar && !btnExecutar.hasAttribute('data-texto-original')) {
         btnExecutar.setAttribute('data-texto-original', btnExecutar.textContent);
     }
@@ -1345,7 +1520,6 @@ async function executarOBSStudio() {
             throw new Error(`Erro HTTP: ${response.status}`);
         }
 
-        // Aguardar conclusão
         await new Promise((resolve) => {
             const checkInterval = setInterval(() => {
                 const status = getStatusComando(idComando);
@@ -1369,17 +1543,16 @@ async function executarOBSStudio() {
 
         completarProgresso(idComando, true);
 
-        // CORREÇÃO: Restaurar o texto original e desabilitar o botão
+        // CORREÇÃO: Texto alterado para "✅ OBS Studio instalado"
         if (btnExecutar) {
             const original = btnExecutar.getAttribute('data-texto-original') || '📹 Instalar OBS Studio';
-            btnExecutar.innerHTML = original;
+            btnExecutar.innerHTML = '✅ OBS Studio instalado';
             btnExecutar.style.backgroundColor = '#4b5563';
             btnExecutar.style.cursor = 'default';
             btnExecutar.style.opacity = '1';
             btnExecutar.disabled = true;
         }
 
-        // Mostrar botão de desinstalar
         if (btnReverter) {
             btnReverter.style.display = 'inline-block';
             btnReverter.disabled = false;
@@ -1405,7 +1578,6 @@ async function executarOBSStudio() {
         logBox.scrollTop = logBox.scrollHeight;
         completarProgresso(idComando, false);
 
-        // Em caso de erro, restaurar o botão
         if (btnExecutar) {
             const original = btnExecutar.getAttribute('data-texto-original') || '📹 Instalar OBS Studio';
             btnExecutar.innerHTML = original;
@@ -1560,7 +1732,7 @@ async function reverterEasyEffects() {
 // --- Sessão 07: Manutenção ---
 async function executarLimpeza() {
     const idComando = 'limpeza-sistema';
-    const comando = 'sudo dnf clean all && sudo dnf autoremove -y && flatpak uninstall --unused -y';
+    const comando = 'sudo dnf clean all && sudo dnf autoremove -y';
     await executarComandoPadrao(idComando, comando);
 }
 
