@@ -116,33 +116,101 @@ async function obterSnapshotAtual() {
 }
 
 // ============================================================
-// NOVA FUNÇÃO: Obter Subvolume ID
+// FUNÇÃO: Obter Subvolume ID (VERSÃO DEFINITIVA - SEM CARACTERES ESPECIAIS)
 // ============================================================
 
 /**
  * Obtém o Subvolume ID de um snapshot
  * @param {number} snapshotNumber - Número do snapshot
+ * @param {boolean} isInsideSnapshot - Se está rodando dentro de um snapshot (opcional)
+ * @param {number} currentSnapshotNumber - Número do snapshot atual (opcional)
  * @returns {string} Subvolume ID (ex: "256")
  */
-async function obterSubvolumeId(snapshotNumber) {
-    if (!snapshotNumber || snapshotNumber <= 0) {
+async function obterSubvolumeId(snapshotNumber, isInsideSnapshot = false, currentSnapshotNumber = null) {
+    if (snapshotNumber === undefined || snapshotNumber === null || snapshotNumber < 0) {
         throw new Error('Número do snapshot inválido');
     }
 
-    const comando = `btrfs subvolume show /.snapshots/${snapshotNumber}/snapshot 2>/dev/null | grep "Subvolume ID:" | awk '{print $3}'`;
-    const id = 'get-subvolume-id-' + Date.now();
-    const output = await executarComandoSSE(comando, id);
-    const subvolumeId = output.trim();
+    let comando;
+    let metodo = '';
 
-    if (!subvolumeId || isNaN(parseInt(subvolumeId, 10))) {
-        throw new Error(`Não foi possível obter o Subvolume ID do snapshot #${snapshotNumber}`);
+    // CASO 1: Estamos dentro do snapshot que queremos consultar
+    if (isInsideSnapshot && snapshotNumber === currentSnapshotNumber) {
+        // Usando awk de forma simples, SEM caracteres especiais no grep
+        comando = `sudo btrfs subvolume show / 2>/dev/null | grep "Subvolume ID" | awk '{print $3}'`;
+        metodo = 'show / com awk (snapshot atual)';
+        console.log(`📌 Obtendo Subvolume ID do snapshot atual (#${snapshotNumber}) via /`);
+    }
+    // CASO 2: Snapshot #0 (sistema principal)
+    else if (snapshotNumber === 0) {
+        comando = `sudo btrfs subvolume show / 2>/dev/null | grep "Subvolume ID" | awk '{print $3}'`;
+        metodo = 'show / com awk (sistema principal)';
+        console.log(`📌 Obtendo Subvolume ID do sistema principal (snapshot #0) via /`);
+    }
+    // CASO 3: Qualquer outro snapshot (fora do snapshot)
+    else {
+        comando = `sudo btrfs subvolume show /.snapshots/${snapshotNumber}/snapshot 2>/dev/null | grep "Subvolume ID" | awk '{print $3}'`;
+        metodo = `show /.snapshots/${snapshotNumber}/snapshot com awk`;
+        console.log(`📌 Obtendo Subvolume ID do snapshot #${snapshotNumber} via /.snapshots/`);
     }
 
+    console.log(`🔧 Método: ${metodo}`);
+    console.log(`🔧 Comando: ${comando}`);
+
+    const id = 'get-subvolume-id-' + Date.now();
+    let output = await executarComandoSSE(comando, id);
+    let subvolumeId = output.trim();
+
+    console.log(`📤 Output bruto: "${output}"`);
+    console.log(`📤 Subvolume ID extraído: "${subvolumeId}"`);
+
+    // Se falhou, tentar método com sed (sem caracteres especiais)
+    if (!subvolumeId || isNaN(parseInt(subvolumeId, 10))) {
+        console.log(`⚠️ Método com awk falhou. Tentando método com sed...`);
+
+        let altComando;
+        if (isInsideSnapshot && snapshotNumber === currentSnapshotNumber) {
+            altComando = `sudo btrfs subvolume show / 2>/dev/null | sed -n 's/.*Subvolume ID: *\\([0-9]*\\).*/\\1/p'`;
+            console.log(`🔧 Método alternativo: sed com espaco simples`);
+        } else if (snapshotNumber === 0) {
+            altComando = `sudo btrfs subvolume show / 2>/dev/null | sed -n 's/.*Subvolume ID: *\\([0-9]*\\).*/\\1/p'`;
+            console.log(`🔧 Método alternativo: sed com espaco simples (sistema principal)`);
+        } else {
+            altComando = `sudo btrfs subvolume show /.snapshots/${snapshotNumber}/snapshot 2>/dev/null | sed -n 's/.*Subvolume ID: *\\([0-9]*\\).*/\\1/p'`;
+            console.log(`🔧 Método alternativo: sed com espaco simples`);
+        }
+
+        const altId = 'get-subvolume-id-alt-' + Date.now();
+        const altOutput = await executarComandoSSE(altComando, altId);
+        subvolumeId = altOutput.trim();
+        console.log(`📤 Output alternativo: "${altOutput}"`);
+        console.log(`📤 Subvolume ID alternativo: "${subvolumeId}"`);
+    }
+
+    // Último recurso: usar btrfs subvolume list
+    if (!subvolumeId || isNaN(parseInt(subvolumeId, 10))) {
+        console.log(`⚠️ Métodos falharam. Tentando btrfs subvolume list...`);
+
+        const lastComando = `sudo btrfs subvolume list / 2>/dev/null | grep "path \\.$" | awk '{print $2}'`;
+        console.log(`🔧 Último recurso: ${lastComando}`);
+
+        const lastId = 'get-subvolume-id-last-' + Date.now();
+        const lastOutput = await executarComandoSSE(lastComando, lastId);
+        subvolumeId = lastOutput.trim();
+        console.log(`📤 Output último recurso: "${lastOutput}"`);
+        console.log(`📤 Subvolume ID último recurso: "${subvolumeId}"`);
+    }
+
+    if (!subvolumeId || isNaN(parseInt(subvolumeId, 10))) {
+        throw new Error(`Não foi possível obter o Subvolume ID do snapshot #${snapshotNumber}.`);
+    }
+
+    console.log(`✅ Subvolume ID final: ${subvolumeId}`);
     return subvolumeId;
 }
 
 // ============================================================
-// 0. VERIFICAÇÃO DA CONFIGURAÇÃO (CORRIGIDA)
+// 0. VERIFICAÇÃO DA CONFIGURAÇÃO
 // ============================================================
 
 /**
@@ -846,6 +914,7 @@ async function setSnapshotDefault(snapshotNumber) {
         throw new Error(`Snapshot #${snapshotNumber} não encontrado`);
     }
 
+    // CORREÇÃO: Usar snapper -c root set-default (não precisa de Subvolume ID)
     const comando = `sudo snapper -c root set-default ${snapshotNumber}`;
     const id = 'snapper-set-default-' + Date.now();
     console.log(`📌 Tornando snapshot #${snapshotNumber} o padrão (snapper)...`);
@@ -857,7 +926,7 @@ async function setSnapshotDefault(snapshotNumber) {
 
 
 // ============================================================
-// 7. TORNAR SNAPSHOT PADRÃO + READ-WRITE (COMPLETO) - CORRIGIDO
+// 7. TORNAR SNAPSHOT PADRÃO + READ-WRITE (COMPLETO) - VERSÃO SIMPLIFICADA
 // ============================================================
 
 /**
@@ -869,40 +938,76 @@ async function tornarSnapshotPadraoCompleto(snapshotNumber) {
         throw new Error('Número do snapshot inválido');
     }
 
-    // 1. Verificar se o snapshot existe
-    const listOutput = await listarSnapshots();
-    if (!listOutput.includes(` ${snapshotNumber} │`)) {
-        throw new Error(`Snapshot #${snapshotNumber} não encontrado`);
+    console.log(`🔄 Iniciando processo para snapshot #${snapshotNumber}...`);
+
+    // ============================================================
+    // PASSO 1: VERIFICAR SE ESTAMOS DENTRO DE UM SNAPSHOT
+    // ============================================================
+    let isInsideSnapshot = false;
+    let currentSnapshotNumber = null;
+
+    try {
+        const bootResponse = await fetch(API_URL + '/check-booted-snapshot');
+        if (bootResponse.ok) {
+            const bootData = await bootResponse.json();
+            if (bootData.inSnapshot) {
+                isInsideSnapshot = true;
+                currentSnapshotNumber = bootData.snapshotNumber;
+                console.log(`🔍 Rodando dentro do snapshot #${currentSnapshotNumber}`);
+            }
+        }
+    } catch (e) {
+        console.warn('Não foi possível verificar se está em um snapshot:', e);
     }
 
-    // 2. Verificar se o snapshot é readonly
-    const checkCmd = `sudo btrfs property get /.snapshots/${snapshotNumber}/snapshot ro 2>/dev/null`;
-    const checkId = 'btrfs-check-readonly-' + Date.now();
-    const output = await executarComandoSSE(checkCmd, checkId);
-    const isReadonly = output.trim().includes('ro=true');
+    // ============================================================
+    // PASSO 2: OBTER SUBVOLUME ID (USANDO A FUNÇÃO CORRIGIDA)
+    // ============================================================
+    console.log(`📌 Obtendo Subvolume ID do snapshot #${snapshotNumber}...`);
+    let subvolumeId;
 
-    // 3. Se for readonly, torná-lo read-write
-    if (isReadonly) {
-        console.log(`📝 Snapshot #${snapshotNumber} é readonly. Tornando read-write...`);
-        const rwCmd = `sudo btrfs property set /.snapshots/${snapshotNumber}/snapshot ro false`;
+    try {
+        subvolumeId = await obterSubvolumeId(snapshotNumber, isInsideSnapshot, currentSnapshotNumber);
+        console.log(`✅ Subvolume ID obtido: ${subvolumeId}`);
+    } catch (e) {
+        console.error(`❌ Erro ao obter Subvolume ID: ${e.message}`);
+        throw new Error(`Não foi possível obter o Subvolume ID do snapshot #${snapshotNumber}: ${e.message}`);
+    }
+
+    // ============================================================
+    // PASSO 3: TORNAR READ-WRITE
+    // ============================================================
+    try {
+        let rwCmd;
+        if (isInsideSnapshot && snapshotNumber === currentSnapshotNumber) {
+            rwCmd = `sudo btrfs property set / ro false`;
+            console.log(`📝 Tornando snapshot atual read-write via /`);
+        } else {
+            rwCmd = `sudo btrfs property set /.snapshots/${snapshotNumber}/snapshot ro false`;
+            console.log(`📝 Tornando snapshot #${snapshotNumber} read-write via /.snapshots/`);
+        }
+
         const rwId = 'btrfs-set-readwrite-' + Date.now();
         await executarComandoSSE(rwCmd, rwId);
         console.log(`✅ Snapshot #${snapshotNumber} agora é read-write!`);
-    } else {
-        console.log(`✅ Snapshot #${snapshotNumber} já é read-write.`);
+    } catch (e) {
+        console.error(`❌ Erro ao tornar read-write: ${e.message}`);
+        throw new Error(`Erro ao tornar snapshot #${snapshotNumber} read-write: ${e.message}`);
     }
 
-    // 4. CORREÇÃO: Obter o Subvolume ID do snapshot
-    console.log(`📌 Obtendo Subvolume ID do snapshot #${snapshotNumber}...`);
-    const subvolumeId = await obterSubvolumeId(snapshotNumber);
-    console.log(`✅ Subvolume ID: ${subvolumeId}`);
-
-    // 5. CORREÇÃO: Definir como padrão de boot usando btrfs subvolume set-default
-    console.log(`📌 Definindo subvolume ${subvolumeId} como padrão de boot...`);
-    const defaultCmd = `sudo btrfs subvolume set-default ${subvolumeId} /`;
-    const defaultId = 'btrfs-set-default-' + Date.now();
-    await executarComandoSSE(defaultCmd, defaultId);
-    console.log(`✅ Subvolume ${subvolumeId} definido como padrão de boot!`);
+    // ============================================================
+    // PASSO 4: DEFINIR COMO PADRÃO DE BOOT
+    // ============================================================
+    try {
+        console.log(`📌 Definindo subvolume ${subvolumeId} como padrão de boot...`);
+        const defaultCmd = `sudo btrfs subvolume set-default ${subvolumeId} /`;
+        const defaultId = 'btrfs-set-default-' + Date.now();
+        await executarComandoSSE(defaultCmd, defaultId);
+        console.log(`✅ Subvolume ${subvolumeId} definido como padrão de boot!`);
+    } catch (e) {
+        console.error(`❌ Erro ao definir padrão: ${e.message}`);
+        throw new Error(`Erro ao definir snapshot #${snapshotNumber} como padrão: ${e.message}`);
+    }
 
     return {
         success: true,
@@ -923,7 +1028,8 @@ async function tornarSnapshotPadraoCompleto(snapshotNumber) {
 async function restoreNormalBoot() {
     try {
         // Obter o Subvolume ID do sistema principal (subvolume @)
-        const subvolumeId = await obterSubvolumeId(0);
+        // snapshotNumber = 0, isInsideSnapshot = false (sempre falso para snapshot 0)
+        const subvolumeId = await obterSubvolumeId(0, false, null);
         console.log(`📌 Subvolume ID do sistema principal: ${subvolumeId}`);
 
         // Definir o subvolume @ como padrão
@@ -1359,7 +1465,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- Tornar Snapshot Padrão (Versão Simples) - CORRIGIDO ---
+    // --- Tornar Snapshot Padrão (Versão Simples) ---
     const btnSnapshotAtual = document.getElementById('btn-snapshot-atual');
     const defaultStatus = document.getElementById('default-status');
 
@@ -1381,9 +1487,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Habilitar botões usando o snapshot atual (como fallback)
                         if (btnTornarPadrao) {
                             btnTornarPadrao.dataset.snapshotNumber = data.snapshotNumber;
+                            btnTornarPadrao.disabled = false;  // <-- CORREÇÃO
+                            btnTornarPadrao.title = 'Tornar este snapshot o padrão (readonly)';
                         }
                         if (btnTornarPadraoCompleto) {
                             btnTornarPadraoCompleto.dataset.snapshotNumber = data.snapshotNumber;
+                            btnTornarPadraoCompleto.disabled = false;  // <-- CORREÇÃO
+                            btnTornarPadraoCompleto.title = 'Tornar este snapshot read-write e padrão de boot';
                         }
                         // Mostrar botão de restaurar
                         if (btnRestaurarPadrao) {
@@ -1393,6 +1503,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         snapshotAtualNumber = null;
                         defaultStatus.innerHTML = `✅ Você está rodando no sistema principal (fora de um snapshot)`;
                         defaultStatus.style.color = '#34d399';
+                        if (btnTornarPadrao) {
+                            btnTornarPadrao.disabled = true;
+                            btnTornarPadrao.title = 'Você está no sistema principal';
+                        }
+                        if (btnTornarPadraoCompleto) {
+                            btnTornarPadraoCompleto.disabled = true;
+                            btnTornarPadraoCompleto.title = 'Você está no sistema principal';
+                        }
                         if (btnRestaurarPadrao) {
                             btnRestaurarPadrao.style.display = 'none';
                         }
