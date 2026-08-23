@@ -2886,10 +2886,6 @@ async function desinstalarFOF() {
 // MÓDULO BTRFS - INTEGRAÇÃO
 // ============================================================
 
-function abrirGerenciadorSnapshots() {
-    window.location.href = '/btrfs-module/index.html';
-}
-
 async function verificarBtrfsAssistantInstalado() {
     try {
         const response = await fetch(API_URL + '/executar', {
@@ -3467,8 +3463,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    setTimeout(verificarBtrfsAssistantInstalado, 1000);
 
     console.log('🚀 Fedora Only Fans v' + FOF_VERSION + ' carregado!');
 });

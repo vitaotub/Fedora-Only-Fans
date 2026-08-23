@@ -695,73 +695,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ============ ROTA: Verificar configuração do Snapper ============
-    if (req.method === 'GET' && req.url === '/check-snapper-config') {
-        const configPath = '/etc/snapper/configs/root';
-        const configured = fs.existsSync(configPath);
-
-        // Verificar se o Snapper está funcionando
-        exec('sudo snapper -c root list 2>/dev/null | head -1', { timeout: 3000 }, (error, stdout) => {
-            const working = !error && stdout && stdout.trim().length > 0;
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                configured: configured && working,
-                configExists: configured,
-                working: working
-            }));
-        });
-        return;
-    }
-
-    // ============ ROTA: Verificar se o Snapper está instalado (sem sudo) ============
-    if (req.method === 'GET' && req.url === '/check-snapper-installed') {
-        exec('which snapper', { timeout: 3000 }, (error, stdout) => {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ installed: !error && !!stdout && stdout.trim().length > 0 }));
-        });
-        return;
-    }
-
-    // ============ ROTA: Verificar se o boot atual está dentro de um snapshot ============
-    if (req.method === 'GET' && req.url === '/check-booted-snapshot') {
-        exec('findmnt -no SOURCE /', { timeout: 3000 }, (error, stdout) => {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            const saida = (stdout || '').trim();
-            const match = saida.match(/\.snapshots\/(\d+)\/snapshot/);
-            res.end(JSON.stringify({
-                inSnapshot: !error && !!match,
-                snapshotNumber: match ? parseInt(match[1], 10) : null
-            }));
-        });
-        return;
-    }
-
-    // ============ ROTA: Servir arquivos do módulo Btrfs ============
-    if (req.method === 'GET' && req.url.startsWith('/btrfs-module/')) {
-        const filePath = req.url.substring(1);
-        const fullPath = path.join(__dirname, filePath);
-
-        if (fs.existsSync(fullPath) && !fullPath.includes('..')) {
-            const ext = path.extname(fullPath).toLowerCase();
-            const mimeTypes = {
-                '.html': 'text/html; charset=utf-8',
-                '.css': 'text/css; charset=utf-8',
-                '.js': 'application/javascript; charset=utf-8',
-                '.png': 'image/png',
-                '.jpg': 'image/jpeg',
-                '.json': 'application/json; charset=utf-8',
-                '.md': 'text/markdown; charset=utf-8'
-            };
-            const mimeType = mimeTypes[ext] || 'application/octet-stream';
-            res.writeHead(200, { 'Content-Type': mimeType });
-            fs.createReadStream(fullPath).pipe(res);
-        } else {
-            res.writeHead(404);
-            res.end('Arquivo não encontrado');
-        }
-        return;
-    }
-
     // Landing page
     if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
         if (fs.existsSync(path.join(__dirname, 'index.html'))) {
@@ -942,11 +875,5 @@ server.listen(PORT, () => {
     console.log(` 📝 Script Wrapper: Ativo (pkexec)`);
     console.log(` 📄 Página inicial: index.html (Landing Page)`);
     console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, ls /boot/vmlinuz-*, test, gtk-launch`);
-    console.log(` 📦 Módulo Btrfs: /btrfs-module/`);
-    console.log(` ✅ Rota /check-snapper-config (sem sudo)`);
-    console.log(` ✅ Rota /check-snapper-installed (sem sudo)`);
-    console.log(` ✅ Rota /check-booted-snapshot (sem sudo)`);
-    console.log(` ✅ CORREÇÃO: Snapper (create, set-config, delete) agora preserva aspas`);
-    console.log(` ✅ CORREÇÃO: Script de setup do Snapper com timeout de 20 min (era 60s)`);
     console.log(`====================================================`);
 });
