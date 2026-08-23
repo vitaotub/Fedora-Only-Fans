@@ -425,19 +425,19 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
     enviarLog(idComando, `🔐 Autenticando para: ${descricao}\n`, 'info');
 
-    const isSnapperCommand = comandoOriginal.includes('snapper -c root');
+    // ============================================================
+    // CORREÇÃO: a escapagem de aspas/$/backtick só faz sentido para o
+    // caminho 'sudo_fallback', onde o comando é embutido dentro de um
+    // `sh -c "..."`. No caminho 'pkexec', o comando é escrito
+    // diretamente em um arquivo .sh (fora de qualquer aspas), então
+    // escapar aqui só corrompe o comando: "Subvolume ID" virava
+    // \"Subvolume ID\" (quebrando grep em dois argumentos), $3 virava
+    // \$3 (erro de sintaxe no awk), e \( \) de regex sed viravam \\( \\)
+    // (grupo de captura destruído, saída vazia sem erro aparente).
+    // A exceção antiga isSnapperCommand só cobria comandos "snapper -c
+    // root" especificamente; agora nenhum comando é escapado no
+    // caminho pkexec, então a exceção deixa de ser necessária.
     const comandoSemSudo = comandoOriginal.replace(/sudo\s+/g, '');
-    let comandoEscapado;
-
-    if (isSnapperCommand) {
-        comandoEscapado = comandoSemSudo;
-    } else {
-        comandoEscapado = comandoSemSudo
-        .replace(/\\/g, '\\\\')
-        .replace(/"/g, '\\"')
-        .replace(/\$/g, '\\$')
-        .replace(/`/g, '\\`');
-    }
 
     let comandoFinal = '';
 
@@ -451,7 +451,7 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
             # Fedora Only Fans - ${descricao}
             # Executado em: $(date '+%d/%m/%Y %H:%M:%S')
 
-            ${comandoEscapado}
+            ${comandoSemSudo}
             `;
 
             try {
@@ -496,7 +496,14 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
                 }
 
                 const senhaLimpa = senha.trim().replace(/'/g, "'\\''");
-                comandoFinal = `echo '${senhaLimpa}' | sudo -S sh -c "${comandoEscapado}"`;
+                // Aqui sim a escapagem é necessária: o comando vai
+                // embutido dentro de um `sh -c "..."`.
+                const comandoEscapadoFallback = comandoSemSudo
+                .replace(/\\/g, '\\\\')
+                .replace(/"/g, '\\"')
+                .replace(/\$/g, '\\$')
+                .replace(/`/g, '\\`');
+                comandoFinal = `echo '${senhaLimpa}' | sudo -S sh -c "${comandoEscapadoFallback}"`;
                 executarComandoComStream(comandoFinal, idComando, isReversao, (error, stdout, stderr) => {
                     callback(error, stdout, stderr);
                 });

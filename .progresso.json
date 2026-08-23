@@ -49,5 +49,17 @@
   "instalar-obs-studio-uninstall",
   "snapper-list-1787386308831",
   "snapper-delete-1787386327522",
-  "snapper-list-1787386334342"
+  "snapper-list-1787386334342",
+  "steam-install-flatpak",
+  "steam-install-devices",
+  "check-grub-btrfs",
+  "snapper-list-1787443998099",
+  "snapper-create-1787444013393",
+  "grub-update-1787444013591",
+  "snapper-list-1787444020195",
+  "get-subvolume-id-1787448239171",
+  "get-subvolume-id-alt-1787448241814",
+  "get-subvolume-id-alt-1787448366586",
+  "get-subvolume-id-1787448894301",
+  "btrfs-set-readwrite-1787448896948"
 ]
