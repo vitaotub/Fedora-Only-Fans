@@ -145,15 +145,13 @@ void on_webview_load_progress(WebKitWebView *webview, gint progress, gpointer us
 }
 
 // ============================================================
-// CORREÇÃO FINAL: Versão compatível com WebKitGTK
+// CORREÇÃO: Versão compatível com WebKitGTK
 // ============================================================
 gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *decision,
                                    WebKitPolicyDecisionType type, gpointer user_data) {
     if (type == WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION) {
-        // CORREÇÃO: Faz cast para WebKitNavigationPolicyDecision
-        WebKitNavigationPolicyDecision *nav_decision = WEBKIT_NAVIGATION_POLICY_DECISION(decision);
-        WebKitNavigationAction *action = webkit_navigation_policy_decision_get_navigation_action(nav_decision);
-        WebKitURIRequest *request = webkit_navigation_action_get_request(action);
+        // Obtém a requisição
+        WebKitURIRequest *request = webkit_policy_decision_get_request(decision);
         const char *uri = webkit_uri_request_get_uri(request);
 
         g_print("[FOF] 🌐 Navegando para: %s\n", uri);
