@@ -4,7 +4,7 @@
 // ============================================================
 //
 // Compilação:
-//   gcc -o fof-container fof-container.c $(pkg-config --cflags --libs webkit2gtk-4.1 gtk+-3.0) -lm
+//   gcc -o fof-container fof-container.c $(pkg-config --cflags --libs webkit2gtk-4.0 gtk+-3.0) -lm
 //
 // Uso:
 //   ./fof-container --url http://localhost:3000 --icon icone_app.png --name "Fedora Only Fans"
@@ -144,11 +144,14 @@ void on_webview_load_progress(WebKitWebView *webview, gint progress, gpointer us
     }
 }
 
+// ============================================================
+// CORREÇÃO: Versão compatível com WebKitGTK mais antigo
+// ============================================================
 gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *decision,
                                    WebKitPolicyDecisionType type, gpointer user_data) {
     if (type == WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION) {
-        // CORREÇÃO: Usa a API moderna para obter a ação de navegação
-        WebKitNavigationAction *action = webkit_policy_decision_get_navigation_action(decision);
+        // CORREÇÃO: Usa a API compatível com versões antigas
+        WebKitNavigationAction *action = webkit_navigation_policy_decision_get_navigation_action(decision);
         WebKitURIRequest *request = webkit_navigation_action_get_request(action);
         const char *uri = webkit_uri_request_get_uri(request);
 
@@ -369,8 +372,6 @@ int main(int argc, char *argv[]) {
     webkit_settings_set_enable_webaudio(settings, FALSE);
     webkit_settings_set_allow_file_access_from_file_urls(settings, TRUE);
     webkit_settings_set_enable_media_stream(settings, TRUE);
-    // CORREÇÃO: Removeu função depreciada
-    // webkit_settings_set_enable_offline_web_application_cache(settings, FALSE);
     webkit_settings_set_enable_page_cache(settings, TRUE);
     webkit_settings_set_enable_smooth_scrolling(settings, TRUE);
 
