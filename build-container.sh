@@ -16,11 +16,30 @@ echo ""
 
 echo "🔍 Verificando dependências..."
 
-if ! pkg-config --exists webkit2gtk-4.1 gtk+-3.0; then
-    echo "❌ Bibliotecas de desenvolvimento não encontradas!"
+# ============================================================
+# DETECÇÃO AUTOMÁTICA DA VERSÃO DO WEBKITGTK
+# ============================================================
+
+WEBKIT_VERSION=""
+WEBKIT_PKG=""
+
+# Tenta encontrar a versão mais recente disponível
+for version in 4.1 4.0; do
+    if pkg-config --exists webkit2gtk-$version gtk+-3.0 2>/dev/null; then
+        WEBKIT_VERSION=$version
+        WEBKIT_PKG="webkit2gtk-$version"
+        echo "✅ WebKitGTK-$version detectado"
+        break
+    fi
+done
+
+if [ -z "$WEBKIT_VERSION" ]; then
+    echo "❌ Nenhuma versão do WebKitGTK encontrada!"
     echo ""
     echo "   Instale com:"
     echo "   sudo dnf install webkit2gtk4.1-devel gtk3-devel"
+    echo "   ou"
+    echo "   sudo dnf install webkit2gtk4.0-devel gtk3-devel"
     echo ""
     exit 1
 fi
@@ -37,10 +56,27 @@ if [ ! -f "src/fof-container.c" ]; then
 fi
 
 echo ""
-echo "📦 Compilando container..."
+echo "📦 Compilando container com WebKitGTK-$WEBKIT_VERSION..."
 
-make clean
-make
+# ============================================================
+# DEFINIÇÕES DE COMPILAÇÃO BASEADAS NA VERSÃO
+# ============================================================
+
+# Define flags específicos para cada versão
+if [ "$WEBKIT_VERSION" = "4.1" ]; then
+    # WebKitGTK 4.1 usa a API mais nova
+    EXTRA_CFLAGS="-DWEBKIT_API_41"
+elif [ "$WEBKIT_VERSION" = "4.0" ]; then
+    # WebKitGTK 4.0 usa a API mais antiga
+    EXTRA_CFLAGS="-DWEBKIT_API_40"
+fi
+
+# Compila usando os flags detectados
+gcc -Wall -O2 \
+    $(pkg-config --cflags $WEBKIT_PKG gtk+-3.0) \
+    $EXTRA_CFLAGS \
+    -o fof-container src/fof-container.c \
+    $(pkg-config --libs $WEBKIT_PKG gtk+-3.0) -lm
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -50,6 +86,7 @@ if [ $? -eq 0 ]; then
     echo ""
     echo "📁 Arquivo: $DIR/fof-container"
     echo "📦 Tamanho: $(du -h fof-container | cut -f1)"
+    echo "🔧 WebKitGTK: $WEBKIT_VERSION"
     echo ""
     echo "Para executar:"
     echo "  ./fof-container"
