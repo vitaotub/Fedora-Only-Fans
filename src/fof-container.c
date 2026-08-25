@@ -33,6 +33,20 @@
 #define DEFAULT_URL "http://localhost:3000"
 
 // ============================================================
+// DETECÇÃO DE VERSÃO DO WEBKITGTK
+// ============================================================
+
+// Se WEBKIT_API_40 estiver definido, usa a API antiga
+// Se WEBKIT_API_41 estiver definido, usa a API nova
+
+// Por padrão, assume a API antiga (4.0)
+#ifndef WEBKIT_API_40
+#ifndef WEBKIT_API_41
+#define WEBKIT_API_40 1
+#endif
+#endif
+
+// ============================================================
 // ESTRUTURA DE DADOS
 // ============================================================
 
@@ -145,22 +159,37 @@ void on_webview_load_progress(WebKitWebView *webview, gint progress, gpointer us
 }
 
 // ============================================================
-// CORREÇÃO: Versão compatível com WebKitGTK
+// CALLBACK DE POLÍTICA - COMPATÍVEL COM MÚLTIPLAS VERSÕES
 // ============================================================
 gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *decision,
                                    WebKitPolicyDecisionType type, gpointer user_data) {
     if (type == WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION) {
-        // Obtém a requisição
-        WebKitURIRequest *request = webkit_policy_decision_get_request(decision);
-        const char *uri = webkit_uri_request_get_uri(request);
+        WebKitURIRequest *request = NULL;
+        const char *uri = NULL;
 
+#if defined(WEBKIT_API_41)
+        // ===== WebKitGTK 4.1 =====
+        WebKitNavigationAction *action = webkit_policy_decision_get_navigation_action(decision);
+        request = webkit_navigation_action_get_request(action);
+#else
+        // ===== WebKitGTK 4.0 =====
+        WebKitNavigationPolicyDecision *nav_decision = WEBKIT_NAVIGATION_POLICY_DECISION(decision);
+        WebKitNavigationAction *action = webkit_navigation_policy_decision_get_navigation_action(nav_decision);
+        request = webkit_navigation_action_get_request(action);
+#endif
+
+        uri = webkit_uri_request_get_uri(request);
         g_print("[FOF] 🌐 Navegando para: %s\n", uri);
 
         // Permite navegação para URLs internas e locais
         if (g_str_has_prefix(uri, "http://localhost:") ||
             g_str_has_prefix(uri, "file://") ||
             g_str_has_prefix(uri, "about:")) {
+#if defined(WEBKIT_API_41)
             webkit_policy_decision_allow(decision);
+#else
+            webkit_policy_decision_use(decision);
+#endif
             return TRUE;
         }
 
