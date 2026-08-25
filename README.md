@@ -1,7 +1,7 @@
 # <img src="icone_app.png" width="55" align="center"> Fedora Only Fans (FOF)
 
 ![Autor](https://img.shields.io/badge/Criador-Vit%C3%A3oTub-blue?style=flat-square)
-![Versão](https://img.shields.io/badge/Versão-v0.7.0--alpha-orange?style=flat-square)
+![Versão](https://img.shields.io/badge/Versão-v0.9.5--alpha-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-40+-294172?style=flat-square&logo=fedora)
 ![Licença](https://img.shields.io/badge/Licen%C3%A7a-GPL--3.0-green?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow?style=flat-square)
@@ -23,13 +23,13 @@ Isso é tudo! O script cuida de todo o resto. 🎉
 
 O instalador irá:
 
-✅ Verificar se você está no Fedora
-✅ Instalar dependências (Node.js, npm, git, curl)
-✅ Baixar o projeto do GitHub
-✅ Instalar dependências Node.js
-✅ Criar o comando `fof` no terminal
-✅ Criar atalho no menu de aplicativos
-✅ Compilar o container nativo WebKitGTK (opcional)
+- ✅ Verificar se você está no Fedora
+- ✅ Instalar dependências (Node.js, npm, git, curl)
+- ✅ Baixar o projeto do GitHub
+- ✅ Instalar dependências Node.js
+- ✅ Criar o comando `fof` no terminal
+- ✅ Criar atalho no menu de aplicativos
+- ✅ Compilar o container nativo WebKitGTK (opcional)
 
 ---
 
@@ -150,12 +150,12 @@ chmod +x iniciar_fof.sh
 
 O script irá:
 
-✅ Verificar se todos os arquivos estão presentes
-✅ Instalar o Node.js (se necessário)
-✅ Instalar as dependências do projeto
-✅ Compilar o container nativo WebKitGTK (se possível)
-✅ Iniciar o servidor na porta 3000
-✅ Abrir a interface no container nativo ou navegador
+- ✅ Verificar se todos os arquivos estão presentes
+- ✅ Instalar o Node.js (se necessário)
+- ✅ Instalar as dependências do projeto
+- ✅ Compilar o container nativo WebKitGTK (se possível)
+- ✅ Iniciar o servidor na porta 3000
+- ✅ Abrir a interface no container nativo ou navegador
 
 ### 🔧 Opções do Script:
 
@@ -207,19 +207,19 @@ firefox http://localhost:3000
 ```
 Fedora-Only-Fans/
 ├── 📄 index.html              # Landing page (escolha do modo)
-├── 📄 guiado.html             # Modo Guiado (passo a passo)
-├── 📄 avancado.html           # Modo Avançado (todas as sessões)
-├── 📄 style.css               # CSS compartilhado
-├── 📄 script.js               # JS compartilhado (com todas as correções)
-├── 📄 00-boas-vindas.html     # Sessão 1
-├── 📄 01-restauracao.html     # Sessão 2
-├── 📄 02-otimizacao.html      # Sessão 3
-├── 📄 03-repositorios.html    # Sessão 4
-├── 📄 04-fontes.html          # Sessão 5
-├── 📄 05-launchers.html       # Sessão 6
-├── 📄 06-loja.html            # Sessão 7
-├── 📄 07-manutencao.html      # Sessão 8
-├── 📄 08-fof-manutencao.html  # Sessão 9
+├── 📄 guiado.html             # Modo Guiado (carrega sessões dinamicamente)
+├── 📄 avancado.html           # Modo Avançado (carrega todas as sessões)
+├── 📄 style.css               # CSS compartilhado (global)
+├── 📄 script.js               # JS compartilhado (funções globais)
+├── 📄 00-boas-vindas.html     # Sessão 1 (HTML + JS específico)
+├── 📄 01-restauracao.html     # Sessão 2 (HTML + JS específico)
+├── 📄 02-otimizacao.html      # Sessão 3 (HTML + JS específico)
+├── 📄 03-repositorios.html    # Sessão 4 (HTML + JS específico)
+├── 📄 04-fontes.html          # Sessão 5 (HTML + JS específico)
+├── 📄 05-launchers.html       # Sessão 6 (HTML + JS específico)
+├── 📄 06-loja.html            # Sessão 7 (HTML + JS específico)
+├── 📄 07-manutencao.html      # Sessão 8 (HTML + JS específico)
+├── 📄 08-fof-manutencao.html  # Sessão 9 (HTML + JS específico)
 ├── 📄 iniciar_fof.sh          # Script de inicialização
 ├── 📄 iniciar_fof_compat.sh   # Modo compatibilidade (GPUs antigas)
 ├── 📄 install.sh              # Instalador do sistema
@@ -263,7 +263,7 @@ tail -f /tmp/fof-*.log
 
 ## 🎯 Roadmap
 
-### v0.7.0 (Atual) ✅
+### v0.9.5 (Atual) ✅
 
 - ✅ Modo Guiado com navegação passo a passo
 - ✅ Modo Avançado com todas as sessões
@@ -278,11 +278,9 @@ tail -f /tmp/fof-*.log
 - ✅ Progresso com timeout de segurança
 - ✅ Modo Compatibilidade para GPUs antigas
 
-### v0.8.0 (Futuro) 🔮
+### v1.0.0 (Futuro) 🔮
 
-- □ Localização (i18n)
 - □ Perfil EasyEffects com presets
-- □ Backup e restauração de configurações
 - □ Tema claro/escuro
 
 ---

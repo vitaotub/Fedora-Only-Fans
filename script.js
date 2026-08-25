@@ -1,31 +1,148 @@
 /**
  * Fedora Only Fans (FOF) - Script Compartilhado
- * Versão: 0.7.0-alpha
+ * Versão: 0.9.5-alpha
  *
- * CORREÇÕES:
- *   - Botões de Launchers mantêm texto original
- *   - Progresso não trava mais em 85%
- *   - Modo Guiado mostra Sessão 9 corretamente
- *   - Central de Apps não pede mais senha
- *   - Função executarDistroSync() adicionada
- *   - Botão para remover repositórios Flatpak do Fedora adicionado
- *   - OBS Studio instalável via Flatpak
- *   - Sessão OBS reorganizada
+ * Este arquivo contém as funções GLOBAIS compartilhadas entre todas as sessões.
+ * Cada sessão (00-*.html) tem seu próprio JS específico que usa estas funções.
  */
 
 // ============================================================
 // CONSTANTES E CONFIGURAÇÕES
 // ============================================================
 
-const FOF_VERSION = '0.7.0-alpha';
+const FOF_VERSION = '0.9.5-alpha';
 const STORAGE_KEY = 'fof_progress';
 const API_URL = 'http://localhost:3000';
 
 // ============================================================
-// GERENCIAMENTO DE PROGRESSO (localStorage)
+// GERENCIAMENTO DE PROGRESSO (API do Servidor + localStorage fallback)
 // ============================================================
 
-function getProgress() {
+let progressCache = null;
+let progressLoaded = false;
+let progressLoading = false;
+
+/**
+ * Busca o progresso do servidor (ou fallback para localStorage)
+ */
+async function getProgress() {
+    // Se já carregou e tem cache, retorna o cache
+    if (progressLoaded && progressCache) {
+        return progressCache;
+    }
+
+    // Evita múltiplas requisições simultâneas
+    if (progressLoading) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        return progressCache || { executados: [], pulados: [] };
+    }
+
+    progressLoading = true;
+
+    try {
+        const response = await fetch(API_URL + '/progress');
+        if (response.ok) {
+            const data = await response.json();
+            progressCache = {
+                executados: data.executados || [],
+                pulados: data.pulados || []
+            };
+            progressLoaded = true;
+
+            // Sincroniza com localStorage (fallback)
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(progressCache));
+            } catch (e) { /* ignore */ }
+
+            progressLoading = false;
+            return progressCache;
+        }
+    } catch (e) {
+        console.warn('⚠️ Não foi possível conectar ao servidor. Usando localStorage como fallback.');
+    }
+
+    // Fallback: localStorage
+    try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        const localData = data ? JSON.parse(data) : { executados: [], pulados: [] };
+        progressCache = localData;
+        progressLoaded = true;
+        progressLoading = false;
+        return localData;
+    } catch (e) {
+        progressLoading = false;
+        return { executados: [], pulados: [] };
+    }
+}
+
+/**
+ * Salva o progresso no servidor (e localStorage como fallback)
+ */
+async function saveProgress(progress) {
+    progressCache = progress;
+    progressLoaded = true;
+
+    // Tenta salvar no servidor
+    try {
+        const response = await fetch(API_URL + '/progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                executados: progress.executados || [],
+                pulados: progress.pulados || []
+            })
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao salvar no servidor');
+        }
+        console.log('✅ Progresso salvo no servidor');
+    } catch (e) {
+        console.warn('⚠️ Não foi possível salvar no servidor. Salvando apenas no localStorage.');
+    }
+
+    // Sempre salva no localStorage como fallback
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    } catch (e) { /* ignore */ }
+}
+
+/**
+ * Reinicia o progresso (remove do servidor e localStorage)
+ */
+async function reiniciarProgresso() {
+    if (!confirm('Tem certeza que deseja reiniciar todo o progresso?\n\nTodas as sessões serão marcadas como pendentes.')) {
+        return;
+    }
+
+    // Remove do servidor
+    try {
+        const response = await fetch(API_URL + '/progress', {
+            method: 'DELETE'
+        });
+        if (response.ok) {
+            console.log('✅ Progresso removido do servidor');
+        }
+    } catch (e) {
+        console.warn('⚠️ Não foi possível remover do servidor');
+    }
+
+    // Remove do localStorage
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+    } catch (e) { /* ignore */ }
+
+    // Limpa cache
+    progressCache = { executados: [], pulados: [] };
+    progressLoaded = true;
+
+    // Recarrega a página
+    location.reload();
+}
+
+/**
+ * Função síncrona para compatibilidade com código existente
+ */
+function getProgressSync() {
     try {
         const data = localStorage.getItem(STORAGE_KEY);
         return data ? JSON.parse(data) : { executados: [], pulados: [] };
@@ -34,53 +151,46 @@ function getProgress() {
     }
 }
 
-function saveProgress(progress) {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-    } catch (e) {
-        console.warn('Não foi possível salvar o progresso:', e);
+/**
+ * Carrega o progresso na inicialização e restaura os botões
+ */
+async function carregarProgressoInicial() {
+    const progress = await getProgress();
+    if (progress.executados) {
+        progress.executados.forEach(id => {
+            // Tenta restaurar o botão com o texto correto
+            const btn = document.querySelector('[data-comando="' + id + '"]');
+            if (btn) {
+                const textoFinal = getTextoAposExecucao(id);
+                btn.textContent = textoFinal;
+                btn.style.backgroundColor = '#4b5563';
+                btn.style.cursor = 'default';
+                btn.disabled = true;
+
+                // Mostra botão reverter se existir
+                const btnReverter = btn.parentElement.querySelector('.btn-reverter');
+                if (btnReverter && !['dnf-speed', 'limpeza-sistema', 'atualizacao-inicial'].includes(id)) {
+                    btnReverter.style.display = 'inline-block';
+                    btnReverter.disabled = false;
+                }
+            }
+        });
     }
+    atualizarInterfaceProgresso();
+    console.log('📊 Progresso carregado:', progress.executados.length + ' itens');
 }
 
-function marcarComoExecutado(idComando) {
-    const progress = getProgress();
-    if (!progress.executados.includes(idComando)) {
-        progress.executados.push(idComando);
-        saveProgress(progress);
-    }
-    atualizarInterfaceProgresso();
-}
-
-function marcarComoPulado(idComando) {
-    const progress = getProgress();
-    if (!progress.pulados.includes(idComando)) {
-        progress.pulados.push(idComando);
-        saveProgress(progress);
-    }
-    atualizarInterfaceProgresso();
-}
-
-function desmarcarComoExecutado(idComando) {
-    const progress = getProgress();
-    progress.executados = progress.executados.filter(id => id !== idComando);
-    saveProgress(progress);
-    atualizarInterfaceProgresso();
-}
-
-function desmarcarComoPulado(idComando) {
-    const progress = getProgress();
-    progress.pulados = progress.pulados.filter(id => id !== idComando);
-    saveProgress(progress);
-    atualizarInterfaceProgresso();
-}
+// ============================================================
+// FUNÇÕES DE PROGRESSO (compatibilidade)
+// ============================================================
 
 function isExecutado(idComando) {
-    const progress = getProgress();
+    const progress = getProgressSync();
     return progress.executados.includes(idComando);
 }
 
 function isPulado(idComando) {
-    const progress = getProgress();
+    const progress = getProgressSync();
     return progress.pulados.includes(idComando);
 }
 
@@ -90,24 +200,79 @@ function getStatusComando(idComando) {
     return 'pendente';
 }
 
+async function marcarComoExecutado(idComando) {
+    const progress = await getProgress();
+    if (!progress.executados.includes(idComando)) {
+        progress.executados.push(idComando);
+        await saveProgress(progress);
+    }
+    atualizarInterfaceProgresso();
+}
+
+async function marcarComoPulado(idComando) {
+    const progress = await getProgress();
+    if (!progress.pulados.includes(idComando)) {
+        progress.pulados.push(idComando);
+        await saveProgress(progress);
+    }
+    atualizarInterfaceProgresso();
+}
+
+async function desmarcarComoExecutado(idComando) {
+    const progress = await getProgress();
+    progress.executados = progress.executados.filter(id => id !== idComando);
+    await saveProgress(progress);
+    atualizarInterfaceProgresso();
+}
+
+async function desmarcarComoPulado(idComando) {
+    const progress = await getProgress();
+    progress.pulados = progress.pulados.filter(id => id !== idComando);
+    await saveProgress(progress);
+    atualizarInterfaceProgresso();
+}
+
+// ============================================================
+// INTERFACE DE PROGRESSO
+// ============================================================
+
 function atualizarInterfaceProgresso() {
-    document.querySelectorAll('.etapa-card').forEach(card => {
+    // Atualiza classes das sessões
+    document.querySelectorAll('.sessao-container').forEach(card => {
         const id = card.id;
         if (!id) return;
-        const status = getStatusComando(id);
+        const sessaoNome = id.replace('sessao-', '');
+        const status = getStatusComando(sessaoNome);
         card.classList.remove('concluida', 'pulada');
         if (status === 'executado') card.classList.add('concluida');
         if (status === 'pulado') card.classList.add('pulada');
     });
+
+        // Atualiza labels das sessões (para modo avançado)
+        document.querySelectorAll('.sessao-label').forEach(label => {
+            const parent = label.closest('.sessao-container');
+            if (parent) {
+                const id = parent.id;
+                if (id) {
+                    const sessaoNome = id.replace('sessao-', '');
+                    const status = getStatusComando(sessaoNome);
+                    label.className = 'sessao-label';
+                    if (status === 'executado') label.classList.add('concluida');
+                    if (status === 'pulado') label.classList.add('pulada');
+                }
+            }
+        });
+
         atualizarBarraProgressoGeral();
 }
 
 function atualizarBarraProgressoGeral() {
-    const progress = getProgress();
+    const progress = getProgressSync();
     const total = 9;
     const concluidos = progress.executados.length;
     const percentual = Math.round((concluidos / total) * 100);
 
+    // Index
     const fill = document.getElementById('progress-geral-fill');
     const count = document.getElementById('progress-geral-count');
     const percent = document.getElementById('progress-geral-percent');
@@ -116,6 +281,7 @@ function atualizarBarraProgressoGeral() {
     if (count) count.textContent = concluidos + '/' + total;
     if (percent) percent.textContent = percentual + '%';
 
+    // Modo Avançado
     const fillAvancado = document.getElementById('progress-geral-fill-avancado');
     const countAvancado = document.getElementById('progress-count');
     const percentAvancado = document.getElementById('progress-percent-label');
@@ -124,6 +290,7 @@ function atualizarBarraProgressoGeral() {
     if (countAvancado) countAvancado.textContent = concluidos + '/' + total;
     if (percentAvancado) percentAvancado.textContent = percentual + '%';
 
+    // Stats do modo avançado
     const statsExecutados = document.getElementById('stats-executados');
     const statsPulados = document.getElementById('stats-pulados');
     const statsPendentes = document.getElementById('stats-pendentes');
@@ -137,2893 +304,42 @@ function atualizarBarraProgressoGeral() {
 }
 
 // ============================================================
-// FUNÇÕES DE BOTÕES
+// BARRA DE PROGRESSO (para comandos individuais)
 // ============================================================
 
-function obterBotoesPorId(idComando) {
-    let btnExecutar = null;
-    const allButtons = document.querySelectorAll('.btn-executar');
-    for (const btn of allButtons) {
-        const onclick = btn.getAttribute('onclick') || '';
-        if (onclick.includes("'" + idComando + "'") || onclick.includes('"' + idComando + '"') || onclick.includes(idComando)) {
-            btnExecutar = btn;
-            break;
-        }
-    }
-    if (!btnExecutar) {
-        btnExecutar = document.querySelector('.btn-executar[data-comando="' + idComando + '"]');
-    }
-    let btnReverter = null;
-    if (btnExecutar && btnExecutar.parentElement) {
-        btnReverter = btnExecutar.parentElement.querySelector('.btn-reverter');
-    }
-    return { btnExecutar: btnExecutar, btnReverter: btnReverter };
-}
-
-function marcarBotaoComoExecutado(idComando) {
-    const botoes = obterBotoesPorId(idComando);
-    const btnExecutar = botoes.btnExecutar;
-    const btnReverter = botoes.btnReverter;
-
-    if (btnExecutar) {
-        if (!btnExecutar.hasAttribute('data-texto-original')) {
-            btnExecutar.setAttribute('data-texto-original', btnExecutar.innerHTML);
-        }
-        btnExecutar.innerHTML = '✅ Concluído';
-        btnExecutar.style.backgroundColor = '#4b5563';
-        btnExecutar.style.cursor = 'default';
-        btnExecutar.disabled = true;
-    }
-    if (btnReverter) {
-        btnReverter.style.display = 'inline-block';
-        btnReverter.disabled = false;
-        btnReverter.innerHTML = '↩️ Desfazer';
-        btnReverter.style.backgroundColor = '#ef4444';
-        btnReverter.style.padding = '0.4rem 0.8rem';
-        btnReverter.style.fontSize = '0.8rem';
-        btnReverter.style.borderRadius = '6px';
-        btnReverter.style.border = 'none';
-        btnReverter.style.cursor = 'pointer';
-        btnReverter.style.color = 'white';
-        btnReverter.style.width = 'auto';
-    }
-    marcarComoExecutado(idComando);
-}
-
-function marcarBotaoComoPermanente(idComando) {
-    const botoes = obterBotoesPorId(idComando);
-    const btnExecutar = botoes.btnExecutar;
-    const btnReverter = botoes.btnReverter;
-
-    if (btnExecutar) {
-        if (!btnExecutar.hasAttribute('data-texto-original')) {
-            btnExecutar.setAttribute('data-texto-original', btnExecutar.innerHTML);
-        }
-        btnExecutar.innerHTML = '✅ Concluído';
-        btnExecutar.style.backgroundColor = '#4b5563';
-        btnExecutar.style.cursor = 'default';
-        btnExecutar.disabled = true;
-    }
-    if (btnReverter) {
-        btnReverter.style.display = 'none';
-        btnReverter.disabled = true;
-    }
-    marcarComoExecutado(idComando);
-}
-
-function restaurarBotaoOriginal(idComando) {
-    const botoes = obterBotoesPorId(idComando);
-    const btnExecutar = botoes.btnExecutar;
-    const btnReverter = botoes.btnReverter;
-
-    if (btnExecutar) {
-        const original = btnExecutar.getAttribute('data-texto-original') || 'Executar';
-        btnExecutar.innerHTML = original;
-        btnExecutar.style.backgroundColor = 'var(--accent)';
-        btnExecutar.style.cursor = 'pointer';
-        btnExecutar.disabled = false;
-    }
-    if (btnReverter) {
-        btnReverter.style.display = 'none';
-        btnReverter.disabled = true;
-        btnReverter.innerHTML = '↩️ Desfazer';
-    }
-    desmarcarComoExecutado(idComando);
-}
-
-// ============================================================
-// CORREÇÃO: RESTAURAR BOTÃO APÓS EXECUÇÃO
-// ============================================================
-
-function restaurarBotaoAposExecucao(idComando, sucesso) {
-    if (sucesso === undefined) sucesso = true;
-    const botoes = obterBotoesPorId(idComando);
-    const btnExecutar = botoes.btnExecutar;
-    const btnReverter = botoes.btnReverter;
-
-    if (!btnExecutar) return;
-
-    // ============================================================
-    // CORREÇÃO SESSÃO 1: "Atualizar Fedora" - SEMPRE CLICÁVEL, SEM DESFAZER
-    // ============================================================
-    if (idComando === 'atualizacao-inicial') {
-        if (btnExecutar) {
-            btnExecutar.disabled = false;
-            btnExecutar.innerHTML = '🔄 Atualizar Fedora';
-            btnExecutar.style.backgroundColor = '#d97706';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.style.cursor = 'pointer';
-        }
-        if (btnReverter) {
-            btnReverter.style.display = 'none';
-            btnReverter.disabled = true;
-        }
-        return;
-    }
-
-    // ============================================================
-    // LAUNCHERS - CORREÇÃO: Mantêm o texto original, ficam desabilitados
-    // ============================================================
-    const launchers = ['steam-install', 'heroic-install', 'lutris-install', 'protonup-install'];
-    if (launchers.indexOf(idComando) !== -1) {
-        if (sucesso) {
-            // Manter o texto original, desabilitar o botão
-            const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
-            btnExecutar.innerHTML = original;
-            btnExecutar.style.backgroundColor = '#4b5563';
-            btnExecutar.style.cursor = 'default';
-            btnExecutar.disabled = true;
-            btnExecutar.style.opacity = '1';
-
-            // Mostrar botão de desinstalar
-            if (btnReverter) {
-                btnReverter.style.display = 'inline-block';
-                btnReverter.disabled = false;
-                btnReverter.innerHTML = '↩️ Desinstalar';
-                btnReverter.style.backgroundColor = '#ef4444';
-                btnReverter.style.padding = '0.5rem 1rem';
-                btnReverter.style.fontSize = '0.85rem';
-                btnReverter.style.borderRadius = '6px';
-                btnReverter.style.border = 'none';
-                btnReverter.style.cursor = 'pointer';
-                btnReverter.style.color = 'white';
-                btnReverter.style.width = '100%';
-            }
-
-            marcarComoExecutado(idComando);
-        } else {
-            // Falha: restaurar estado original
-            const original = btnExecutar.getAttribute('data-texto-original') || 'Executar';
-            btnExecutar.innerHTML = original;
-            btnExecutar.style.backgroundColor = 'var(--accent)';
-            btnExecutar.style.cursor = 'pointer';
-            btnExecutar.disabled = false;
-            if (btnReverter) {
-                btnReverter.style.display = 'none';
-                btnReverter.disabled = true;
-            }
-        }
-        return;
-    }
-
-    // ============================================================
-    // BOTÕES PERMANENTES SEM DESFAZER
-    // ============================================================
-    const botoesPermanentesSemDesfazer = [
-        'idioma-packs',
-        'idioma-hunspell',
-        'idioma-localectl',
-        'dual-boot-time',
-        'fontes-ms-all',
-        'vulkan-amd'
-    ];
-
-    if (botoesPermanentesSemDesfazer.indexOf(idComando) !== -1) {
-        if (sucesso) {
-            marcarBotaoComoPermanente(idComando);
-        }
-        return;
-    }
-
-    // ============================================================
-    // BOTÕES COM DESFAZER (padrão)
-    // ============================================================
-    const botoesComDesfazer = [
-        'btrfs-install',
-        'rpm-fusion',
-        'flatpak-setup',
-        'codecs-essenciais',
-        'extras-tainted',
-        'vaapi-amd',
-        'vaapi-swap',
-        'obs-cam',
-        'instalar-easyeffects',
-        'instalar-obs-studio'
-    ];
-
-    if (botoesComDesfazer.indexOf(idComando) !== -1) {
-        if (sucesso) {
-            marcarBotaoComoExecutado(idComando);
-        } else {
-            if (btnExecutar) {
-                const original = btnExecutar.getAttribute('data-texto-original') || 'Executar';
-                btnExecutar.innerHTML = original;
-                btnExecutar.style.backgroundColor = 'var(--accent)';
-                btnExecutar.style.cursor = 'pointer';
-                btnExecutar.disabled = false;
-            }
-            if (btnReverter) {
-                btnReverter.style.display = 'none';
-                btnReverter.disabled = true;
-            }
-        }
-        return;
-    }
-
-    // ============================================================
-    // COMPORTAMENTO PADRÃO (fallback)
-    // ============================================================
-    if (sucesso) {
-        btnExecutar.innerHTML = '✅ Concluído';
-        btnExecutar.style.backgroundColor = '#4b5563';
-        btnExecutar.style.opacity = '1';
-        btnExecutar.disabled = true;
-
-        marcarComoExecutado(idComando);
-
-        setTimeout(function() {
-            const original = btnExecutar.getAttribute('data-texto-original') || 'Executar';
-            btnExecutar.innerHTML = original;
-            btnExecutar.style.backgroundColor = 'var(--accent)';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.disabled = false;
-        }, 3000);
-    } else {
-        btnExecutar.disabled = false;
-        const original = btnExecutar.getAttribute('data-texto-original') || 'Executar';
-        btnExecutar.innerHTML = original;
-        btnExecutar.style.backgroundColor = 'var(--accent)';
-        btnExecutar.style.opacity = '1';
-    }
-}
-
-// ============================================================
-// FUNÇÃO PADRÃO PARA EXECUTAR COMANDOS
-// ============================================================
-
-async function executarComandoPadrao(idComando, scriptComando, manterHabilitado) {
-    if (manterHabilitado === undefined) manterHabilitado = false;
-    const logBox = document.getElementById('log-' + idComando);
-    if (!logBox) {
-        console.error('Log box não encontrado: log-' + idComando);
-        return;
-    }
-
-    iniciarProgresso(idComando);
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = '🚀 Iniciando... (' + new Date().toLocaleTimeString() + ')';
-    logBox.appendChild(header);
-
-    conectarSSE(idComando, logBox);
-
-    const botoes = obterBotoesPorId(idComando);
-    const btnExecutar = botoes.btnExecutar;
-
-    if (btnExecutar && !btnExecutar.hasAttribute('data-texto-original')) {
-        btnExecutar.setAttribute('data-texto-original', btnExecutar.textContent);
-    }
-
-    if (btnExecutar) {
-        btnExecutar.disabled = true;
-        btnExecutar.textContent = '⏳ Executando...';
-        btnExecutar.style.opacity = '0.6';
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: scriptComando, idComando: idComando })
-        });
-
-        if (!response.ok) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro HTTP: ' + response.status + ' - ' + response.statusText;
-            logBox.appendChild(errorLine);
-            completarProgresso(idComando, false);
-            if (btnExecutar) {
-                btnExecutar.disabled = false;
-                const original = btnExecutar.getAttribute('data-texto-original') || 'Executar';
-                btnExecutar.innerHTML = original;
-                btnExecutar.style.opacity = '1';
-                btnExecutar.style.backgroundColor = 'var(--accent)';
-            }
-        }
-    } catch (e) {
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro de conexão: ' + e.message;
-        logBox.appendChild(errorLine);
-        completarProgresso(idComando, false);
-        if (btnExecutar) {
-            btnExecutar.disabled = false;
-            const original = btnExecutar.getAttribute('data-texto-original') || 'Executar';
-            btnExecutar.innerHTML = original;
-            btnExecutar.style.opacity = '1';
-            btnExecutar.style.backgroundColor = 'var(--accent)';
-        }
-    }
-}
-
-// ============================================================
-// COMANDOS ESPECÍFICOS POR SESSÃO
-// ============================================================
-
-// --- Sessão 00: Boas-Vindas ---
-async function executarAtualizacaoFedora() {
-    const idComando = 'atualizacao-inicial';
-    const comando = 'sudo dnf upgrade --refresh -y';
-    await executarComandoPadrao(idComando, comando);
-}
-
-// --- Sessão 01: Restauração ---
-async function instalarBtrfsAssistant() {
-    const idComando = 'btrfs-install';
-    const comando = 'sudo dnf install btrfs-assistant -y';
-    await executarComandoPadrao(idComando, comando);
-    setTimeout(verificarBtrfsAssistantInstalado, 3000);
-}
-
-function abrirBtrfsAssistant() {
-    fetch('http://localhost:3000/executar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            comando: 'gtk-launch btrfs-assistant 2>/dev/null &',
-            idComando: 'btrfs-open'
-        })
-    });
-}
-
-async function reverterBtrfsAssistant() {
-    const idComando = 'btrfs-install';
-    const comando = 'sudo dnf remove btrfs-assistant -y && sudo dnf clean all && sudo dnf autoremove -y';
-
-    const logBox = document.getElementById('log-' + idComando);
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = '🗑️ Desinstalando Btrfs-Assistant...';
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando + '-uninstall' })
-        });
-
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const botoes = obterBotoesPorId(idComando);
-        if (botoes.btnExecutar) {
-            const original = botoes.btnExecutar.getAttribute('data-texto-original') || '📦 Instalar Btrfs-Assistant';
-            botoes.btnExecutar.innerHTML = original;
-            botoes.btnExecutar.style.backgroundColor = '#8b5cf6';
-            botoes.btnExecutar.style.cursor = 'pointer';
-            botoes.btnExecutar.disabled = false;
-        }
-        if (botoes.btnReverter) {
-            botoes.btnReverter.style.display = 'none';
-            botoes.btnReverter.disabled = true;
-        }
-
-        desmarcarComoExecutado(idComando);
-        atualizarInterfaceProgresso();
-
-        const btnGerenciar = document.getElementById('btn-gerenciar-snapshots');
-        if (btnGerenciar) {
-            btnGerenciar.style.display = 'none';
-        }
-
-        if (logBox) {
-            const successLine = document.createElement('div');
-            successLine.className = 'log-line success';
-            successLine.textContent = '✅ Btrfs-Assistant desinstalado com sucesso!';
-            logBox.appendChild(successLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    } catch (e) {
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro ao desinstalar: ' + e.message;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    }
-}
-
-// --- Sessão 02: Otimização ---
-async function executarAjusteDNF() {
-    const conexoes = document.getElementById('select-downloads').value;
-    const idComando = 'dnf-speed';
-    const comandoMontado = 'sudo dnf config-manager setopt max_parallel_downloads=' + conexoes + ' && sudo dnf config-manager setopt fastestmirror=True';
-    const logBox = document.getElementById('log-dnf-speed');
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = '📦 Aplicando ajuste: ' + conexoes + ' conexões simultâneas...';
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-    await executarComandoPadrao(idComando, comandoMontado);
-}
-
-// --- Sessão 03: Repositórios ---
-async function executarRPMFusion() {
-    const idComando = 'rpm-fusion';
-    const comando = 'sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm && sudo dnf install -y rpmfusion-*-appstream-data && sudo dnf update -y --refresh';
-    await executarComandoPadrao(idComando, comando);
-}
-
-async function reverterRPMFusion() {
-    const idComando = 'rpm-fusion';
-    const comando = 'sudo dnf remove rpmfusion-free-release rpmfusion-nonfree-release -y && sudo dnf clean all && sudo dnf autoremove -y';
-    await executarComandoPadrao(idComando, comando);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    restaurarBotaoOriginal(idComando);
-    desmarcarComoExecutado(idComando);
-    atualizarInterfaceProgresso();
-}
-
-async function executarFlatpak() {
-    const idComando = 'flatpak-setup';
-    const desktop = detectarDesktopFrontend();
-    let comandoExtra = '';
-
-    switch (desktop) {
-        case 'KDE':
-            comandoExtra = 'sudo dnf install plasma-discover flatpak -y';
-            break;
-        case 'GNOME':
-            comandoExtra = 'sudo dnf install gnome-software flatpak -y';
-            break;
-        case 'XFCE':
-        case 'CINNAMON':
-        case 'MATE':
-        case 'LXQT':
-        case 'LXDE':
-        default:
-            comandoExtra = 'sudo dnf install flatpak -y';
-            break;
-    }
-
-    const comando = comandoExtra + ' && flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo';
-    await executarComandoPadrao(idComando, comando);
-}
-
-async function reverterFlatpak() {
-    const idComando = 'flatpak-setup';
-    const desktop = detectarDesktopFrontend();
-    let comandoExtra = '';
-
-    switch (desktop) {
-        case 'KDE':
-            comandoExtra = 'sudo dnf remove plasma-discover -y';
-            break;
-        case 'GNOME':
-            comandoExtra = 'sudo dnf remove gnome-software -y';
-            break;
-        default:
-            comandoExtra = '';
-            break;
-    }
-
-    const comando = comandoExtra + ' && sudo dnf remove flatpak -y && rm -rf ~/.local/share/flatpak && rm -rf ~/.var/app';
-    await executarComandoPadrao(idComando, comando);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    restaurarBotaoOriginal(idComando);
-    desmarcarComoExecutado(idComando);
-    atualizarInterfaceProgresso();
-}
-
-async function executarCodecs() {
-    const idComando = 'codecs-essenciais';
-    const comando = 'sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y && sudo dnf install --setopt=\'install_weak_deps=False\' gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-plugin-openh264 gstreamer1-plugin-libav --exclude=PackageKit-gstreamer-plugin -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1';
-    await executarComandoPadrao(idComando, comando);
-}
-
-async function reverterCodecs() {
-    const idComando = 'codecs-essenciais';
-    const comando = 'sudo dnf swap ffmpeg ffmpeg-free --allowerasing -y && sudo dnf clean all && sudo dnf autoremove -y';
-    await executarComandoPadrao(idComando, comando);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    restaurarBotaoOriginal(idComando);
-    desmarcarComoExecutado(idComando);
-    atualizarInterfaceProgresso();
-}
-
-async function executarExtrasTainted() {
-    const idComando = 'extras-tainted';
-    const comando = 'sudo dnf install rpmfusion-free-release-tainted -y && sudo dnf install rpmfusion-nonfree-release-tainted -y && sudo dnf install libdvdcss -y';
-    await executarComandoPadrao(idComando, comando);
-}
-
-async function reverterExtrasTainted() {
-    const idComando = 'extras-tainted';
-    const comando = 'sudo dnf remove rpmfusion-free-release-tainted rpmfusion-nonfree-release-tainted libdvdcss -y && sudo dnf clean all && sudo dnf autoremove -y';
-    await executarComandoPadrao(idComando, comando);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    restaurarBotaoOriginal(idComando);
-    desmarcarComoExecutado(idComando);
-    atualizarInterfaceProgresso();
-}
-
-async function executarVaapi() {
-    const idComando = 'vaapi-amd';
-    const comando = 'sudo dnf install ffmpeg-libs libva libva-utils -y && sudo dnf install mesa-va-drivers-freeworld mesa-va-drivers-freeworld.i686 -y';
-    await executarComandoPadrao(idComando, comando);
-}
-
-async function reverterVaapi() {
-    const idComando = 'vaapi-amd';
-    const comando = 'sudo dnf remove mesa-va-drivers-freeworld mesa-va-drivers-freeworld.i686 ffmpeg-libs libva libva-utils -y && sudo dnf clean all && sudo dnf autoremove -y';
-    await executarComandoPadrao(idComando, comando);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    restaurarBotaoOriginal(idComando);
-    desmarcarComoExecutado(idComando);
-    atualizarInterfaceProgresso();
-}
-
-async function executarVaapiSwap() {
-    const idComando = 'vaapi-swap';
-    const comando = 'sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld -y && sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld -y';
-    await executarComandoPadrao(idComando, comando);
-}
-
-async function reverterVaapiSwap() {
-    const idComando = 'vaapi-swap';
-    const comando = 'sudo dnf swap mesa-va-drivers-freeworld mesa-va-drivers -y && sudo dnf swap mesa-vdpau-drivers-freeworld mesa-vdpau-drivers -y';
-    await executarComandoPadrao(idComando, comando);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    restaurarBotaoOriginal(idComando);
-    desmarcarComoExecutado(idComando);
-    atualizarInterfaceProgresso();
-}
-
-// --- Sessão 04: Fontes ---
-async function executarFontesMS() {
-    const idComando = 'fontes-ms-all';
-    const comando = 'sudo dnf install -y curl cabextract fontconfig && curl -L https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm -o /tmp/msfonts.rpm && rpm2cpio /tmp/msfonts.rpm | cpio -idmv -D /tmp/ && sudo mkdir -p /usr/share/fonts/microsoft && sudo mv /tmp/usr/share/fonts/msttcore/* /usr/share/fonts/microsoft/ && sudo fc-cache -f -v && rm -rf /tmp/msfonts.rpm /tmp/usr';
-    await executarComandoPadrao(idComando, comando);
-}
-
-async function reverterFontesMS() {
-    const idComando = 'fontes-ms-all';
-    const comando = 'sudo rm -rf /usr/share/fonts/microsoft && sudo fc-cache -f -v';
-    await executarComandoPadrao(idComando, comando);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    restaurarBotaoOriginal(idComando);
-    desmarcarComoExecutado(idComando);
-    atualizarInterfaceProgresso();
-}
-
-// --- Sessão 05: Launchers ---
-async function executarVulkan() {
-    const idComando = 'vulkan-amd';
-    const comando = 'sudo dnf install vulkan-tools mesa-vulkan-drivers mesa-vulkan-drivers.i686 libva.i686 mesa-dri-drivers.i686 -y';
-    await executarComandoPadrao(idComando, comando);
-}
-
-async function toggleLauncher(nome, idComando, comandoInstalar, comandoDesinstalar) {
-    const status = getStatusComando(idComando);
-
-    if (status === 'executado') {
-        if (confirm(`Deseja desinstalar ${nome}?`)) {
-            const logBox = document.getElementById('log-' + idComando);
-            if (logBox) {
-                logBox.innerHTML = '';
-                logBox.style.display = 'block';
-                logBox.style.height = '100px';
-                logBox.style.maxHeight = '100px';
-                const infoLine = document.createElement('div');
-                infoLine.className = 'log-line info';
-                infoLine.textContent = `🗑️ Desinstalando ${nome}...`;
-                logBox.appendChild(infoLine);
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-
-            await executarComandoPadrao(idComando + '-uninstall', comandoDesinstalar);
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            restaurarBotaoOriginal(idComando);
-            desmarcarComoExecutado(idComando);
-            atualizarInterfaceProgresso();
-
-            const btnDesinstalar = document.querySelector(`[data-comando="${idComando}-uninstall"]`);
-            if (btnDesinstalar) {
-                btnDesinstalar.style.display = 'none';
-            }
-
-            if (logBox) {
-                const successLine = document.createElement('div');
-                successLine.className = 'log-line success';
-                successLine.textContent = `✅ ${nome} desinstalado com sucesso!`;
-                logBox.appendChild(successLine);
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-        }
-    } else {
-        await executarComandoPadrao(idComando, comandoInstalar);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        marcarBotaoComoExecutado(idComando);
-        atualizarInterfaceProgresso();
-
-        const btnDesinstalar = document.querySelector(`[data-comando="${idComando}-uninstall"]`);
-        if (btnDesinstalar) {
-            btnDesinstalar.style.display = 'inline-block';
-        }
-    }
-}
-
-// --- Sessão 05: Launchers ---
-
-async function executarSteam() {
-    const idComando = 'steam-install';
-
-    // Comando para instalar o Steam via Flatpak E os pacotes steam-devices
-    // Nota: steam-devices requer sudo, então separamos em dois comandos
-    const comandoSteam = 'flatpak install flathub com.valvesoftware.Steam -y';
-    const comandoDevices = 'sudo dnf install -y steam-devices 2>/dev/null || true';
-
-    const logBox = document.getElementById('log-' + idComando);
-    if (!logBox) {
-        console.error('Log box não encontrado: log-' + idComando);
-        return;
-    }
-
-    iniciarProgresso(idComando);
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = '🎮 Instalando Steam e steam-devices... (' + new Date().toLocaleTimeString() + ')';
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    conectarSSE(idComando, logBox);
-
-    const btnExecutar = document.querySelector('button[data-comando="' + idComando + '"]');
-    if (btnExecutar) {
-        btnExecutar.disabled = true;
-        btnExecutar.textContent = '⏳ Instalando...';
-        btnExecutar.style.opacity = '0.6';
-    }
-
-    try {
-        // Passo 1: Instalar Steam via Flatpak
-        const response1 = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comandoSteam, idComando: idComando + '-flatpak' })
-        });
-
-        if (!response1.ok) {
-            throw new Error(`Erro HTTP na instalação do Steam: ${response1.status}`);
-        }
-
-        // Aguardar conclusão do Steam
-        await new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                const status = getStatusComando(idComando + '-flatpak');
-                if (status === 'executado') {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 1000);
-
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                resolve();
-            }, 120000);
-        });
-
-        // Log de sucesso do Steam
-        const successLine1 = document.createElement('div');
-        successLine1.className = 'log-line success';
-        successLine1.textContent = '✅ Steam instalado com sucesso!';
-        logBox.appendChild(successLine1);
-        logBox.scrollTop = logBox.scrollHeight;
-
-        // Passo 2: Instalar steam-devices (requer sudo)
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = '🔧 Instalando steam-devices (requer autenticação)...';
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-
-        const response2 = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comandoDevices, idComando: idComando + '-devices' })
-        });
-
-        if (!response2.ok) {
-            // steam-devices pode falhar, não é crítico
-            console.warn('Aviso: steam-devices pode não ter sido instalado');
-        }
-
-        // Aguardar conclusão do steam-devices
-        await new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                const status = getStatusComando(idComando + '-devices');
-                if (status === 'executado') {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 1000);
-
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                resolve();
-            }, 30000);
-        });
-
-        const successLine2 = document.createElement('div');
-        successLine2.className = 'log-line success';
-        successLine2.textContent = '✅ steam-devices instalado com sucesso!';
-        logBox.appendChild(successLine2);
-        logBox.scrollTop = logBox.scrollHeight;
-
-        // Finalizar progresso
-        completarProgresso(idComando, true);
-
-        // Marcar como concluído
-        if (btnExecutar) {
-            btnExecutar.innerHTML = '✅ Steam instalado';
-            btnExecutar.style.backgroundColor = '#4b5563';
-            btnExecutar.style.cursor = 'default';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.disabled = true;
-        }
-        marcarComoExecutado(idComando);
-
-        // Mensagem final
-        const finalLine = document.createElement('div');
-        finalLine.className = 'log-line success';
-        finalLine.textContent = '🎮 Steam + steam-devices instalados com sucesso!';
-        logBox.appendChild(finalLine);
-        logBox.scrollTop = logBox.scrollHeight;
-
-    } catch (e) {
-        console.error('Erro ao instalar Steam:', e);
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro: ' + e.message;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-        completarProgresso(idComando, false);
-
-        if (btnExecutar) {
-            btnExecutar.disabled = false;
-            btnExecutar.textContent = '🎮 Steam';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.style.backgroundColor = 'var(--accent)';
-        }
-    }
-}
-
-async function executarHeroic() {
-    const idComando = 'heroic-install';
-    const comando = 'flatpak install flathub com.heroicgameslauncher.hgl -y';
-
-    const logBox = document.getElementById('log-' + idComando);
-    if (!logBox) {
-        console.error('Log box não encontrado: log-' + idComando);
-        return;
-    }
-
-    iniciarProgresso(idComando);
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = '⚡ Instalando Heroic Games via Flatpak... (' + new Date().toLocaleTimeString() + ')';
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    conectarSSE(idComando, logBox);
-
-    const btnExecutar = document.querySelector('button[data-comando="' + idComando + '"]');
-    if (btnExecutar) {
-        btnExecutar.disabled = true;
-        btnExecutar.textContent = '⏳ Instalando...';
-        btnExecutar.style.opacity = '0.6';
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        await new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                const status = getStatusComando(idComando);
-                if (status === 'executado') {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 1000);
-
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                resolve();
-            }, 120000);
-        });
-
-        const successLine = document.createElement('div');
-        successLine.className = 'log-line success';
-        successLine.textContent = '✅ Heroic Games instalado com sucesso!';
-        logBox.appendChild(successLine);
-        logBox.scrollTop = logBox.scrollHeight;
-
-        completarProgresso(idComando, true);
-
-        if (btnExecutar) {
-            btnExecutar.innerHTML = '✅ Heroic instalado';
-            btnExecutar.style.backgroundColor = '#4b5563';
-            btnExecutar.style.cursor = 'default';
-            btnExecutar.disabled = true;
-        }
-        marcarComoExecutado(idComando);
-
-    } catch (e) {
-        console.error('Erro ao instalar Heroic Games:', e);
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro: ' + e.message;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-        completarProgresso(idComando, false);
-
-        if (btnExecutar) {
-            btnExecutar.disabled = false;
-            btnExecutar.textContent = '⚡ Heroic Games';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.style.backgroundColor = '#10b981';
-        }
-    }
-}
-
-async function executarLutris() {
-    const idComando = 'lutris-install';
-    const comando = 'flatpak install flathub net.lutris.Lutris -y';
-
-    const logBox = document.getElementById('log-' + idComando);
-    if (!logBox) {
-        console.error('Log box não encontrado: log-' + idComando);
-        return;
-    }
-
-    iniciarProgresso(idComando);
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = '🎯 Instalando Lutris via Flatpak... (' + new Date().toLocaleTimeString() + ')';
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    conectarSSE(idComando, logBox);
-
-    const btnExecutar = document.querySelector('button[data-comando="' + idComando + '"]');
-    if (btnExecutar) {
-        btnExecutar.disabled = true;
-        btnExecutar.textContent = '⏳ Instalando...';
-        btnExecutar.style.opacity = '0.6';
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        await new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                const status = getStatusComando(idComando);
-                if (status === 'executado') {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 1000);
-
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                resolve();
-            }, 120000);
-        });
-
-        const successLine = document.createElement('div');
-        successLine.className = 'log-line success';
-        successLine.textContent = '✅ Lutris instalado com sucesso!';
-        logBox.appendChild(successLine);
-        logBox.scrollTop = logBox.scrollHeight;
-
-        completarProgresso(idComando, true);
-
-        if (btnExecutar) {
-            btnExecutar.innerHTML = '✅ Lutris instalado';
-            btnExecutar.style.backgroundColor = '#4b5563';
-            btnExecutar.style.cursor = 'default';
-            btnExecutar.disabled = true;
-        }
-        marcarComoExecutado(idComando);
-
-    } catch (e) {
-        console.error('Erro ao instalar Lutris:', e);
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro: ' + e.message;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-        completarProgresso(idComando, false);
-
-        if (btnExecutar) {
-            btnExecutar.disabled = false;
-            btnExecutar.textContent = '🎯 Lutris';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.style.backgroundColor = '#8b5cf6';
-        }
-    }
-}
-
-async function executarProtonUp() {
-    const idComando = 'protonup-install';
-    const comando = 'flatpak install flathub net.davidotek.pupgui2 -y';
-
-    const logBox = document.getElementById('log-' + idComando);
-    if (!logBox) {
-        console.error('Log box não encontrado: log-' + idComando);
-        return;
-    }
-
-    iniciarProgresso(idComando);
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = '🔄 Instalando ProtonUp-Qt via Flatpak... (' + new Date().toLocaleTimeString() + ')';
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    conectarSSE(idComando, logBox);
-
-    const btnExecutar = document.querySelector('button[data-comando="' + idComando + '"]');
-    if (btnExecutar) {
-        btnExecutar.disabled = true;
-        btnExecutar.textContent = '⏳ Instalando...';
-        btnExecutar.style.opacity = '0.6';
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        await new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                const status = getStatusComando(idComando);
-                if (status === 'executado') {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 1000);
-
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                resolve();
-            }, 120000);
-        });
-
-        const successLine = document.createElement('div');
-        successLine.className = 'log-line success';
-        successLine.textContent = '✅ ProtonUp-Qt instalado com sucesso!';
-        logBox.appendChild(successLine);
-        logBox.scrollTop = logBox.scrollHeight;
-
-        completarProgresso(idComando, true);
-
-        if (btnExecutar) {
-            btnExecutar.innerHTML = '✅ ProtonUp instalado';
-            btnExecutar.style.backgroundColor = '#4b5563';
-            btnExecutar.style.cursor = 'default';
-            btnExecutar.disabled = true;
-        }
-        marcarComoExecutado(idComando);
-
-    } catch (e) {
-        console.error('Erro ao instalar ProtonUp-Qt:', e);
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro: ' + e.message;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-        completarProgresso(idComando, false);
-
-        if (btnExecutar) {
-            btnExecutar.disabled = false;
-            btnExecutar.textContent = '🔄 ProtonUp-Qt';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.style.backgroundColor = '#f59e0b';
-        }
-    }
-}
-
-// --- Sessão 06: Loja ---
-function detectarDesktopFrontend() {
-    const userAgent = navigator.userAgent || '';
-    const uaLower = userAgent.toLowerCase();
-    if (uaLower.includes('kde') || uaLower.includes('plasma')) return 'KDE';
-    if (uaLower.includes('gnome') || uaLower.includes('gnome-shell')) return 'GNOME';
-    if (uaLower.includes('xfce')) return 'XFCE';
-    if (uaLower.includes('cinnamon')) return 'CINNAMON';
-    if (uaLower.includes('mate')) return 'MATE';
-    if (uaLower.includes('lxqt')) return 'LXQT';
-    if (uaLower.includes('lxde')) return 'LXDE';
-    if (navigator.userAgent.includes('Konqueror')) return 'KDE';
-    return 'UNKNOWN';
-}
-
-function abrirCentralApps() {
-    const desktop = detectarDesktopFrontend();
-    let comando = '';
-    let nomeCentral = '';
-
-    const spanDesktop = document.getElementById('desktop-detectado');
-    if (spanDesktop) {
-        const nomes = {
-            'KDE': '🪟 KDE Plasma (Discover)',
-            'GNOME': '🐧 GNOME (GNOME Software)',
-            'XFCE': '🐭 XFCE (AppFinder)',
-            'CINNAMON': '🍃 Cinnamon (Software Center)',
-            'MATE': '🦎 MATE (Software Boutique)',
-            'LXQT': '💠 LXQt (LXQt Software Center)',
-            'LXDE': '💠 LXDE (LXDE Software Center)',
-            'UNKNOWN': '❓ Desktop desconhecido'
-        };
-        spanDesktop.textContent = nomes[desktop] || 'Desktop: ' + desktop;
-        spanDesktop.style.color = desktop === 'UNKNOWN' ? '#f59e0b' : '#34d399';
-    }
-
-    switch (desktop) {
-        case 'KDE':
-            comando = 'gtk-launch org.kde.discover.desktop 2>/dev/null || plasma-discover &';
-            nomeCentral = 'Discover (KDE Plasma)';
-            break;
-        case 'GNOME':
-            comando = 'gtk-launch gnome-software.desktop 2>/dev/null || gnome-software &';
-            nomeCentral = 'GNOME Software';
-            break;
-        case 'XFCE':
-            comando = 'gtk-launch xfce4-appfinder.desktop 2>/dev/null || xfce4-appfinder &';
-            nomeCentral = 'AppFinder (XFCE)';
-            break;
-        case 'CINNAMON':
-            comando = 'gtk-launch cinnamon-software.desktop 2>/dev/null || cinnamon-software & || gnome-software &';
-            nomeCentral = 'Software Center (Cinnamon)';
-            break;
-        case 'MATE':
-            comando = 'gtk-launch mate-software.desktop 2>/dev/null || mate-software & || gnome-software &';
-            nomeCentral = 'Software Boutique (MATE)';
-            break;
-        case 'LXQT':
-            comando = 'gtk-launch lxqt-software-center.desktop 2>/dev/null || lxqt-software-center & || discover & || gnome-software &';
-            nomeCentral = 'LXQt Software Center';
-            break;
-        case 'LXDE':
-            comando = 'gtk-launch lxde-software-center.desktop 2>/dev/null || lxde-software-center & || discover & || gnome-software &';
-            nomeCentral = 'LXDE Software Center';
-            break;
-        default:
-            comando = 'gtk-launch org.kde.discover.desktop 2>/dev/null || gtk-launch gnome-software.desktop 2>/dev/null || gtk-launch xfce4-appfinder.desktop 2>/dev/null || plasma-discover & || gnome-software & || xfce4-appfinder &';
-            nomeCentral = 'Central de Apps (modo automático)';
-            break;
-    }
-
-    const logBox = document.getElementById('log-abrir-central');
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
-
-        const info1 = document.createElement('div');
-        info1.className = 'log-line info';
-        info1.textContent = '🛍️ Desktop detectado: ' + desktop;
-        logBox.appendChild(info1);
-
-        const info2 = document.createElement('div');
-        info2.className = 'log-line output';
-        info2.textContent = '📦 Abrindo: ' + nomeCentral;
-        logBox.appendChild(info2);
-
-        const info3 = document.createElement('div');
-        info3.className = 'log-line success';
-        info3.textContent = '✅ Central aberta!';
-        logBox.appendChild(info3);
-
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    fetch(API_URL + '/executar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            comando: comando,
-            idComando: 'abrir-central'
-        })
-    }).catch(function(e) {
-        console.error('Erro ao abrir central:', e);
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro ao abrir central: ' + e.message;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    });
-}
-
-/**
- * Instala a câmera virtual para OBS Studio
- */
-async function executarOBSCam() {
-    const idComando = 'obs-cam';
-    const comando = 'sudo dnf install akmod-v4l2loopback v4l-utils -y 2>/dev/null || sudo dnf install v4l2loopback v4l-utils -y';
-
-    const logBox = document.getElementById('log-' + idComando);
-    if (!logBox) {
-        console.error('Log box não encontrado: log-' + idComando);
-        return;
-    }
-
-    iniciarProgresso(idComando);
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = '🎥 Instalando câmera virtual... (' + new Date().toLocaleTimeString() + ')';
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    conectarSSE(idComando, logBox);
-
-    const botoes = obterBotoesPorId(idComando);
-    const btnExecutar = botoes.btnExecutar;
-    const btnReverter = botoes.btnReverter;
-
-    if (btnExecutar && !btnExecutar.hasAttribute('data-texto-original')) {
-        btnExecutar.setAttribute('data-texto-original', btnExecutar.textContent);
-    }
-
-    if (btnExecutar) {
-        btnExecutar.disabled = true;
-        btnExecutar.textContent = '⏳ Instalando...';
-        btnExecutar.style.opacity = '0.6';
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        await new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                const status = getStatusComando(idComando);
-                if (status === 'executado') {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 1000);
-
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                resolve();
-            }, 60000);
-        });
-
-        const successLine = document.createElement('div');
-        successLine.className = 'log-line success';
-        successLine.textContent = '✅ Câmera virtual instalada com sucesso!';
-        logBox.appendChild(successLine);
-        logBox.scrollTop = logBox.scrollHeight;
-
-        completarProgresso(idComando, true);
-
-        // CORREÇÃO: Texto alterado para "✅ Câmera Virtual Habilitada"
-        if (btnExecutar) {
-            const original = btnExecutar.getAttribute('data-texto-original') || '🎥 Ativar Câmera Virtual';
-            btnExecutar.innerHTML = '✅ Câmera Virtual Habilitada';
-            btnExecutar.style.backgroundColor = '#4b5563';
-            btnExecutar.style.cursor = 'default';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.disabled = true;
-        }
-
-        if (btnReverter) {
-            btnReverter.style.display = 'inline-block';
-            btnReverter.disabled = false;
-            btnReverter.innerHTML = '↩️ Remover';
-            btnReverter.style.backgroundColor = '#ef4444';
-            btnReverter.style.padding = '0.5rem 1rem';
-            btnReverter.style.fontSize = '0.85rem';
-            btnReverter.style.borderRadius = '6px';
-            btnReverter.style.border = 'none';
-            btnReverter.style.cursor = 'pointer';
-            btnReverter.style.color = 'white';
-            btnReverter.style.width = 'auto';
-        }
-
-        marcarComoExecutado(idComando);
-
-    } catch (e) {
-        console.error('Erro ao instalar câmera virtual:', e);
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro: ' + e.message;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-        completarProgresso(idComando, false);
-
-        if (btnExecutar) {
-            const original = btnExecutar.getAttribute('data-texto-original') || '🎥 Ativar Câmera Virtual';
-            btnExecutar.innerHTML = original;
-            btnExecutar.style.backgroundColor = 'var(--accent)';
-            btnExecutar.style.cursor = 'pointer';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.disabled = false;
-        }
-        if (btnReverter) {
-            btnReverter.style.display = 'none';
-            btnReverter.disabled = true;
-        }
-    }
-}
-
-async function reverterOBSCam() {
-    const idComando = 'obs-cam';
-    const comando = 'sudo dnf remove akmod-v4l2loopback v4l-utils -y && sudo dnf clean all && sudo dnf autoremove -y';
-    await executarComandoPadrao(idComando, comando);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    restaurarBotaoOriginal(idComando);
-    desmarcarComoExecutado(idComando);
-    atualizarInterfaceProgresso();
-}
-
-// ============================================================
-// FUNÇÕES: OBS Studio
-// ============================================================
-
-/**
- * Instala o OBS Studio via Flatpak
- */
-async function executarOBSStudio() {
-    const idComando = 'instalar-obs-studio';
-    const comando = 'flatpak install flathub com.obsproject.Studio -y';
-
-    const logBox = document.getElementById('log-' + idComando);
-    if (!logBox) {
-        console.error('Log box não encontrado: log-' + idComando);
-        return;
-    }
-
-    iniciarProgresso(idComando);
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = '📹 Instalando OBS Studio via Flatpak... (' + new Date().toLocaleTimeString() + ')';
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    conectarSSE(idComando, logBox);
-
-    const botoes = obterBotoesPorId(idComando);
-    const btnExecutar = botoes.btnExecutar;
-    const btnReverter = botoes.btnReverter;
-
-    if (btnExecutar && !btnExecutar.hasAttribute('data-texto-original')) {
-        btnExecutar.setAttribute('data-texto-original', btnExecutar.textContent);
-    }
-
-    if (btnExecutar) {
-        btnExecutar.disabled = true;
-        btnExecutar.textContent = '⏳ Instalando...';
-        btnExecutar.style.opacity = '0.6';
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        await new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                const status = getStatusComando(idComando);
-                if (status === 'executado') {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 1000);
-
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                resolve();
-            }, 120000);
-        });
-
-        const successLine = document.createElement('div');
-        successLine.className = 'log-line success';
-        successLine.textContent = '✅ OBS Studio instalado com sucesso!';
-        logBox.appendChild(successLine);
-        logBox.scrollTop = logBox.scrollHeight;
-
-        completarProgresso(idComando, true);
-
-        // CORREÇÃO: Texto alterado para "✅ OBS Studio instalado"
-        if (btnExecutar) {
-            const original = btnExecutar.getAttribute('data-texto-original') || '📹 Instalar OBS Studio';
-            btnExecutar.innerHTML = '✅ OBS Studio instalado';
-            btnExecutar.style.backgroundColor = '#4b5563';
-            btnExecutar.style.cursor = 'default';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.disabled = true;
-        }
-
-        if (btnReverter) {
-            btnReverter.style.display = 'inline-block';
-            btnReverter.disabled = false;
-            btnReverter.innerHTML = '↩️ Remover';
-            btnReverter.style.backgroundColor = '#ef4444';
-            btnReverter.style.padding = '0.5rem 1rem';
-            btnReverter.style.fontSize = '0.85rem';
-            btnReverter.style.borderRadius = '6px';
-            btnReverter.style.border = 'none';
-            btnReverter.style.cursor = 'pointer';
-            btnReverter.style.color = 'white';
-            btnReverter.style.width = 'auto';
-        }
-
-        marcarComoExecutado(idComando);
-
-    } catch (e) {
-        console.error('Erro ao instalar OBS Studio:', e);
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro: ' + e.message;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-        completarProgresso(idComando, false);
-
-        if (btnExecutar) {
-            const original = btnExecutar.getAttribute('data-texto-original') || '📹 Instalar OBS Studio';
-            btnExecutar.innerHTML = original;
-            btnExecutar.style.backgroundColor = '#357a38';
-            btnExecutar.style.cursor = 'pointer';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.disabled = false;
-        }
-        if (btnReverter) {
-            btnReverter.style.display = 'none';
-            btnReverter.disabled = true;
-        }
-    }
-}
-
-/**
- * Desinstala o OBS Studio via Flatpak
- */
-async function reverterOBSStudio() {
-    const idComando = 'instalar-obs-studio';
-    const comando = 'flatpak uninstall com.obsproject.Studio -y';
-
-    const logBox = document.getElementById('log-' + idComando);
-    if (!logBox) return;
-
-    const confirmacao = confirm('Deseja remover o OBS Studio?');
-    if (!confirmacao) return;
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const infoLine = document.createElement('div');
-    infoLine.className = 'log-line info';
-    infoLine.textContent = '🗑️ Removendo OBS Studio...';
-    logBox.appendChild(infoLine);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    const btnExecutar = document.querySelector('button[data-comando="' + idComando + '"]');
-    const btnReverter = document.querySelector('button[data-comando="' + idComando + '-uninstall"]');
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando + '-uninstall' })
-        });
-
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Restaurar botão de instalar (habilitado)
-        if (btnExecutar) {
-            const original = btnExecutar.getAttribute('data-texto-original') || '📹 Instalar OBS Studio';
-            btnExecutar.innerHTML = original;
-            btnExecutar.style.backgroundColor = '#357a38';
-            btnExecutar.style.cursor = 'pointer';
-            btnExecutar.style.opacity = '1';
-            btnExecutar.disabled = false;
-        }
-
-        // Esconder botão de desinstalar
-        if (btnReverter) {
-            btnReverter.style.display = 'none';
-            btnReverter.disabled = true;
-        }
-
-        desmarcarComoExecutado(idComando);
-        atualizarInterfaceProgresso();
-
-        const successLine = document.createElement('div');
-        successLine.className = 'log-line success';
-        successLine.textContent = '✅ OBS Studio removido com sucesso!';
-        logBox.appendChild(successLine);
-        logBox.scrollTop = logBox.scrollHeight;
-
-    } catch (e) {
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro ao remover OBS Studio: ' + e.message;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-}
-
-async function executarEasyEffects() {
-    const idComando = 'instalar-easyeffects';
-    const comando = 'flatpak install flathub com.github.wwmm.easyeffects -y';
-    await executarComandoPadrao(idComando, comando);
-}
-
-async function reverterEasyEffects() {
-    const idComando = 'instalar-easyeffects';
-    const comando = 'flatpak uninstall com.github.wwmm.easyeffects -y';
-
-    const logBox = document.getElementById('log-' + idComando);
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = '🗑️ Desinstalando EasyEffects...';
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando + '-uninstall' })
-        });
-
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const botoes = obterBotoesPorId(idComando);
-        if (botoes.btnExecutar) {
-            const original = botoes.btnExecutar.getAttribute('data-texto-original') || 'Instalar EasyEffects (Flatpak)';
-            botoes.btnExecutar.innerHTML = original;
-            botoes.btnExecutar.style.backgroundColor = 'var(--accent)';
-            botoes.btnExecutar.style.cursor = 'pointer';
-            botoes.btnExecutar.disabled = false;
-        }
-        if (botoes.btnReverter) {
-            botoes.btnReverter.style.display = 'none';
-            botoes.btnReverter.disabled = true;
-        }
-
-        desmarcarComoExecutado(idComando);
-        atualizarInterfaceProgresso();
-
-        if (logBox) {
-            const successLine = document.createElement('div');
-            successLine.className = 'log-line success';
-            successLine.textContent = '✅ EasyEffects desinstalado com sucesso!';
-            logBox.appendChild(successLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    } catch (e) {
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro ao desinstalar: ' + e.message;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    }
-}
-
-// --- Sessão 07: Manutenção ---
-async function executarLimpeza() {
-    const idComando = 'limpeza-sistema';
-    const comando = 'sudo dnf clean all && sudo dnf autoremove -y';
-    await executarComandoPadrao(idComando, comando);
-}
-
-var kernelsList = [];
-
-async function listarKernels() {
-    const idComando = 'listar-kernels';
-    const comando = 'rpm -q kernel-core --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n" 2>/dev/null';
-
-    const logBox = document.getElementById('log-listar-kernels');
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = '📋 Obtendo lista de kernels instalados...';
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    const btn = document.querySelector("button[onclick='listarKernels()']");
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Verificando...';
-        btn.style.opacity = '0.6';
-    }
-
-    let outputCompleto = '';
-    let sseConnection = null;
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comando,
-                idComando: idComando
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        const ssePromise = new Promise((resolve, reject) => {
-            const eventSource = new EventSource(API_URL + '/stream?id=' + idComando);
-            sseConnection = eventSource;
-
-            let outputLines = [];
-
-            eventSource.onmessage = function(event) {
-                try {
-                    const dados = JSON.parse(event.data);
-
-                    if (dados.tipo === 'end') {
-                        eventSource.close();
-                        resolve(outputLines.join('\n'));
-                        return;
-                    }
-
-                    if (dados.tipo === 'output' || dados.tipo === 'info') {
-                        const linha = dados.mensagem.trim();
-                        if (linha && !linha.includes('Comando aceito')) {
-                            outputLines.push(linha);
-                            if (logBox) {
-                                const lineElement = document.createElement('div');
-                                lineElement.className = 'log-line ' + dados.tipo;
-                                lineElement.textContent = linha;
-                                logBox.appendChild(lineElement);
-                                logBox.scrollTop = logBox.scrollHeight;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error('Erro ao processar SSE:', e);
-                }
-            };
-
-            eventSource.onerror = function(event) {
-                console.warn('SSE error, tentando fallback...');
-                eventSource.close();
-                reject(new Error('SSE connection failed'));
-            };
-
-            setTimeout(() => {
-                if (eventSource.readyState !== EventSource.CLOSED) {
-                    eventSource.close();
-                    if (outputLines.length === 0) {
-                        reject(new Error('Timeout'));
-                    } else {
-                        resolve(outputLines.join('\n'));
-                    }
-                }
-            }, 30000);
-        });
-
-        outputCompleto = await ssePromise;
-        console.log('📝 Output completo do SSE:', outputCompleto);
-
-        let lines = outputCompleto.split('\n')
-        .map(line => line.trim())
-        .filter(line => {
-            return line !== '' &&
-            !line.includes('Comando aceito') &&
-            !line.includes('rpm -q') &&
-            !line.includes('sed') &&
-            !line.includes('grep') &&
-            !line.includes('kernel-core') &&
-            !line.includes('{') &&
-            !line.includes('}') &&
-            !line.includes('success') &&
-            !line.includes('output') &&
-            !line.includes('──────────') &&
-            !line.includes('$ ');
-        });
-
-        console.log('📊 Linhas processadas:', lines);
-
-        const select = document.getElementById('kernel-select');
-        const btnRemover = document.getElementById('btn-remover-kernel');
-
-        select.innerHTML = '';
-
-        if (lines.length === 0) {
-            console.log('⚠️ Nenhum kernel encontrado, tentando fallback...');
-            await listarKernelsFallback();
-        } else {
-            kernelsList = lines;
-            lines.forEach(function(kernel) {
-                const option = document.createElement('option');
-                option.value = kernel;
-                option.textContent = 'kernel-' + kernel;
-                select.appendChild(option);
-            });
-            select.disabled = false;
-            btnRemover.disabled = false;
-
-            if (logBox) {
-                const successLine = document.createElement('div');
-                successLine.className = 'log-line success';
-                successLine.textContent = '✅ ' + lines.length + ' kernel(s) encontrado(s):';
-                logBox.appendChild(successLine);
-                lines.forEach(function(kernel) {
-                    const kernelLine = document.createElement('div');
-                    kernelLine.className = 'log-line output';
-                    kernelLine.textContent = '   • kernel-' + kernel;
-                    logBox.appendChild(kernelLine);
-                });
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-        }
-
-    } catch (e) {
-        console.error('❌ Erro:', e);
-        await listarKernelsFallback();
-    } finally {
-        if (sseConnection) {
-            sseConnection.close();
-        }
-    }
-
-    if (btn) {
-        btn.disabled = false;
-        btn.textContent = '📋 Verificar Kernels';
-        btn.style.opacity = '1';
-        btn.style.backgroundColor = 'var(--accent)';
-    }
-}
-
-async function listarKernelsFallback() {
-    console.log('🔄 Usando fallback com uname -r');
-    const logBox = document.getElementById('log-listar-kernels');
-    const idComando = 'uname-current';
-    const comando = 'uname -r';
-
-    let outputCompleto = '';
-    let sseConnection = null;
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comando,
-                idComando: idComando
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        const ssePromise = new Promise((resolve, reject) => {
-            const eventSource = new EventSource(API_URL + '/stream?id=' + idComando);
-            sseConnection = eventSource;
-
-            let outputLines = [];
-
-            eventSource.onmessage = function(event) {
-                try {
-                    const dados = JSON.parse(event.data);
-
-                    if (dados.tipo === 'end') {
-                        eventSource.close();
-                        resolve(outputLines.join('\n'));
-                        return;
-                    }
-
-                    if (dados.tipo === 'output' || dados.tipo === 'info') {
-                        const linha = dados.mensagem.trim();
-                        if (linha && !linha.includes('Comando aceito')) {
-                            outputLines.push(linha);
-                            if (logBox) {
-                                const lineElement = document.createElement('div');
-                                lineElement.className = 'log-line ' + dados.tipo;
-                                lineElement.textContent = linha;
-                                logBox.appendChild(lineElement);
-                                logBox.scrollTop = logBox.scrollHeight;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error('Erro ao processar SSE:', e);
-                }
-            };
-
-            eventSource.onerror = function(event) {
-                eventSource.close();
-                reject(new Error('SSE connection failed'));
-            };
-
-            setTimeout(() => {
-                if (eventSource.readyState !== EventSource.CLOSED) {
-                    eventSource.close();
-                    if (outputLines.length === 0) {
-                        reject(new Error('Timeout'));
-                    } else {
-                        resolve(outputLines.join('\n'));
-                    }
-                }
-            }, 30000);
-        });
-
-        outputCompleto = await ssePromise;
-        console.log('📝 Kernel atual (fallback):', outputCompleto);
-
-        const currentKernel = outputCompleto.trim();
-        const select = document.getElementById('kernel-select');
-        const btnRemover = document.getElementById('btn-remover-kernel');
-
-        select.innerHTML = '';
-
-        if (currentKernel &&
-            !currentKernel.includes('Comando aceito') &&
-            !currentKernel.includes('{') &&
-            !currentKernel.includes('}') &&
-            currentKernel !== '') {
-
-            kernelsList = [currentKernel];
-        const option = document.createElement('option');
-        option.value = currentKernel;
-        option.textContent = 'kernel-' + currentKernel + ' (atual)';
-        select.appendChild(option);
-        select.disabled = false;
-        btnRemover.disabled = false;
-
-        if (logBox) {
-            const successLine = document.createElement('div');
-            successLine.className = 'log-line success';
-            successLine.textContent = '✅ Kernel atual encontrado:';
-            logBox.appendChild(successLine);
-            const kernelLine = document.createElement('div');
-            kernelLine.className = 'log-line output';
-            kernelLine.textContent = '   • kernel-' + currentKernel + ' (atual)';
-            logBox.appendChild(kernelLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-            } else {
-                select.innerHTML = '<option value="">Nenhum kernel encontrado</option>';
-                select.disabled = true;
-                btnRemover.disabled = true;
-                if (logBox) {
-                    const warningLine = document.createElement('div');
-                    warningLine.className = 'log-line warning';
-                    warningLine.textContent = '⚠️ Nenhum kernel encontrado no sistema';
-                    logBox.appendChild(warningLine);
-                    logBox.scrollTop = logBox.scrollHeight;
-                }
-            }
-
-    } catch (e) {
-        console.error('❌ Erro no fallback:', e);
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro no fallback: ' + e.message;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    } finally {
-        if (sseConnection) {
-            sseConnection.close();
-        }
-    }
-}
-
-async function removerKernel() {
-    const select = document.getElementById('kernel-select');
-    const kernel = select.value;
-
-    if (!kernel) {
-        alert('Selecione um kernel para remover.');
-        return;
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: 'uname -r',
-                idComando: 'check-current-kernel'
-            })
-        });
-
-        if (response.ok) {
-            const currentKernel = await new Promise((resolve) => {
-                let output = '';
-                const eventSource = new EventSource(API_URL + '/stream?id=check-current-kernel');
-
-                eventSource.onmessage = function(event) {
-                    try {
-                        const dados = JSON.parse(event.data);
-                        if (dados.tipo === 'end') {
-                            eventSource.close();
-                            resolve(output.trim());
-                            return;
-                        }
-                        if (dados.tipo === 'output' || dados.tipo === 'info') {
-                            output += dados.mensagem;
-                        }
-                    } catch (e) {}
-                };
-
-                eventSource.onerror = function() {
-                    eventSource.close();
-                    resolve('');
-                };
-
-                setTimeout(() => {
-                    if (eventSource.readyState !== EventSource.CLOSED) {
-                        eventSource.close();
-                        resolve(output.trim());
-                    }
-                }, 10000);
-            });
-
-            if (currentKernel && kernel.includes(currentKernel)) {
-                alert('⚠️ Você está tentando remover o kernel atual! Isso não é recomendado e pode causar problemas.');
-                return;
-            }
-        }
-    } catch (e) {
-        console.error('Erro ao verificar kernel atual:', e);
-    }
-
-    const confirmacao = confirm(
-        '⚠️ ATENÇÃO!\n\nVocê está prestes a remover o kernel:\n' +
-        kernel + '\n\n' +
-        'Esta ação requer privilégios de administrador.\n' +
-        'Tem certeza que deseja continuar?'
-    );
-
-    if (!confirmacao) return;
-
-    const logBox = document.getElementById('log-listar-kernels');
-    if (logBox) {
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = '🗑️ Removendo kernel: ' + kernel + '...';
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    const idComando = 'remover-kernel';
-    const comando = 'sudo dnf remove kernel-core-' + kernel + ' -y';
-
-    const btnRemover = document.getElementById('btn-remover-kernel');
-    const selectKernel = document.getElementById('kernel-select');
-    if (btnRemover) {
-        btnRemover.disabled = true;
-        btnRemover.textContent = '⏳ Removendo...';
-        btnRemover.style.opacity = '0.6';
-    }
-    if (selectKernel) {
-        selectKernel.disabled = true;
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comando,
-                idComando: idComando
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        await new Promise((resolve) => {
-            const eventSource = new EventSource(API_URL + '/stream?id=' + idComando);
-
-            eventSource.onmessage = function(event) {
-                try {
-                    const dados = JSON.parse(event.data);
-                    if (dados.tipo === 'end') {
-                        eventSource.close();
-                        resolve();
-                        return;
-                    }
-                    if (dados.tipo === 'output' || dados.tipo === 'info' || dados.tipo === 'error') {
-                        if (logBox) {
-                            const lineElement = document.createElement('div');
-                            lineElement.className = 'log-line ' + dados.tipo;
-                            lineElement.textContent = dados.mensagem;
-                            logBox.appendChild(lineElement);
-                            logBox.scrollTop = logBox.scrollHeight;
-                        }
-                    }
-                } catch (e) {}
-            };
-
-            eventSource.onerror = function() {
-                eventSource.close();
-                resolve();
-            };
-
-            setTimeout(() => {
-                if (eventSource.readyState !== EventSource.CLOSED) {
-                    eventSource.close();
-                    resolve();
-                }
-            }, 60000);
-        });
-
-        if (logBox) {
-            const successLine = document.createElement('div');
-            successLine.className = 'log-line success';
-            successLine.textContent = '✅ Kernel ' + kernel + ' removido com sucesso!';
-            logBox.appendChild(successLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-
-        setTimeout(async function() {
-            await listarKernels();
-        }, 2000);
-
-    } catch (e) {
-        console.error('❌ Erro ao remover kernel:', e);
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro ao remover kernel: ' + e.message;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    } finally {
-        if (btnRemover) {
-            btnRemover.disabled = false;
-            btnRemover.textContent = '🗑️ Remover';
-            btnRemover.style.opacity = '1';
-        }
-        if (selectKernel) {
-            selectKernel.disabled = false;
-        }
-    }
-}
-
-async function verificarVersaoFedora() {
-    const logBox = document.getElementById('log-system-upgrade');
-    const statusDiv = document.getElementById('upgrade-status');
-
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = '🔍 Verificando versão atual do Fedora...';
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    if (statusDiv) {
-        statusDiv.style.display = 'block';
-        statusDiv.style.backgroundColor = 'var(--bg-card)';
-        statusDiv.style.border = '1px solid var(--border)';
-        statusDiv.innerHTML = '⏳ Verificando...';
-    }
-
-    try {
-        const comando = 'cat /etc/fedora-release | grep -oP "[0-9]+" | head -1';
-
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comando,
-                idComando: 'check-fedora-version'
-            })
-        });
-
-        if (response.ok) {
-            const versaoAtual = await new Promise((resolve) => {
-                let output = '';
-                const eventSource = new EventSource(API_URL + '/stream?id=check-fedora-version');
-
-                eventSource.onmessage = function(event) {
-                    try {
-                        const dados = JSON.parse(event.data);
-                        if (dados.tipo === 'end') {
-                            eventSource.close();
-                            resolve(output.trim());
-                            return;
-                        }
-                        if (dados.tipo === 'output' || dados.tipo === 'info') {
-                            const linha = dados.mensagem.trim();
-                            if (linha && !linha.includes('Comando aceito')) {
-                                output += linha;
-                            }
-                            if (logBox) {
-                                const lineElement = document.createElement('div');
-                                lineElement.className = 'log-line ' + dados.tipo;
-                                lineElement.textContent = dados.mensagem;
-                                logBox.appendChild(lineElement);
-                                logBox.scrollTop = logBox.scrollHeight;
-                            }
-                        }
-                    } catch (e) {}
-                };
-
-                eventSource.onerror = function() {
-                    eventSource.close();
-                    resolve('');
-                };
-
-                setTimeout(() => {
-                    if (eventSource.readyState !== EventSource.CLOSED) {
-                        eventSource.close();
-                        resolve(output.trim());
-                    }
-                }, 10000);
-            });
-
-            const versaoSelecionada = document.getElementById('select-fedora-version').value;
-            const versaoAtualInt = parseInt(versaoAtual);
-            const versaoSelecionadaInt = parseInt(versaoSelecionada);
-
-            const versaoDisponivel = await verificarVersaoDisponivel(versaoSelecionadaInt);
-
-            if (statusDiv) {
-                statusDiv.style.display = 'block';
-
-                if (!versaoDisponivel) {
-                    statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-                    statusDiv.style.border = '1px solid #ef4444';
-                    statusDiv.style.color = '#ef4444';
-                    statusDiv.innerHTML = `
-                    ❌ <strong>Fedora ${versaoSelecionada} ainda não foi lançado!</strong><br>
-                    A versão mais recente disponível é o Fedora ${versaoAtualInt}.
-                    `;
-                    if (logBox) {
-                        const warningLine = document.createElement('div');
-                        warningLine.className = 'log-line warning';
-                        warningLine.textContent = `⚠️ Fedora ${versaoSelecionada} ainda não foi lançado! Versão atual: ${versaoAtualInt}`;
-                        logBox.appendChild(warningLine);
-                        logBox.scrollTop = logBox.scrollHeight;
-                    }
-                    return;
-                }
-
-                if (versaoSelecionadaInt <= versaoAtualInt) {
-                    statusDiv.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
-                    statusDiv.style.border = '1px solid #f59e0b';
-                    statusDiv.style.color = '#f59e0b';
-                    statusDiv.innerHTML = `
-                    ⚠️ <strong>Você já está na versão ${versaoAtualInt} ou superior!</strong><br>
-                    Versão atual: Fedora ${versaoAtualInt}<br>
-                    Versão selecionada: Fedora ${versaoSelecionada}
-                    `;
-                    if (logBox) {
-                        const warningLine = document.createElement('div');
-                        warningLine.className = 'log-line warning';
-                        warningLine.textContent = `⚠️ Você já está na versão ${versaoAtualInt} (selecionado: ${versaoSelecionada})`;
-                        logBox.appendChild(warningLine);
-                        logBox.scrollTop = logBox.scrollHeight;
-                    }
-                    return;
-                }
-
-                statusDiv.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
-                statusDiv.style.border = '1px solid #34d399';
-                statusDiv.style.color = '#34d399';
-                statusDiv.innerHTML = `
-                ✅ <strong>Upgrade disponível!</strong><br>
-                Versão atual: Fedora ${versaoAtualInt}<br>
-                Versão alvo: Fedora ${versaoSelecionada}<br>
-                <span style="font-size: 0.85rem; color: var(--text-muted);">
-                Clique em "Baixar Nova Versão" para iniciar o upgrade.
-                </span>
-                `;
-                if (logBox) {
-                    const successLine = document.createElement('div');
-                    successLine.className = 'log-line success';
-                    successLine.textContent = `✅ Upgrade disponível: Fedora ${versaoAtualInt} → Fedora ${versaoSelecionada}`;
-                    logBox.appendChild(successLine);
-                    logBox.scrollTop = logBox.scrollHeight;
-                }
-            }
-        }
-    } catch (e) {
-        console.error('Erro ao verificar versão:', e);
-        if (statusDiv) {
-            statusDiv.style.display = 'block';
-            statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-            statusDiv.style.border = '1px solid #ef4444';
-            statusDiv.style.color = '#ef4444';
-            statusDiv.innerHTML = '❌ Erro ao verificar versão: ' + e.message;
-        }
-    }
-}
-
-async function verificarVersaoDisponivel(versao) {
-    try {
-        const url = `https://mirrors.fedoraproject.org/mirrorlist?repo=fedora-${versao}&arch=x86_64`;
-        const comando = `curl -s --max-time 5 -o /dev/null -w "%{http_code}" "${url}"`;
-
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comando,
-                idComando: 'check-version-available'
-            })
-        });
-
-        if (!response.ok) {
-            return false;
-        }
-
-        const output = await new Promise((resolve) => {
-            let output = '';
-            const eventSource = new EventSource(API_URL + '/stream?id=check-version-available');
-
-            eventSource.onmessage = function(event) {
-                try {
-                    const dados = JSON.parse(event.data);
-                    if (dados.tipo === 'end') {
-                        eventSource.close();
-                        resolve(output.trim());
-                        return;
-                    }
-                    if (dados.tipo === 'output' || dados.tipo === 'info') {
-                        const linha = dados.mensagem.trim();
-                        if (linha && !linha.includes('Comando aceito')) {
-                            output += linha;
-                        }
-                    }
-                } catch (e) {
-                    console.error('Erro ao processar SSE:', e);
-                }
-            };
-
-            eventSource.onerror = function() {
-                eventSource.close();
-                resolve(output.trim());
-            };
-
-            setTimeout(() => {
-                if (eventSource.readyState !== EventSource.CLOSED) {
-                    eventSource.close();
-                    resolve(output.trim());
-                }
-            }, 10000);
-        });
-
-        console.log(`📡 Verificando versão ${versao}:`, output);
-
-        const codigo = output.trim();
-        if (codigo === '200') {
-            console.log(`✅ Fedora ${versao} está disponível!`);
-            return true;
-        } else {
-            console.log(`❌ Fedora ${versao} NÃO está disponível (código: ${codigo})`);
-            return false;
-        }
-    } catch (e) {
-        console.error('Erro ao verificar versão disponível:', e);
-        return false;
-    }
-}
-
-async function executarUpgradeFedora() {
-    const versaoSelecionada = document.getElementById('select-fedora-version').value;
-    const versaoInt = parseInt(versaoSelecionada);
-    const idComando = 'system-upgrade';
-
-    const logBox = document.getElementById('log-system-upgrade');
-    const statusDiv = document.getElementById('upgrade-status');
-
-    if (logBox) {
-        logBox.innerHTML = '';
-        logBox.style.display = 'block';
-        logBox.style.height = '100px';
-        logBox.style.maxHeight = '100px';
-    }
-
-    const versaoAtual = await obterVersaoAtual();
-
-    if (!versaoAtual) {
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Não foi possível determinar a versão atual do Fedora.';
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-        return;
-    }
-
-    const versaoAtualInt = parseInt(versaoAtual);
-
-    const versaoDisponivel = await verificarVersaoDisponivel(versaoInt);
-
-    if (!versaoDisponivel) {
-        if (statusDiv) {
-            statusDiv.style.display = 'block';
-            statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-            statusDiv.style.border = '1px solid #ef4444';
-            statusDiv.style.color = '#ef4444';
-            statusDiv.innerHTML = `
-            ❌ <strong>Fedora ${versaoSelecionada} ainda não foi lançado!</strong><br>
-            A versão mais recente disponível é o Fedora ${versaoAtualInt}.
-            `;
-        }
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = `❌ Fedora ${versaoSelecionada} ainda não foi lançado!`;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-        return;
-    }
-
-    if (versaoInt <= versaoAtualInt) {
-        if (statusDiv) {
-            statusDiv.style.display = 'block';
-            statusDiv.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
-            statusDiv.style.border = '1px solid #f59e0b';
-            statusDiv.style.color = '#f59e0b';
-            statusDiv.innerHTML = `
-            ⚠️ <strong>Você já está na versão ${versaoAtualInt}!</strong><br>
-            Não é necessário fazer upgrade.
-            `;
-        }
-        if (logBox) {
-            const warningLine = document.createElement('div');
-            warningLine.className = 'log-line warning';
-            warningLine.textContent = `⚠️ Você já está na versão ${versaoAtualInt}`;
-            logBox.appendChild(warningLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-        return;
-    }
-
-    const confirmacao = confirm(
-        `⚠️ ATENÇÃO!\n\n` +
-        `Você está prestes a fazer upgrade do Fedora ${versaoAtualInt} para o Fedora ${versaoSelecionada}.\n\n` +
-        `Este processo irá:\n` +
-        `• Baixar todos os pacotes da nova versão\n` +
-        `• Preparar o sistema para o upgrade\n` +
-        `• Você precisará reiniciar para concluir\n\n` +
-        `Tem certeza que deseja continuar?`
-    );
-
-    if (!confirmacao) return;
-
-    if (statusDiv) {
-        statusDiv.style.display = 'block';
-        statusDiv.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
-        statusDiv.style.border = '1px solid #34d399';
-        statusDiv.style.color = '#34d399';
-        statusDiv.innerHTML = `
-        ⏳ <strong>Baixando pacotes para Fedora ${versaoSelecionada}...</strong><br>
-        Isso pode levar alguns minutos.
-        `;
-    }
-
-    const comando = `sudo dnf upgrade --refresh -y && sudo dnf system-upgrade download --releasever=${versaoSelecionada} -y`;
-
-    if (logBox) {
-        const infoLine = document.createElement('div');
-        infoLine.className = 'log-line info';
-        infoLine.textContent = `📥 Baixando pacotes para Fedora ${versaoSelecionada}...`;
-        logBox.appendChild(infoLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    const btn = document.querySelector("button[onclick='executarUpgradeFedora()']");
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Baixando...';
-        btn.style.opacity = '0.6';
-    }
-
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comando,
-                idComando: idComando
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        await new Promise((resolve) => {
-            const eventSource = new EventSource(API_URL + '/stream?id=' + idComando);
-
-            eventSource.onmessage = function(event) {
-                try {
-                    const dados = JSON.parse(event.data);
-                    if (dados.tipo === 'end') {
-                        eventSource.close();
-                        resolve();
-                        return;
-                    }
-                    if (dados.tipo === 'output' || dados.tipo === 'info' || dados.tipo === 'success') {
-                        if (logBox) {
-                            const lineElement = document.createElement('div');
-                            lineElement.className = 'log-line ' + dados.tipo;
-                            lineElement.textContent = dados.mensagem;
-                            logBox.appendChild(lineElement);
-                            logBox.scrollTop = logBox.scrollHeight;
-                        }
-                    }
-                } catch (e) {}
-            };
-
-            eventSource.onerror = function() {
-                eventSource.close();
-                resolve();
-            };
-
-            setTimeout(() => {
-                if (eventSource.readyState !== EventSource.CLOSED) {
-                    eventSource.close();
-                    resolve();
-                }
-            }, 1800000);
-        });
-
-        if (statusDiv) {
-            statusDiv.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
-            statusDiv.style.border = '1px solid #34d399';
-            statusDiv.style.color = '#34d399';
-            statusDiv.innerHTML = `
-            ✅ <strong>Pacotes baixados com sucesso!</strong><br>
-            Para concluir o upgrade, execute no terminal:<br>
-            <code style="background-color: #0a0e1a; padding: 0.3rem 0.6rem; border-radius: 4px; display: inline-block; margin-top: 0.3rem;">
-            sudo dnf system-upgrade reboot
-            </code>
-            `;
-        }
-
-        if (logBox) {
-            const successLine = document.createElement('div');
-            successLine.className = 'log-line success';
-            successLine.textContent = '✅ Pacotes baixados! Execute "sudo dnf system-upgrade reboot" para finalizar.';
-            logBox.appendChild(successLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-
-    } catch (e) {
-        console.error('Erro no upgrade:', e);
-        if (statusDiv) {
-            statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-            statusDiv.style.border = '1px solid #ef4444';
-            statusDiv.style.color = '#ef4444';
-            statusDiv.innerHTML = '❌ Erro ao baixar pacotes: ' + e.message;
-        }
-        if (logBox) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro: ' + e.message;
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = '📥 Baixar Nova Versão';
-            btn.style.opacity = '1';
-        }
-    }
-}
-
-async function obterVersaoAtual() {
-    try {
-        const comando = 'cat /etc/fedora-release | grep -oP "[0-9]+" | head -1';
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: comando,
-                idComando: 'get-version'
-            })
-        });
-
-        if (response.ok) {
-            const versao = await new Promise((resolve) => {
-                let output = '';
-                const eventSource = new EventSource(API_URL + '/stream?id=get-version');
-
-                eventSource.onmessage = function(event) {
-                    try {
-                        const dados = JSON.parse(event.data);
-                        if (dados.tipo === 'end') {
-                            eventSource.close();
-                            resolve(output.trim());
-                            return;
-                        }
-                        if (dados.tipo === 'output' || dados.tipo === 'info') {
-                            const linha = dados.mensagem.trim();
-                            if (linha && !linha.includes('Comando aceito')) {
-                                output += linha;
-                            }
-                        }
-                    } catch (e) {}
-                };
-
-                eventSource.onerror = function() {
-                    eventSource.close();
-                    resolve('');
-                };
-
-                setTimeout(() => {
-                    if (eventSource.readyState !== EventSource.CLOSED) {
-                        eventSource.close();
-                        resolve(output.trim());
-                    }
-                }, 10000);
-            });
-            return versao;
-        }
-        return '';
-    } catch (e) {
-        return '';
-    }
-}
-
-// ============================================================
-// FUNÇÃO: Sincronizar Canal Estável (Distro Sync)
-// ============================================================
-
-async function executarDistroSync() {
-    const idComando = 'distro-sync';
-    const comando = 'sudo dnf distro-sync -y';
-
-    const logBox = document.getElementById('log-distro-sync');
-    if (!logBox) {
-        console.error('Log box não encontrado: log-distro-sync');
-        return;
-    }
-
-    const btn = document.querySelector('button[onclick="executarDistroSync()"]');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Sincronizando...';
-        btn.style.opacity = '0.6';
-    }
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = '🔄 Iniciando sincronização com canal estável... (' + new Date().toLocaleTimeString() + ')';
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    const container = document.getElementById('progress-' + idComando);
-    if (container) {
-        container.style.display = 'block';
-        const fill = document.getElementById('progress-fill-' + idComando);
-        const percent = document.getElementById('progress-percent-' + idComando);
-        const status = document.getElementById('progress-status-' + idComando);
-        if (fill && percent && status) {
-            fill.style.width = '0%';
-            percent.textContent = '0%';
-            status.textContent = '⏳ Iniciando...';
-            status.className = 'status running';
-        }
-    }
-
-    try {
-        conectarSSE(idComando, logBox);
-
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comando: comando, idComando: idComando })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
-        }
-
-        await new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                const status = getStatusComando(idComando);
-                if (status === 'executado') {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 1000);
-
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                resolve();
-            }, 600000);
-        });
-
-        const successLine = document.createElement('div');
-        successLine.className = 'log-line success';
-        successLine.textContent = '✅ Sincronização concluída com sucesso!';
-        logBox.appendChild(successLine);
-        logBox.scrollTop = logBox.scrollHeight;
-
-        completarProgresso(idComando, true);
-
-    } catch (e) {
-        console.error('Erro no distro-sync:', e);
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro: ' + e.message;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-        completarProgresso(idComando, false);
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Sincronizar Canal Estável';
-            btn.style.opacity = '1';
-        }
-    }
-}
-
-async function desinstalarFOF() {
-    const logBox = document.getElementById('log-desinstalar-fof');
-    if (!logBox) return;
-    const confirmacao = confirm(
-        '⚠️ ATENÇÃO!\n\nVocê está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
-        'Isso irá remover:\n• Todos os arquivos do FOF\n• Atalhos do menu\n• Comando "fof" do terminal\n\n' +
-        'Esta ação é IRREVERSÍVEL!\n\nTem certeza que deseja continuar?'
-    );
-    if (!confirmacao) return;
-    const confirmacao2 = confirm(
-        '🔄 Última confirmação!\n\nTodos os dados do FOF serão perdidos.\n\nDeseja realmente desinstalar o Fedora Only Fans?'
-    );
-    if (!confirmacao2) return;
-
-    logBox.innerHTML = '';
-    logBox.style.display = 'block';
-    logBox.style.height = '100px';
-    logBox.style.maxHeight = '100px';
-    const header = document.createElement('div');
-    header.className = 'log-line info';
-    header.textContent = '🗑️ Iniciando desinstalação... (' + new Date().toLocaleTimeString() + ')';
-    logBox.appendChild(header);
-    logBox.scrollTop = logBox.scrollHeight;
-
-    const btn = document.querySelector('button[onclick="desinstalarFOF()"]');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Desinstalando...';
-        btn.style.opacity = '0.6';
-    }
-
-    try {
-        conectarSSE('desinstalar-fof', logBox);
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: 'echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall',
-                                 idComando: 'desinstalar-fof'
-            })
-        });
-        if (!response.ok) {
-            const errorLine = document.createElement('div');
-            errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro HTTP: ' + response.status;
-            logBox.appendChild(errorLine);
-        } else {
-            const dados = await response.json();
-            if (dados.success === false) {
-                const errorLine = document.createElement('div');
-                errorLine.className = 'log-line error';
-                errorLine.textContent = '❌ Erro: ' + (dados.output || 'Falha na desinstalação');
-                logBox.appendChild(errorLine);
-                logBox.scrollTop = logBox.scrollHeight;
-            } else {
-                const successLine = document.createElement('div');
-                successLine.className = 'log-line success';
-                successLine.textContent = '✅ FOF desinstalado com sucesso!';
-                logBox.appendChild(successLine);
-                logBox.scrollTop = logBox.scrollHeight;
-                setTimeout(function() { window.close(); }, 3000);
-            }
-        }
-    } catch (e) {
-        const errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro de conexão: ' + e.message;
-        logBox.appendChild(errorLine);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-    setTimeout(function() {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = '🗑️ Desinstalar FOF';
-            btn.style.opacity = '1';
-        }
-    }, 10000);
-}
-
-// ============================================================
-// MÓDULO BTRFS - INTEGRAÇÃO
-// ============================================================
-
-async function verificarBtrfsAssistantInstalado() {
-    try {
-        const response = await fetch(API_URL + '/executar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comando: 'rpm -q btrfs-assistant 2>/dev/null',
-                idComando: 'check-btrfs-installed'
-            })
-        });
-        if (response.ok) {
-            const dados = await response.json();
-            const output = dados.output || '';
-            const instalado = output.trim() !== '' && !output.includes('not installed') && !output.includes('não instalado');
-
-            const btn = document.getElementById('btn-gerenciar-snapshots');
-            if (btn) {
-                btn.style.display = instalado ? 'inline-block' : 'none';
-            }
-        }
-    } catch (e) {
-        console.error('Erro ao verificar Btrfs-Assistant:', e);
-    }
-}
-
-// ============================================================
-// SSE - LOGS EM TEMPO REAL
-// ============================================================
-
-var sseConnections = {};
-
-function conectarSSE(idComando, logBox) {
-    if (sseConnections[idComando]) {
-        sseConnections[idComando].close();
-        delete sseConnections[idComando];
-    }
-    try {
-        var eventSource = new EventSource(API_URL + '/stream?id=' + idComando);
-        sseConnections[idComando] = eventSource;
-        var linhas = 0;
-        var MAX_LINHAS = 100;
-        var timeoutId = setTimeout(function() {
-            if (sseConnections[idComando]) {
-                console.log('[SSE] Timeout de segurança para: ' + idComando);
-                completarProgresso(idComando, true);
-                restaurarBotaoAposExecucao(idComando, true);
-                sseConnections[idComando].close();
-                delete sseConnections[idComando];
-            }
-        }, 1800000);
-
-        eventSource.onmessage = function(event) {
-            try {
-                var dados = JSON.parse(event.data);
-                if (dados.tipo === 'end') {
-                    clearTimeout(timeoutId);
-                    eventSource.close();
-                    delete sseConnections[idComando];
-                    completarProgresso(idComando, true);
-                    restaurarBotaoAposExecucao(idComando, true);
-                    return;
-                }
-                var mensagem = dados.mensagem;
-                mensagem = mensagem.replace(/\x1b\]3008;[^\x1b]*\x1b\\/g, '');
-                mensagem = mensagem.replace(/\x1b\[[0-9;]*m/g, '');
-                mensagem = mensagem.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-                var lines = mensagem.split('\n');
-                for (var i = 0; i < lines.length; i++) {
-                    var line = lines[i];
-                    if (line.trim() === '') continue;
-                    if (line.includes('org.kde.plasma.libdiscover')) continue;
-                    if (line.includes('QML Shortcut')) continue;
-                    if (line.includes('qt.qpa.services')) continue;
-                    if (line.includes('WARNING **: Found icon of unknown type')) continue;
-                    if (line.includes('QIODevice::read')) continue;
-                    if (line.includes('adding empty sources model')) continue;
-                    var lineElement = document.createElement('div');
-                    lineElement.className = 'log-line ' + dados.tipo;
-                    lineElement.textContent = line;
-                    logBox.appendChild(lineElement);
-                    linhas++;
-                }
-                if (linhas > MAX_LINHAS) {
-                    var children = logBox.children;
-                    for (var j = 0; j < linhas - MAX_LINHAS; j++) {
-                        if (children[j]) children[j].remove();
-                    }
-                    linhas = MAX_LINHAS;
-                }
-                logBox.scrollTop = logBox.scrollHeight;
-            } catch (e) {
-                console.error('[SSE] Erro ao processar mensagem:', e);
-            }
-        };
-        eventSource.onerror = function(event) {
-            if (eventSource.readyState === EventSource.CLOSED) {
-                console.log('[SSE] Conexão fechada para:', idComando);
-                clearTimeout(timeoutId);
-            } else {
-                console.warn('[SSE] Erro na conexão:', event);
-            }
-        };
-    } catch (e) {
-        console.error('[SSE] Erro ao criar conexão:', e);
-        var errorLine = document.createElement('div');
-        errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro ao conectar SSE: ' + e.message;
-        logBox.appendChild(errorLine);
-    }
-}
-
-// ============================================================
-// BARRA DE PROGRESSO
-// ============================================================
-
-var progressIntervals = {};
+let progressIntervals = {};
+let progressTimeouts = {};
 
 function iniciarProgresso(idComando) {
-    var container = document.getElementById('progress-' + idComando);
+    const container = document.getElementById('progress-' + idComando);
     if (!container) return;
     container.style.display = 'block';
-    var fill = document.getElementById('progress-fill-' + idComando);
-    var percent = document.getElementById('progress-percent-' + idComando);
-    var status = document.getElementById('progress-status-' + idComando);
+
+    const fill = document.getElementById('progress-fill-' + idComando);
+    const percent = document.getElementById('progress-percent-' + idComando);
+    const status = document.getElementById('progress-status-' + idComando);
+
     if (!fill || !percent || !status) return;
+
     fill.style.width = '0%';
     fill.className = 'progress-fill';
     percent.textContent = '0%';
     status.textContent = '⏳ Iniciando...';
     status.className = 'status running';
 
-    var progresso = 0;
+    let progresso = 0;
+
     if (progressIntervals[idComando]) {
         clearInterval(progressIntervals[idComando]);
         delete progressIntervals[idComando];
     }
 
-    var timeoutSeguranca = setTimeout(function() {
+    if (progressTimeouts[idComando]) {
+        clearTimeout(progressTimeouts[idComando]);
+        delete progressTimeouts[idComando];
+    }
+
+    progressTimeouts[idComando] = setTimeout(() => {
         if (progressIntervals[idComando]) {
             console.log('[PROGRESS] Timeout de segurança para: ' + idComando);
             clearInterval(progressIntervals[idComando]);
@@ -3032,9 +348,9 @@ function iniciarProgresso(idComando) {
         }
     }, 60000);
 
-    progressIntervals[idComando] = setInterval(function() {
+    progressIntervals[idComando] = setInterval(() => {
         if (progresso < 85) {
-            var incremento = Math.max(0.05, (85 - progresso) / 200);
+            const incremento = Math.max(0.05, (85 - progresso) / 200);
             progresso = Math.min(85, progresso + incremento);
             fill.style.width = progresso + '%';
             percent.textContent = Math.round(progresso) + '%';
@@ -3042,22 +358,21 @@ function iniciarProgresso(idComando) {
             status.className = 'status running';
         }
     }, 100);
-
-    container.dataset.timeoutId = timeoutSeguranca;
 }
 
 function completarProgresso(idComando, sucesso) {
-    if (sucesso === undefined) sucesso = true;
-    var container = document.getElementById('progress-' + idComando);
+    const container = document.getElementById('progress-' + idComando);
     if (!container) return;
-    var fill = document.getElementById('progress-fill-' + idComando);
-    var percent = document.getElementById('progress-percent-' + idComando);
-    var status = document.getElementById('progress-status-' + idComando);
+
+    const fill = document.getElementById('progress-fill-' + idComando);
+    const percent = document.getElementById('progress-percent-' + idComando);
+    const status = document.getElementById('progress-status-' + idComando);
+
     if (!fill || !percent || !status) return;
 
-    if (container.dataset.timeoutId) {
-        clearTimeout(parseInt(container.dataset.timeoutId));
-        delete container.dataset.timeoutId;
+    if (progressTimeouts[idComando]) {
+        clearTimeout(progressTimeouts[idComando]);
+        delete progressTimeouts[idComando];
     }
 
     if (progressIntervals[idComando]) {
@@ -3077,14 +392,296 @@ function completarProgresso(idComando, sucesso) {
         status.className = 'status error';
     }
 
-    restaurarBotaoAposExecucao(idComando, sucesso);
-
-    setTimeout(function() {
-        var logBox = document.getElementById('log-' + idComando);
-        if (logBox && logBox.style.display !== 'block') {
-            container.style.display = 'none';
-        }
+    setTimeout(() => {
+        container.style.display = 'none';
     }, 5000);
+
+    restaurarBotaoAposExecucao(idComando, sucesso);
+}
+
+// ============================================================
+// TEXTO CORRETO DOS BOTÕES APÓS EXECUÇÃO
+// ============================================================
+
+function getTextoAposExecucao(idComando) {
+    const textos = {
+        'btrfs-install': '✅ Btrfs-Assistant instalado',
+        'idioma-packs': '✅ Tradução instalada',
+        'idioma-hunspell': '✅ Corretor instalado',
+        'idioma-localectl': '✅ Localidade configurada',
+        'dual-boot-time': '✅ Relógio corrigido',
+        'rpm-fusion': '✅ RPM Fusion ativado',
+        'flatpak-setup': '✅ Flatpak configurado',
+        'codecs-essenciais': '✅ Codecs instalados',
+        'extras-tainted': '✅ Extras instalados',
+        'vaapi-amd': '✅ VA-API instalado',
+        'vaapi-swap': '✅ VA-API instalado',
+        'fontes-ms-all': '✅ Fontes MS instaladas',
+        'vulkan-amd': '✅ Vulkan instalado',
+        'steam-install': '✅ Steam instalado',
+        'heroic-install': '✅ Heroic instalado',
+        'lutris-install': '✅ Lutris instalado',
+        'protonup-install': '✅ ProtonUp instalado',
+        'instalar-obs-studio': '✅ OBS Studio instalado',
+        'obs-cam': '✅ Câmera Virtual ativada',
+        'instalar-easyeffects': '✅ EasyEffects instalado',
+        'config-grub': '✅ GRUB configurado',
+        'reverter-grub': '✅ GRUB revertido',
+        'limpeza-sistema': '✅ Limpeza concluída',
+        'atualizar-fof': '✅ FOF atualizado',
+        'desinstalar-fof': '✅ FOF desinstalado'
+    };
+    return textos[idComando] || '✅ Concluído';
+}
+
+// ============================================================
+// RESTAURAR BOTÃO APÓS EXECUÇÃO
+// ============================================================
+
+function restaurarBotaoAposExecucao(idComando, sucesso) {
+    const botoes = obterBotoesPorId(idComando);
+    const btnExecutar = botoes.btnExecutar;
+    const btnReverter = botoes.btnReverter;
+
+    if (!btnExecutar) return;
+
+    const sempreClicaveis = [
+        'atualizacao-inicial',
+        'dnf-speed',
+        'limpeza-sistema',
+        'verificar-grub',
+        'verificar-versao',
+        'listar-kernels',
+        'check-version'
+    ];
+
+    if (sempreClicaveis.includes(idComando)) {
+        const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
+        btnExecutar.innerHTML = original;
+        btnExecutar.style.backgroundColor = 'var(--accent, #3c67e3)';
+        btnExecutar.style.cursor = 'pointer';
+        btnExecutar.disabled = false;
+        btnExecutar.style.opacity = '1';
+        return;
+    }
+
+    if (sucesso) {
+        const textoFinal = getTextoAposExecucao(idComando);
+        btnExecutar.innerHTML = textoFinal;
+        btnExecutar.style.backgroundColor = '#4b5563';
+        btnExecutar.style.cursor = 'default';
+        btnExecutar.disabled = true;
+        btnExecutar.style.opacity = '1';
+
+        if (btnReverter) {
+            btnReverter.style.display = 'inline-block';
+            btnReverter.disabled = false;
+        }
+
+        marcarComoExecutado(idComando);
+    } else {
+        const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
+        btnExecutar.innerHTML = original;
+        btnExecutar.style.backgroundColor = 'var(--accent, #3c67e3)';
+        btnExecutar.style.cursor = 'pointer';
+        btnExecutar.disabled = false;
+        btnExecutar.style.opacity = '1';
+    }
+}
+
+// ============================================================
+// SSE - LOGS EM TEMPO REAL
+// ============================================================
+
+let sseConnections = {};
+
+function conectarSSE(idComando, logBox) {
+    if (sseConnections[idComando]) {
+        sseConnections[idComando].close();
+        delete sseConnections[idComando];
+    }
+
+    try {
+        const eventSource = new EventSource(API_URL + '/stream?id=' + idComando);
+        sseConnections[idComando] = eventSource;
+
+        let linhas = 0;
+        const MAX_LINHAS = 100;
+
+        eventSource.onmessage = function(event) {
+            try {
+                const dados = JSON.parse(event.data);
+
+                if (dados.tipo === 'end') {
+                    eventSource.close();
+                    delete sseConnections[idComando];
+                    completarProgresso(idComando, true);
+                    return;
+                }
+
+                let mensagem = dados.mensagem
+                .replace(/\x1b\]3008;[^\x1b]*\x1b\\/g, '')
+                .replace(/\x1b\[[0-9;]*m/g, '')
+                .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+                const lines = mensagem.split('\n');
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (line.trim() === '') continue;
+
+                    if (line.includes('org.kde.plasma.libdiscover')) continue;
+                    if (line.includes('QML Shortcut')) continue;
+                    if (line.includes('qt.qpa.services')) continue;
+                    if (line.includes('WARNING **: Found icon of unknown type')) continue;
+                    if (line.includes('QIODevice::read')) continue;
+                    if (line.includes('adding empty sources model')) continue;
+
+                    const lineElement = document.createElement('div');
+                    lineElement.className = 'log-line ' + dados.tipo;
+                    lineElement.textContent = line;
+                    logBox.appendChild(lineElement);
+                    linhas++;
+                }
+
+                if (linhas > MAX_LINHAS) {
+                    const children = logBox.children;
+                    for (let j = 0; j < linhas - MAX_LINHAS; j++) {
+                        if (children[j]) children[j].remove();
+                    }
+                    linhas = MAX_LINHAS;
+                }
+
+                logBox.scrollTop = logBox.scrollHeight;
+
+            } catch (e) {
+                console.error('[SSE] Erro ao processar mensagem:', e);
+            }
+        };
+
+        eventSource.onerror = function(event) {
+            if (eventSource.readyState === EventSource.CLOSED) {
+                console.log('[SSE] Conexão fechada para:', idComando);
+            } else {
+                console.warn('[SSE] Erro na conexão:', event);
+            }
+        };
+
+    } catch (e) {
+        console.error('[SSE] Erro ao criar conexão:', e);
+        const errorLine = document.createElement('div');
+        errorLine.className = 'log-line error';
+        errorLine.textContent = '❌ Erro ao conectar SSE: ' + e.message;
+        if (logBox) {
+            logBox.appendChild(errorLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+    }
+}
+
+// ============================================================
+// DETECÇÃO DE DESKTOP
+// ============================================================
+
+function detectarDesktopFrontend() {
+    const userAgent = navigator.userAgent || '';
+    const uaLower = userAgent.toLowerCase();
+
+    if (uaLower.includes('kde') || uaLower.includes('plasma')) return 'KDE';
+    if (uaLower.includes('gnome') || uaLower.includes('gnome-shell')) return 'GNOME';
+    if (uaLower.includes('xfce')) return 'XFCE';
+    if (uaLower.includes('cinnamon')) return 'CINNAMON';
+    if (uaLower.includes('mate')) return 'MATE';
+    if (uaLower.includes('lxqt')) return 'LXQT';
+    if (uaLower.includes('lxde')) return 'LXDE';
+    if (navigator.userAgent.includes('Konqueror')) return 'KDE';
+
+    return 'UNKNOWN';
+}
+
+// ============================================================
+// FUNÇÕES DE BOTÕES (para controle de estado)
+// ============================================================
+
+function obterBotoesPorId(idComando) {
+    let btnExecutar = null;
+
+    btnExecutar = document.querySelector('.btn-executar[data-comando="' + idComando + '"]');
+
+    if (!btnExecutar) {
+        const allButtons = document.querySelectorAll('.btn-executar');
+        for (const btn of allButtons) {
+            const onclick = btn.getAttribute('onclick') || '';
+            if (onclick.includes("'" + idComando + "'") ||
+                onclick.includes('"' + idComando + '"') ||
+                onclick.includes(idComando)) {
+                btnExecutar = btn;
+            break;
+                }
+        }
+    }
+
+    let btnReverter = null;
+    if (btnExecutar && btnExecutar.parentElement) {
+        btnReverter = btnExecutar.parentElement.querySelector('.btn-reverter');
+    }
+
+    return { btnExecutar, btnReverter };
+}
+
+function marcarBotaoComoExecutado(idComando) {
+    const botoes = obterBotoesPorId(idComando);
+    const btnExecutar = botoes.btnExecutar;
+    const btnReverter = botoes.btnReverter;
+
+    if (btnExecutar) {
+        if (!btnExecutar.hasAttribute('data-texto-original')) {
+            btnExecutar.setAttribute('data-texto-original', btnExecutar.innerHTML);
+        }
+        const textoFinal = getTextoAposExecucao(idComando);
+        btnExecutar.innerHTML = textoFinal;
+        btnExecutar.style.backgroundColor = '#4b5563';
+        btnExecutar.style.cursor = 'default';
+        btnExecutar.disabled = true;
+    }
+
+    if (btnReverter) {
+        btnReverter.style.display = 'inline-block';
+        btnReverter.disabled = false;
+        btnReverter.innerHTML = '↩️ Desfazer';
+        btnReverter.style.backgroundColor = '#ef4444';
+        btnReverter.style.padding = '0.4rem 0.8rem';
+        btnReverter.style.fontSize = '0.8rem';
+        btnReverter.style.borderRadius = '6px';
+        btnReverter.style.border = 'none';
+        btnReverter.style.cursor = 'pointer';
+        btnReverter.style.color = 'white';
+        btnReverter.style.width = 'auto';
+    }
+
+    marcarComoExecutado(idComando);
+}
+
+function restaurarBotaoOriginal(idComando) {
+    const botoes = obterBotoesPorId(idComando);
+    const btnExecutar = botoes.btnExecutar;
+    const btnReverter = botoes.btnReverter;
+
+    if (btnExecutar) {
+        const original = btnExecutar.getAttribute('data-texto-original') || 'Executar';
+        btnExecutar.innerHTML = original;
+        btnExecutar.style.backgroundColor = 'var(--accent, #3c67e3)';
+        btnExecutar.style.cursor = 'pointer';
+        btnExecutar.disabled = false;
+    }
+
+    if (btnReverter) {
+        btnReverter.style.display = 'none';
+        btnReverter.disabled = true;
+        btnReverter.innerHTML = '↩️ Desfazer';
+    }
+
+    desmarcarComoExecutado(idComando);
 }
 
 // ============================================================
@@ -3092,8 +689,8 @@ function completarProgresso(idComando, sucesso) {
 // ============================================================
 
 function initCustomSelect(containerId, triggerId, optionsId, hiddenId, displayId) {
-    var container = document.getElementById(containerId);
-    var trigger, options, hiddenInput, displayValue;
+    const container = document.getElementById(containerId);
+    let trigger, options, hiddenInput, displayValue;
 
     if (container) {
         trigger = container.querySelector('#' + triggerId);
@@ -3121,348 +718,192 @@ function initCustomSelect(containerId, triggerId, optionsId, hiddenId, displayId
 
     trigger.addEventListener('click', function(e) {
         e.stopPropagation();
-        var isOpen = trigger.classList.toggle('open');
+        trigger.classList.toggle('open');
         options.classList.toggle('open');
-        trigger.setAttribute('aria-expanded', isOpen);
     });
 
-    var optionItems = options.querySelectorAll('li');
-    for (var i = 0; i < optionItems.length; i++) {
-        var li = optionItems[i];
+    const optionItems = options.querySelectorAll('li');
+    optionItems.forEach(function(li) {
         li.addEventListener('click', function(e) {
             e.stopPropagation();
-            var value = this.getAttribute('data-value');
-            var text = this.textContent;
+            const value = this.getAttribute('data-value');
+            const text = this.textContent;
             displayValue.textContent = text;
             hiddenInput.value = value;
-            var allOptions = options.querySelectorAll('li');
-            for (var j = 0; j < allOptions.length; j++) {
-                allOptions[j].classList.remove('selected');
-            }
+
+            optionItems.forEach(function(opt) {
+                opt.classList.remove('selected');
+            });
             this.classList.add('selected');
+
             trigger.classList.remove('open');
             options.classList.remove('open');
         });
-    }
-}
-
-// ============================================================
-// NAVEGAÇÃO DO MODO GUIADO
-// ============================================================
-
-var sessaoAtual = 0;
-var sessoes = [
-    '00-boas-vindas',
-'01-restauracao',
-'02-otimizacao',
-'03-repositorios',
-'04-fontes',
-'05-launchers',
-'06-loja',
-'07-manutencao',
-'08-fof-manutencao'
-];
-
-var nomesSessoes = {
-    '00-boas-vindas': 'Boas-vindas',
-    '01-restauracao': 'Restauração',
-    '02-otimizacao': 'Otimização',
-    '03-repositorios': 'Repositórios',
-    '04-fontes': 'Fontes',
-    '05-launchers': 'Launchers',
-    '06-loja': 'Loja',
-    '07-manutencao': 'Manutenção',
-    '08-fof-manutencao': 'Manutenção FOF'
-};
-
-function irParaSessao(index) {
-    var total = sessoes.length;
-    if (index < 0 || index >= total) return;
-
-    sessaoAtual = index;
-
-    document.querySelectorAll('.etapa-card').forEach(el => el.style.display = 'none');
-    document.getElementById('resumo-final').classList.remove('ativo');
-
-    const card = document.getElementById('sessao-' + sessoes[index]);
-    if (card) {
-        card.style.display = 'block';
-        card.classList.add('ativa');
-    }
-
-    const btnAnterior = document.getElementById('btn-anterior');
-    const btnProximo = document.getElementById('btn-proximo');
-    const btnPular = document.getElementById('btn-pular');
-    const btnVerResumo = document.getElementById('btn-ver-resumo');
-    const infoSessao = document.getElementById('info-sessao');
-
-    if (btnAnterior) btnAnterior.disabled = (index === 0);
-    if (btnProximo) btnProximo.disabled = (index === total - 1);
-    if (btnPular) {
-        var status = getStatusComando(sessoes[index]);
-        btnPular.disabled = (status === 'executado' || status === 'pulado');
-    }
-    if (btnVerResumo) {
-        btnVerResumo.style.display = (index === total - 1) ? 'inline-block' : 'none';
-    }
-
-    if (infoSessao) {
-        infoSessao.innerHTML = '<strong>' + (index + 1) + '/' + total + '</strong> - ' + (nomesSessoes[sessoes[index]] || sessoes[index]);
-    }
-
-    atualizarBarraProgressoGuia(index, total);
-    atualizarIndicadores();
-
-    var statusText = document.getElementById('progress-guia-status');
-    if (statusText) {
-        var status = getStatusComando(sessoes[index]);
-        if (status === 'executado') {
-            statusText.textContent = '✅ Concluída';
-            statusText.className = 'status-text concluido';
-        } else if (status === 'pulado') {
-            statusText.textContent = '⏭️ Pulada';
-            statusText.className = 'status-text';
-        } else {
-            statusText.textContent = '⏳ Pendente';
-            statusText.className = 'status-text';
-        }
-    }
-
-    if (index === total - 1) {
-        atualizarBarraProgressoGeral();
-    } else {
-        atualizarBarraProgressoGeral();
-    }
-}
-
-function atualizarBarraProgressoGuia(atual, total) {
-    var fill = document.getElementById('progress-guia-fill');
-    var text = document.getElementById('progress-guia-text');
-    if (fill) {
-        var percent = ((atual + 1) / total) * 100;
-        fill.style.width = percent + '%';
-    }
-    if (text) {
-        text.textContent = (atual + 1) + ' de ' + total;
-    }
-}
-
-function sessaoAnterior() {
-    if (sessaoAtual > 0) {
-        irParaSessao(sessaoAtual - 1);
-    }
-}
-
-function proximaSessao() {
-    const total = sessoes.length;
-    if (sessaoAtual < total - 1) {
-        irParaSessao(sessaoAtual + 1);
-    } else {
-        verResumoFinal();
-    }
-}
-
-function pularSessao() {
-    var nomeSessao = sessoes[sessaoAtual];
-    var status = getStatusComando(nomeSessao);
-    if (status === 'executado') {
-        alert('Esta sessão já foi executada. Não é possível pular.');
-        return;
-    }
-    if (status === 'pulado') {
-        alert('Esta sessão já foi pulada.');
-        return;
-    }
-    if (confirm('Tem certeza que deseja pular "' + (nomesSessoes[nomeSessao] || nomeSessao) + '"?\n\nVocê pode voltar depois para executá-la.')) {
-        marcarComoPulado(nomeSessao);
-        atualizarInterfaceProgresso();
-        atualizarIndicadores();
-        var statusText = document.getElementById('progress-guia-status');
-        if (statusText) {
-            statusText.textContent = '⏭️ Pulada';
-            statusText.className = 'status-text';
-        }
-        var btnPular = document.getElementById('btn-pular');
-        if (btnPular) btnPular.disabled = true;
-        verificarConclusaoTotal();
-    }
-}
-
-function criarIndicadores() {
-    var container = document.getElementById('sessao-indicadores');
-    if (!container) return;
-    container.innerHTML = '';
-    var total = sessoes.length;
-    for (var i = 0; i < total; i++) {
-        var dot = document.createElement('div');
-        dot.className = 'dot';
-        dot.dataset.index = i;
-        dot.title = nomesSessoes[sessoes[i]] || sessoes[i];
-        dot.addEventListener('click', function() {
-            var index = parseInt(this.dataset.index);
-            if (index !== sessaoAtual) {
-                irParaSessao(index);
-            }
-        });
-        container.appendChild(dot);
-    }
-    atualizarIndicadores();
-}
-
-function atualizarIndicadores() {
-    var dots = document.querySelectorAll('.sessao-indicador .dot');
-    dots.forEach(function(dot, index) {
-        dot.className = 'dot';
-        var nomeSessao = sessoes[index];
-        if (index === sessaoAtual) {
-            dot.classList.add('ativa');
-        }
-        var status = getStatusComando(nomeSessao);
-        if (status === 'executado') {
-            dot.classList.add('concluida');
-        } else if (status === 'pulado') {
-            dot.classList.add('pulada');
-        }
     });
 }
 
-function verResumoFinal() {
-    const resumo = document.getElementById('resumo-final');
-    if (resumo && !resumo.classList.contains('ativo')) {
-        mostrarResumoFinal(resumo);
+// ============================================================
+// INICIALIZAR SELECTS PERSONALIZADOS (VERSÃO GLOBAL)
+// ============================================================
+
+function initCustomSelects() {
+    console.log('🔄 Inicializando selects personalizados...');
+
+    const container = document.getElementById('custom-select-container');
+    if (container) {
+        const trigger = document.getElementById('custom-select-trigger');
+        const options = document.getElementById('custom-select-options');
+        const hidden = document.getElementById('select-downloads');
+        const display = document.getElementById('custom-select-value');
+
+        if (trigger && options && hidden && display) {
+            const newTrigger = trigger.cloneNode(true);
+            trigger.parentNode.replaceChild(newTrigger, trigger);
+
+            const newOptions = document.getElementById('custom-select-options');
+            const newHidden = document.getElementById('select-downloads');
+            const newDisplay = document.getElementById('custom-select-value');
+
+            if (newTrigger && newOptions && newHidden && newDisplay) {
+                document.addEventListener('click', function(e) {
+                    if (!newTrigger.contains(e.target) && !newOptions.contains(e.target)) {
+                        newTrigger.classList.remove('open');
+                        newOptions.classList.remove('open');
+                    }
+                });
+
+                newTrigger.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    newTrigger.classList.toggle('open');
+                    newOptions.classList.toggle('open');
+                });
+
+                const optionItems = newOptions.querySelectorAll('li');
+                optionItems.forEach(function(li) {
+                    li.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const value = this.getAttribute('data-value');
+                        const text = this.textContent;
+                        newDisplay.textContent = text;
+                        newHidden.value = value;
+
+                        optionItems.forEach(function(opt) {
+                            opt.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+
+                        newTrigger.classList.remove('open');
+                        newOptions.classList.remove('open');
+                    });
+                });
+
+                console.log('✅ Select DNF inicializado');
+            }
+        }
     }
-}
 
-function verificarConclusaoTotal() {
-    const progress = getProgress();
-    const total = sessoes.length;
-    const concluidas = new Set([...progress.executados, ...progress.pulados]);
+    const containerFedora = document.getElementById('custom-select-fedora-container');
+    if (containerFedora) {
+        const trigger = document.getElementById('custom-select-fedora-trigger');
+        const options = document.getElementById('custom-select-fedora-options');
+        const hidden = document.getElementById('select-fedora-version');
+        const display = document.getElementById('custom-select-fedora-value');
 
-    if (concluidas.size >= total) {
-        const resumo = document.getElementById('resumo-final');
-        if (resumo && !resumo.classList.contains('ativo')) {
-            if (sessaoAtual === total - 1) {
-                mostrarResumoFinal(resumo);
-            } else {
-                atualizarBarraProgressoGeral();
-                return;
+        if (trigger && options && hidden && display) {
+            const newTrigger = trigger.cloneNode(true);
+            trigger.parentNode.replaceChild(newTrigger, trigger);
+
+            const newOptions = document.getElementById('custom-select-fedora-options');
+            const newHidden = document.getElementById('select-fedora-version');
+            const newDisplay = document.getElementById('custom-select-fedora-value');
+
+            if (newTrigger && newOptions && newHidden && newDisplay) {
+                document.addEventListener('click', function(e) {
+                    if (!newTrigger.contains(e.target) && !newOptions.contains(e.target)) {
+                        newTrigger.classList.remove('open');
+                        newOptions.classList.remove('open');
+                    }
+                });
+
+                newTrigger.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    newTrigger.classList.toggle('open');
+                    newOptions.classList.toggle('open');
+                });
+
+                const optionItems = newOptions.querySelectorAll('li');
+                optionItems.forEach(function(li) {
+                    li.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const value = this.getAttribute('data-value');
+                        const text = this.textContent;
+                        newDisplay.textContent = text;
+                        newHidden.value = value;
+
+                        optionItems.forEach(function(opt) {
+                            opt.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+
+                        newTrigger.classList.remove('open');
+                        newOptions.classList.remove('open');
+                    });
+                });
+
+                console.log('✅ Select Fedora inicializado');
             }
         }
     }
 }
 
-function mostrarResumoFinal(resumo) {
-    resumo.classList.add('ativo');
-    document.querySelectorAll('.etapa-card').forEach(el => el.style.display = 'none');
-    document.getElementById('nav-guide').style.display = 'none';
-    document.querySelector('.progress-guide').style.display = 'none';
-    document.querySelector('.sessao-indicador').style.display = 'none';
-
-    const progress = getProgress();
-    const total = sessoes.length;
-    const executados = progress.executados.length;
-    const pulados = progress.pulados.length;
-    const pendentes = total - executados - pulados;
-
-    document.getElementById('resumo-executados').textContent = executados;
-    document.getElementById('resumo-pulados').textContent = pulados;
-    document.getElementById('resumo-pendentes').textContent = pendentes;
-
-    const lista = document.getElementById('resumo-lista');
-    lista.innerHTML = '';
-    const nomes = {
-        '00-boas-vindas': 'Boas-vindas',
-        '01-restauracao': 'Restauração',
-        '02-otimizacao': 'Otimização',
-        '03-repositorios': 'Repositórios',
-        '04-fontes': 'Fontes',
-        '05-launchers': 'Launchers',
-        '06-loja': 'Loja',
-        '07-manutencao': 'Manutenção',
-        '08-fof-manutencao': 'Manutenção FOF'
-    };
-
-    sessoes.forEach(sessao => {
-        const item = document.createElement('div');
-        item.className = 'item';
-        const status = getStatusComando(sessao);
-        let statusText = '⏳ Pendente';
-        let statusClass = 'pendente';
-        if (status === 'executado') {
-            statusText = '✅ Executado';
-            statusClass = 'executado';
-        } else if (status === 'pulado') {
-            statusText = '⏭️ Pulado';
-            statusClass = 'pulado';
-        }
-        item.innerHTML = `
-        <span class="nome">${nomes[sessao] || sessao}</span>
-        <span class="status-resumo ${statusClass}">${statusText}</span>
-        `;
-        lista.appendChild(item);
-    });
-}
-
-function reiniciarProgresso() {
-    if (confirm('Tem certeza que deseja reiniciar todo o progresso?\n\nTodas as sessões serão marcadas como pendentes.')) {
-        localStorage.removeItem(STORAGE_KEY);
-        location.reload();
-    }
-}
-
 // ============================================================
-// INICIALIZAÇÃO
+// INICIALIZAÇÃO GLOBAL
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        initCustomSelect('custom-select-container', 'custom-select-trigger', 'custom-select-options', 'select-downloads', 'custom-select-value');
-        initCustomSelect('custom-select-fedora-container', 'custom-select-fedora-trigger', 'custom-select-fedora-options', 'select-fedora-version', 'custom-select-fedora-value');
-    }, 300);
-
-    var desktop = detectarDesktopFrontend();
-    var spanDesktop = document.getElementById('desktop-detectado');
-    if (spanDesktop) {
-        var nomes = {
-            'KDE': '🪟 KDE Plasma (Discover)',
-                          'GNOME': '🐧 GNOME (GNOME Software)',
-                          'XFCE': '🐭 XFCE (AppFinder)',
-                          'CINNAMON': '🍃 Cinnamon (Software Center)',
-                          'MATE': '🦎 MATE (Software Boutique)',
-                          'LXQT': '💠 LXQt (LXQt Software Center)',
-                          'LXDE': '💠 LXDE (LXDE Software Center)',
-                          'UNKNOWN': '❓ Não detectado (modo automático)'
-        };
-        spanDesktop.textContent = nomes[desktop] || 'Desktop: ' + desktop;
-        spanDesktop.style.color = desktop === 'UNKNOWN' ? '#f59e0b' : '#34d399';
+    if (document.getElementById('custom-select-container')) {
+        initCustomSelect(
+            'custom-select-container',
+            'custom-select-trigger',
+            'custom-select-options',
+            'select-downloads',
+            'custom-select-value'
+        );
     }
 
-    var progress = getProgress();
-    for (var i = 0; i < progress.executados.length; i++) {
-        marcarBotaoComoExecutado(progress.executados[i]);
-    }
-    atualizarInterfaceProgresso();
-
-    if (document.querySelector('.modo-guiado')) {
-        criarIndicadores();
-        irParaSessao(0);
-    }
-
-    var versionElements = document.querySelectorAll('.fof-version');
-    for (var j = 0; j < versionElements.length; j++) {
-        versionElements[j].textContent = FOF_VERSION;
+    if (document.getElementById('custom-select-fedora-container')) {
+        initCustomSelect(
+            'custom-select-fedora-container',
+            'custom-select-fedora-trigger',
+            'custom-select-fedora-options',
+            'select-fedora-version',
+            'custom-select-fedora-value'
+        );
     }
 
-    var btnTopo = document.getElementById('btn-topo');
-    if (btnTopo) {
-        window.addEventListener('scroll', function() {
-            if (window.scrollY > 400) {
-                btnTopo.classList.add('visivel');
-            } else {
-                btnTopo.classList.remove('visivel');
-            }
-        });
-    }
+    // Carrega progresso do servidor e restaura botões
+    carregarProgressoInicial();
 
-    console.log('🚀 Fedora Only Fans v' + FOF_VERSION + ' carregado!');
+    // Atualiza versão
+    document.querySelectorAll('.fof-version').forEach(function(el) {
+        el.textContent = FOF_VERSION;
+    });
+
+    // Inicializa selects globais após carregar
+    setTimeout(initCustomSelects, 300);
+
+    console.log('🚀 Fedora Only Fans v' + FOF_VERSION + ' - Script compartilhado carregado!');
+});
+
+// Chamar após cada sessão ser carregada (modo guiado)
+document.addEventListener('sessao-carregada', function() {
+    setTimeout(initCustomSelects, 200);
+    // Recarrega o estado dos botões após carregar a sessão
+    setTimeout(carregarProgressoInicial, 300);
+});
+
+// Chamar quando todas as sessões forem carregadas (modo avançado)
+document.addEventListener('todas-sessoes-carregadas', function() {
+    setTimeout(initCustomSelects, 300);
+    setTimeout(carregarProgressoInicial, 400);
 });

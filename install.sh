@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Instalação
-# Versão: 0.7.0-alpha
+# Versão: 0.9.5-alpha
 # ============================================================
 #
 # Este script instala o FOF no sistema
@@ -31,13 +31,39 @@ NC='\033[0m' # No Color
 # CONFIGURAÇÕES
 # ============================================================
 
-VERSION="0.7.0-alpha"
+VERSION="0.9.5-alpha"
 INSTALL_DIR="$HOME/.local/share/fedora-only-fans"
 BIN_DIR="$HOME/.local/bin"
 DESKTOP_FILE="$HOME/.local/share/applications/fedora-only-fans.desktop"
 DESKTOP_FILE_COMPAT="$HOME/.local/share/applications/fedora-only-fans-compat.desktop"
 REPO_URL="https://github.com/vitaotek/Fedora-Only-Fans.git"
 LOG_FILE="/tmp/fof-install-$(date +%Y%m%d-%H%M%S).log"
+
+# Lista de arquivos de sessão
+SESSAO_ARQUIVOS=(
+    "00-boas-vindas.html"
+    "01-restauracao.html"
+    "02-otimizacao.html"
+    "03-repositorios.html"
+    "04-fontes.html"
+    "05-launchers.html"
+    "06-loja.html"
+    "07-manutencao.html"
+    "08-fof-manutencao.html"
+)
+
+# Lista de arquivos principais
+ARQUIVOS_PRINCIPAIS=(
+    "server.js"
+    "index.html"
+    "guiado.html"
+    "avancado.html"
+    "style.css"
+    "script.js"
+    "icone_app.png"
+    "iniciar_fof.sh"
+    "iniciar_fof_compat.sh"
+)
 
 # ============================================================
 # FUNÇÕES DE UTILIDADE
@@ -82,42 +108,60 @@ log() {
 reaplicar_permissoes() {
     print_step "Reaplicando permissões dos arquivos..."
 
-    if [ -f "$INSTALL_DIR/iniciar_fof.sh" ]; then
-        chmod +x "$INSTALL_DIR/iniciar_fof.sh"
-        print_info "Permissão aplicada: iniciar_fof.sh"
-    fi
+    local arquivos_para_permissoes=(
+        "iniciar_fof.sh"
+        "iniciar_fof_compat.sh"
+        "fof-container"
+        "build-container.sh"
+    )
 
-    if [ -f "$INSTALL_DIR/iniciar_fof_compat.sh" ]; then
-        chmod +x "$INSTALL_DIR/iniciar_fof_compat.sh"
-        print_info "Permissão aplicada: iniciar_fof_compat.sh"
-    fi
+    for arquivo in "${arquivos_para_permissoes[@]}"; do
+        if [ -f "$INSTALL_DIR/$arquivo" ]; then
+            chmod +x "$INSTALL_DIR/$arquivo"
+            print_info "Permissão aplicada: $arquivo"
+        fi
+    done
 
-    if [ -f "$BIN_DIR/fof" ]; then
-        chmod +x "$BIN_DIR/fof"
-        print_info "Permissão aplicada: fof (link)"
-    fi
+    # Links no BIN_DIR
+    local links_para_permissoes=(
+        "fof"
+        "fof-compat"
+        "fof-container"
+    )
 
-    if [ -f "$BIN_DIR/fof-compat" ]; then
-        chmod +x "$BIN_DIR/fof-compat"
-        print_info "Permissão aplicada: fof-compat (link)"
-    fi
-
-    if [ -f "$INSTALL_DIR/fof-container" ]; then
-        chmod +x "$INSTALL_DIR/fof-container"
-        print_info "Permissão aplicada: fof-container"
-    fi
-
-    if [ -f "$INSTALL_DIR/build-container.sh" ]; then
-        chmod +x "$INSTALL_DIR/build-container.sh"
-        print_info "Permissão aplicada: build-container.sh"
-    fi
-
-    if [ -f "$BIN_DIR/fof-container" ]; then
-        chmod +x "$BIN_DIR/fof-container"
-        print_info "Permissão aplicada: fof-container (link)"
-    fi
+    for link in "${links_para_permissoes[@]}"; do
+        if [ -f "$BIN_DIR/$link" ]; then
+            chmod +x "$BIN_DIR/$link"
+            print_info "Permissão aplicada: $link (link)"
+        fi
+    done
 
     print_success "Permissões reaplicadas com sucesso!"
+}
+
+# ============================================================
+# VERIFICAÇÃO DE ARQUIVOS
+# ============================================================
+
+verificar_arquivos_instalados() {
+    print_step "Verificando arquivos instalados..."
+
+    local todos_ok=true
+    local arquivos_para_verificar=("${ARQUIVOS_PRINCIPAIS[@]}" "${SESSAO_ARQUIVOS[@]}")
+
+    for arquivo in "${arquivos_para_verificar[@]}"; do
+        if [ ! -f "$INSTALL_DIR/$arquivo" ]; then
+            print_warning "Arquivo não encontrado: $arquivo"
+            todos_ok=false
+        fi
+    done
+
+    if [ "$todos_ok" = true ]; then
+        print_success "Todos os arquivos verificados com sucesso!"
+    else
+        print_warning "Alguns arquivos podem estar faltando. A instalação pode estar incompleta."
+        print_info "Tente executar: $0 --update"
+    fi
 }
 
 # ============================================================
@@ -173,6 +217,7 @@ compilar_container_install() {
     fi
 
     print_warning "Não foi possível compilar o container"
+    print_info "O FOF usará o navegador como fallback"
     return 1
 }
 
@@ -479,6 +524,7 @@ desinstalar() {
 
     print_step "Removendo arquivos..."
 
+    # Remove o diretório principal
     if [ -d "$INSTALL_DIR" ]; then
         rm -rf "$INSTALL_DIR"
         print_success "Diretório removido: $INSTALL_DIR"
@@ -486,44 +532,29 @@ desinstalar() {
         print_info "Diretório não encontrado: $INSTALL_DIR"
     fi
 
-    if [ -f "$BIN_DIR/fof" ]; then
-        rm -f "$BIN_DIR/fof"
-        print_success "Link removido: $BIN_DIR/fof"
-    else
-        print_info "Link não encontrado: $BIN_DIR/fof"
-    fi
+    # Remove links do BIN_DIR
+    local links=("fof" "fof-compat" "fof-container")
+    for link in "${links[@]}"; do
+        if [ -f "$BIN_DIR/$link" ]; then
+            rm -f "$BIN_DIR/$link"
+            print_success "Link removido: $BIN_DIR/$link"
+        fi
+    done
 
-    if [ -f "$BIN_DIR/fof-compat" ]; then
-        rm -f "$BIN_DIR/fof-compat"
-        print_success "Link removido: $BIN_DIR/fof-compat"
-    else
-        print_info "Link não encontrado: $BIN_DIR/fof-compat"
-    fi
+    # Remove atalhos do menu
+    local atalhos=("$DESKTOP_FILE" "$DESKTOP_FILE_COMPAT")
+    for atalho in "${atalhos[@]}"; do
+        if [ -f "$atalho" ]; then
+            rm -f "$atalho"
+            print_success "Atalho removido: $atalho"
+        fi
+    done
 
-    if [ -f "$BIN_DIR/fof-container" ]; then
-        rm -f "$BIN_DIR/fof-container"
-        print_success "Link removido: $BIN_DIR/fof-container"
-    else
-        print_info "Link não encontrado: $BIN_DIR/fof-container"
-    fi
-
-    if [ -f "$DESKTOP_FILE" ]; then
-        rm -f "$DESKTOP_FILE"
-        print_success "Atalho removido: $DESKTOP_FILE"
-    else
-        print_info "Atalho não encontrado: $DESKTOP_FILE"
-    fi
-
-    if [ -f "$DESKTOP_FILE_COMPAT" ]; then
-        rm -f "$DESKTOP_FILE_COMPAT"
-        print_success "Atalho de compatibilidade removido: $DESKTOP_FILE_COMPAT"
-    else
-        print_info "Atalho de compatibilidade não encontrado: $DESKTOP_FILE_COMPAT"
-    fi
-
+    # Remove logs
     rm -f /tmp/fof-*.log
     print_success "Logs removidos: /tmp/fof-*.log"
 
+    # Remove perfis do navegador
     if [ -d "$INSTALL_DIR/.perfil_firefox" ]; then
         rm -rf "$INSTALL_DIR/.perfil_firefox"
         print_success "Perfil Firefox removido"
@@ -534,15 +565,14 @@ desinstalar() {
         print_success "Perfil Chromium removido"
     fi
 
-    if [ -f "$INSTALL_DIR/.fof.pid" ]; then
-        rm -f "$INSTALL_DIR/.fof.pid"
-        print_success "PID removido: .fof.pid"
-    fi
-
-    if [ -f "$INSTALL_DIR/.progresso.json" ]; then
-        rm -f "$INSTALL_DIR/.progresso.json"
-        print_success "Progresso removido: .progresso.json"
-    fi
+    # Remove arquivos de estado
+    local arquivos_estado=(".fof.pid" ".progresso.json" ".estado.json" ".historico.json")
+    for arquivo in "${arquivos_estado[@]}"; do
+        if [ -f "$INSTALL_DIR/$arquivo" ]; then
+            rm -f "$INSTALL_DIR/$arquivo"
+            print_success "Arquivo removido: $arquivo"
+        fi
+    done
 
     print_step "Removendo FOF do PATH..."
 
@@ -565,14 +595,8 @@ desinstalar() {
     }
 
     remover_linha_path "$HOME/.bashrc"
-
-    if [ -f "$HOME/.zshrc" ]; then
-        remover_linha_path "$HOME/.zshrc"
-    fi
-
-    if [ -f "$HOME/.profile" ]; then
-        remover_linha_path "$HOME/.profile"
-    fi
+    remover_linha_path "$HOME/.zshrc"
+    remover_linha_path "$HOME/.profile"
 
     update-desktop-database ~/.local/share/applications/ 2>/dev/null
 
@@ -581,10 +605,11 @@ desinstalar() {
     print_info ""
     print_info "📋 Resumo da desinstalação:"
     echo "  ✅ Diretório removido: $INSTALL_DIR"
-    echo "  ✅ Comando 'fof' removido"
-    echo "  ✅ Comando 'fof-compat' removido"
+    echo "  ✅ Comandos 'fof', 'fof-compat', 'fof-container' removidos"
     echo "  ✅ Atalhos do menu removidos"
     echo "  ✅ Logs removidos"
+    echo "  ✅ Perfis do navegador removidos"
+    echo "  ✅ Arquivos de estado removidos"
     echo "  ✅ PATH limpo (.bashrc, .zshrc, .profile)"
     echo ""
     print_info "💡 Para aplicar as mudanças no PATH, reinicie o terminal ou execute:"
@@ -632,6 +657,7 @@ atualizar() {
         "$INSTALL_DIR/build-container.sh" 2>/dev/null
     fi
 
+    verificar_arquivos_instalados
     reaplicar_permissoes
     criar_atalhos
     fixar_na_barra
@@ -670,6 +696,17 @@ Modo Compatibilidade:
   Útil para GPUs sem aceleração 3D (NVIDIA legacy, Intel antiga, VMs)
   Força renderização por software
 
+Estrutura de Arquivos:
+  Os seguintes arquivos são instalados:
+  - index.html (Landing page)
+  - guiado.html (Modo Guiado)
+  - avancado.html (Modo Avançado)
+  - 00-boas-vindas.html a 08-fof-manutencao.html (Sessões)
+  - style.css (Estilos globais)
+  - script.js (Funções compartilhadas)
+  - server.js (Servidor Node.js)
+  - E outros arquivos de suporte
+
 Exemplos:
   ./install.sh              # Instalação normal
   ./install.sh --update     # Atualiza instalação existente
@@ -704,6 +741,7 @@ main() {
     verificar_dependencias
 
     instalar_fof
+    verificar_arquivos_instalados
     instalar_dependencias_container
     compilar_container_install
     criar_atalhos
@@ -714,10 +752,21 @@ main() {
     echo ""
     print_success "🎉 Fedora Only Fans instalado com sucesso!"
     echo ""
+    print_info "📁 Instalado em: $INSTALL_DIR"
+    print_info ""
     print_info "Para iniciar o FOF:"
     echo "  - Terminal: digite 'fof' ou 'fof-compat'"
     echo "  - Menu: procure por 'Fedora Only Fans'"
     echo "  - Menu: 'Fedora Only Fans (Modo Compatibilidade)' para GPUs antigas"
+    echo ""
+    print_info "📋 Estrutura instalada:"
+    echo "  - $(basename "$INSTALL_DIR")/"
+    echo "    ├── index.html (Landing page)"
+    echo "    ├── guiado.html (Modo Guiado)"
+    echo "    ├── avancado.html (Modo Avançado)"
+    echo "    ├── 00-*.html a 08-*.html (Sessões)"
+    echo "    ├── style.css, script.js (Estilos e JS global)"
+    echo "    └── server.js (Servidor Node.js)"
     echo ""
     print_info "📋 Log da instalação: $LOG_FILE"
     echo ""

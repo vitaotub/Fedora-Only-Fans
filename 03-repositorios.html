@@ -7,104 +7,606 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <section class="etapa-card" id="sessao-03-repositorios">
-            <div class="etapa-titulo">
-                <span class="sessao-label" id="label-03-repositorios">Sessão 4</span>
-                📦 Repositórios, Codecs e Aceleração Gráfica
+    <!-- ===== CONTEÚDO DA SESSÃO ===== -->
+    <div class="sessao-container" id="sessao-03-repositorios">
+        <div class="sessao-titulo">
+            <span class="sessao-label">Sessão 4</span>
+            📦 Repositórios, Codecs e Aceleração Gráfica
+        </div>
+
+        <!-- RPM Fusion -->
+        <div class="bloco-comando">
+            <div class="comando-info">
+                <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
+                <p>Instala e sincroniza os repositórios oficiais RPM Fusion, adiciona suporte a metadados do AppStream e executa um ajuste de segurança.</p>
+                <div class="grupo-botoes">
+                    <button class="btn-executar" onclick="executarRPMFusion()" data-comando="rpm-fusion" id="btn-rpm-fusion">Ativar RPM Fusion</button>
+                    <button class="btn-reverter" onclick="reverterRPMFusion()" style="display:none;">↩️ Remover</button>
+                </div>
             </div>
 
-            <!-- RPM Fusion -->
-            <div class="bloco-comando">
-                <div class="comando-info">
-                    <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
-                    <p>Instala e sincroniza os repositórios oficiais RPM Fusion, adiciona suporte a metadados do AppStream e executa um ajuste de segurança.</p>
-                    <div class="grupo-botoes">
-                        <button class="btn-executar" onclick="executarRPMFusion()" data-comando="rpm-fusion">Ativar RPM Fusion</button>
-                        <button class="btn-reverter" onclick="reverterRPMFusion()" style="display:none;">↩️ Remover</button>
-                    </div>
+            <div class="progress-container" id="progress-rpm-fusion">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-rpm-fusion"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-rpm-fusion">⏳ Iniciando...</span><span class="percentage" id="progress-percent-rpm-fusion">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-rpm-fusion"></div>
+        </div>
+
+        <!-- Flatpak -->
+        <div class="bloco-comando">
+            <div class="comando-info">
+                <h3>Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
+                <p>Adiciona o repositório global Flathub e garante a instalação do gerenciador de pacotes Flatpak no sistema.</p>
+                <div class="grupo-botoes">
+                    <button class="btn-executar verde" onclick="executarFlatpak()" data-comando="flatpak-setup" id="btn-flatpak-setup">Configurar Flatpak</button>
+                    <button class="btn-reverter" onclick="reverterFlatpak()" style="display:none;">↩️ Remover</button>
                 </div>
-                <div class="progress-container" id="progress-rpm-fusion">
-                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-rpm-fusion"></div></div>
-                    <div class="progress-text"><span class="status" id="progress-status-rpm-fusion">⏳ Iniciando...</span><span class="percentage" id="progress-percent-rpm-fusion">0%</span></div>
-                </div>
-                <div class="terminal-log" id="log-rpm-fusion"></div>
             </div>
 
-            <!-- Flatpak -->
-            <div class="bloco-comando">
-                <div class="comando-info">
-                    <h3>Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
-                    <p>Adiciona o repositório global Flathub e garante a instalação do gerenciador de pacotes Flatpak no sistema.</p>
-                    <div class="grupo-botoes">
-                        <button class="btn-executar" onclick="executarFlatpak()" data-comando="flatpak-setup">Configurar Flatpak</button>
-                        <button class="btn-reverter" onclick="reverterFlatpak()" style="display:none;">↩️ Remover</button>
-                    </div>
+            <div class="progress-container" id="progress-flatpak-setup">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-flatpak-setup"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-flatpak-setup">⏳ Iniciando...</span><span class="percentage" id="progress-percent-flatpak-setup">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-flatpak-setup"></div>
+        </div>
+
+        <!-- Codecs -->
+        <div class="bloco-comando">
+            <div class="comando-info">
+                <h3>Instalar Codecs Multimídia Essenciais</h3>
+                <p>Substitui o ffmpeg-free pela versão completa sem restrições, instala plugins gstreamer essenciais e habilita o Cisco OpenH264.</p>
+                <div class="grupo-botoes">
+                    <button class="btn-executar" onclick="executarCodecs()" data-comando="codecs-essenciais" id="btn-codecs-essenciais">Instalar Codecs</button>
+                    <button class="btn-reverter" onclick="reverterCodecs()" style="display:none;">↩️ Reverter</button>
                 </div>
-                <div class="progress-container" id="progress-flatpak-setup">
-                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-flatpak-setup"></div></div>
-                    <div class="progress-text"><span class="status" id="progress-status-flatpak-setup">⏳ Iniciando...</span><span class="percentage" id="progress-percent-flatpak-setup">0%</span></div>
-                </div>
-                <div class="terminal-log" id="log-flatpak-setup"></div>
             </div>
 
-            <!-- Codecs -->
-            <div class="bloco-comando">
-                <div class="comando-info">
-                    <h3>Instalar Codecs Multimídia Essenciais</h3>
-                    <p>Substitui o ffmpeg-free pela versão completa sem restrições, instala plugins gstreamer essenciais e habilita o Cisco OpenH264.</p>
-                    <div class="grupo-botoes">
-                        <button class="btn-executar" onclick="executarCodecs()" data-comando="codecs-essenciais">Instalar Codecs</button>
-                        <button class="btn-reverter" onclick="reverterCodecs()" style="display:none;">↩️ Reverter</button>
-                    </div>
+            <div class="progress-container" id="progress-codecs-essenciais">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-codecs-essenciais"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-codecs-essenciais">⏳ Iniciando...</span><span class="percentage" id="progress-percent-codecs-essenciais">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-codecs-essenciais"></div>
+        </div>
+
+        <!-- Extras Tainted -->
+        <div class="bloco-comando">
+            <div class="comando-info">
+                <h3>Extras e DVD Play (Repositórios Tainted)</h3>
+                <p>Habilita sub-repositórios restritos para habilitar reprodução de DVDs comerciais e firmware proprietário.</p>
+                <div class="grupo-botoes">
+                    <button class="btn-executar" onclick="executarExtrasTainted()" data-comando="extras-tainted" id="btn-extras-tainted">Instalar Extras</button>
+                    <button class="btn-reverter" onclick="reverterExtrasTainted()" style="display:none;">↩️ Reverter</button>
                 </div>
-                <div class="progress-container" id="progress-codecs-essenciais">
-                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-codecs-essenciais"></div></div>
-                    <div class="progress-text"><span class="status" id="progress-status-codecs-essenciais">⏳ Iniciando...</span><span class="percentage" id="progress-percent-codecs-essenciais">0%</span></div>
-                </div>
-                <div class="terminal-log" id="log-codecs-essenciais"></div>
             </div>
 
-            <!-- Extras Tainted -->
-            <div class="bloco-comando">
-                <div class="comando-info">
-                    <h3>Extras e DVD Play (Repositórios Tainted)</h3>
-                    <p>Habilita sub-repositórios restritos para habilitar reprodução de DVDs comerciais e firmware proprietário.</p>
-                    <div class="grupo-botoes">
-                        <button class="btn-executar" onclick="executarExtrasTainted()" data-comando="extras-tainted">Instalar Extras</button>
-                        <button class="btn-reverter" onclick="reverterExtrasTainted()" style="display:none;">↩️ Reverter</button>
-                    </div>
+            <div class="progress-container" id="progress-extras-tainted">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-extras-tainted"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-extras-tainted">⏳ Iniciando...</span><span class="percentage" id="progress-percent-extras-tainted">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-extras-tainted"></div>
+        </div>
+
+        <!-- VA-API -->
+        <div class="bloco-comando destaque">
+            <div class="comando-info">
+                <h3>VA-API e Codecs para Aceleração Gráfica</h3>
+                <p>Instala drivers e utilitários de aceleração de vídeo em hardware para placas de vídeo AMD e Intel.</p>
+                <div class="botoes-flex">
+                    <button class="btn-executar" onclick="executarVaapi()" data-comando="vaapi-amd" id="btn-vaapi-amd">🚀 Instalação Padrão</button>
+                    <button class="btn-executar cinza" onclick="executarVaapiSwap()" data-comando="vaapi-swap" id="btn-vaapi-swap">🔄 Alternativa</button>
                 </div>
-                <div class="progress-container" id="progress-extras-tainted">
-                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-extras-tainted"></div></div>
-                    <div class="progress-text"><span class="status" id="progress-status-extras-tainted">⏳ Iniciando...</span><span class="percentage" id="progress-percent-extras-tainted">0%</span></div>
-                </div>
-                <div class="terminal-log" id="log-extras-tainted"></div>
             </div>
 
-            <!-- VA-API -->
-            <div class="bloco-comando" style="border-left: 4px solid var(--accent);">
-                <div class="comando-info">
-                    <h3>VA-API e Codecs para Aceleração Gráfica</h3>
-                    <p>Instala drivers e utilitários de aceleração de vídeo em hardware para placas de vídeo AMD e Intel.</p>
-                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button class="btn-executar" onclick="executarVaapi()" data-comando="vaapi-amd">🚀 Instalação Padrão</button>
-                        <button class="btn-executar" style="background-color: #4b5563;" onclick="executarVaapiSwap()" data-comando="vaapi-swap">🔄 Alternativa</button>
-                    </div>
-                </div>
-                <div class="progress-container" id="progress-vaapi-amd">
-                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-vaapi-amd"></div></div>
-                    <div class="progress-text"><span class="status" id="progress-status-vaapi-amd">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vaapi-amd">0%</span></div>
-                </div>
-                <div class="terminal-log" id="log-vaapi-amd"></div>
-                <div class="progress-container" id="progress-vaapi-swap">
-                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-vaapi-swap"></div></div>
-                    <div class="progress-text"><span class="status" id="progress-status-vaapi-swap">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vaapi-swap">0%</span></div>
-                </div>
-                <div class="terminal-log" id="log-vaapi-swap"></div>
+            <div class="progress-container" id="progress-vaapi-amd">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-vaapi-amd"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-vaapi-amd">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vaapi-amd">0%</span></div>
             </div>
-        </section>
+            <div class="terminal-log" id="log-vaapi-amd"></div>
+
+            <div class="progress-container" id="progress-vaapi-swap">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-vaapi-swap"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-vaapi-swap">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vaapi-swap">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-vaapi-swap"></div>
+        </div>
     </div>
-    <script src="script.js"></script>
+
+    <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
+    <script>
+        // ============================================================
+        // SESSÃO 03: REPOSITÓRIOS, CODECS E ACELERAÇÃO GRÁFICA
+        // ============================================================
+
+        /**
+         * Executa um comando genérico com progresso e log
+         */
+        async function executarComandoGenerico(idComando, comando, nomeAcao) {
+            const logBox = document.getElementById('log-' + idComando);
+            const btn = document.getElementById('btn-' + idComando);
+
+            if (!logBox) return;
+
+            if (isExecutado(idComando)) {
+                alert('Este comando já foi executado anteriormente.');
+                return;
+            }
+
+            iniciarProgresso(idComando);
+
+            logBox.innerHTML = '';
+            logBox.style.display = 'block';
+            logBox.style.height = '100px';
+            logBox.style.maxHeight = '100px';
+
+            const header = document.createElement('div');
+            header.className = 'log-line info';
+            header.textContent = '🚀 ' + nomeAcao + '... (' + new Date().toLocaleTimeString() + ')';
+            logBox.appendChild(header);
+            logBox.scrollTop = logBox.scrollHeight;
+
+            conectarSSE(idComando, logBox);
+
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ ' + nomeAcao + '...';
+                btn.style.opacity = '0.6';
+            }
+
+            try {
+                const response = await fetch(API_URL + '/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comando: comando, idComando: idComando })
+                });
+
+                if (!response.ok) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = '❌ Erro HTTP: ' + response.status;
+                    logBox.appendChild(errorLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                    completarProgresso(idComando, false);
+
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = btn.getAttribute('data-texto-original') || nomeAcao;
+                        btn.style.opacity = '1';
+                    }
+                }
+            } catch (e) {
+                const errorLine = document.createElement('div');
+                errorLine.className = 'log-line error';
+                errorLine.textContent = '❌ Erro de conexão: ' + e.message;
+                logBox.appendChild(errorLine);
+                logBox.scrollTop = logBox.scrollHeight;
+                completarProgresso(idComando, false);
+
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = btn.getAttribute('data-texto-original') || nomeAcao;
+                    btn.style.opacity = '1';
+                }
+            }
+        }
+
+        /**
+         * Executa a ativação do RPM Fusion
+         */
+        async function executarRPMFusion() {
+            const idComando = 'rpm-fusion';
+            const comando = 'sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm && sudo dnf install -y rpmfusion-*-appstream-data && sudo dnf update -y --refresh';
+            await executarComandoGenerico(idComando, comando, 'Ativando RPM Fusion');
+        }
+
+        /**
+         * Remove o RPM Fusion
+         */
+        async function reverterRPMFusion() {
+            const idComando = 'rpm-fusion';
+            if (!isExecutado(idComando)) {
+                alert('RPM Fusion não está ativado.');
+                return;
+            }
+
+            if (!confirm('Deseja remover os repositórios RPM Fusion?')) return;
+
+            const logBox = document.getElementById('log-rpm-fusion');
+            const btn = document.getElementById('btn-rpm-fusion');
+            const btnReverter = document.querySelector('.btn-reverter');
+
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = '🗑️ Removendo RPM Fusion...';
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            try {
+                await fetch(API_URL + '/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comando: 'sudo dnf remove rpmfusion-free-release rpmfusion-nonfree-release -y && sudo dnf clean all && sudo dnf autoremove -y',
+                        idComando: 'rpm-fusion-revert'
+                    })
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                desmarcarComoExecutado(idComando);
+
+                if (btn) {
+                    btn.textContent = 'Ativar RPM Fusion';
+                    btn.style.backgroundColor = 'var(--accent, #3c67e3)';
+                    btn.style.cursor = 'pointer';
+                    btn.disabled = false;
+                }
+
+                if (btnReverter) {
+                    btnReverter.style.display = 'none';
+                }
+
+                if (logBox) {
+                    const successLine = document.createElement('div');
+                    successLine.className = 'log-line success';
+                    successLine.textContent = '✅ RPM Fusion removido com sucesso!';
+                    logBox.appendChild(successLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+
+                atualizarInterfaceProgresso();
+
+            } catch (e) {
+                if (logBox) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = '❌ Erro ao remover: ' + e.message;
+                    logBox.appendChild(errorLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            }
+        }
+
+        /**
+         * Executa a configuração do Flatpak
+         */
+        async function executarFlatpak() {
+            const idComando = 'flatpak-setup';
+            const desktop = detectarDesktopFrontend();
+            let comandoExtra = '';
+
+            switch (desktop) {
+                case 'KDE': comandoExtra = 'sudo dnf install plasma-discover flatpak -y'; break;
+                case 'GNOME': comandoExtra = 'sudo dnf install gnome-software flatpak -y'; break;
+                default: comandoExtra = 'sudo dnf install flatpak -y'; break;
+            }
+
+            const comando = comandoExtra + ' && flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo';
+            await executarComandoGenerico(idComando, comando, 'Configurando Flatpak');
+        }
+
+        /**
+         * Remove o Flatpak
+         */
+        async function reverterFlatpak() {
+            const idComando = 'flatpak-setup';
+            if (!isExecutado(idComando)) {
+                alert('Flatpak não está configurado.');
+                return;
+            }
+
+            if (!confirm('Deseja remover o Flatpak e o Flathub?')) return;
+
+            const logBox = document.getElementById('log-flatpak-setup');
+            const btn = document.getElementById('btn-flatpak-setup');
+            const btnReverter = document.querySelector('.btn-reverter');
+
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = '🗑️ Removendo Flatpak...';
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            try {
+                const desktop = detectarDesktopFrontend();
+                let comandoExtra = '';
+                switch (desktop) {
+                    case 'KDE': comandoExtra = 'sudo dnf remove plasma-discover -y'; break;
+                    case 'GNOME': comandoExtra = 'sudo dnf remove gnome-software -y'; break;
+                    default: comandoExtra = ''; break;
+                }
+
+                await fetch(API_URL + '/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comando: comandoExtra + ' && sudo dnf remove flatpak -y && rm -rf ~/.local/share/flatpak && rm -rf ~/.var/app',
+                        idComando: 'flatpak-revert'
+                    })
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                desmarcarComoExecutado(idComando);
+
+                if (btn) {
+                    btn.textContent = 'Configurar Flatpak';
+                    btn.style.backgroundColor = '#10b981';
+                    btn.style.cursor = 'pointer';
+                    btn.disabled = false;
+                }
+
+                if (btnReverter) {
+                    btnReverter.style.display = 'none';
+                }
+
+                if (logBox) {
+                    const successLine = document.createElement('div');
+                    successLine.className = 'log-line success';
+                    successLine.textContent = '✅ Flatpak removido com sucesso!';
+                    logBox.appendChild(successLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+
+                atualizarInterfaceProgresso();
+
+            } catch (e) {
+                if (logBox) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = '❌ Erro ao remover: ' + e.message;
+                    logBox.appendChild(errorLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            }
+        }
+
+        /**
+         * Executa a instalação dos codecs
+         */
+        async function executarCodecs() {
+            const idComando = 'codecs-essenciais';
+            const comando = 'sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y && sudo dnf install --setopt=\'install_weak_deps=False\' gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-plugin-openh264 gstreamer1-plugin-libav --exclude=PackageKit-gstreamer-plugin -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1';
+            await executarComandoGenerico(idComando, comando, 'Instalando Codecs');
+        }
+
+        /**
+         * Reverte os codecs
+         */
+        async function reverterCodecs() {
+            const idComando = 'codecs-essenciais';
+            if (!isExecutado(idComando)) {
+                alert('Os codecs não estão instalados.');
+                return;
+            }
+
+            if (!confirm('Deseja reverter os codecs (voltar para ffmpeg-free)?')) return;
+
+            const logBox = document.getElementById('log-codecs-essenciais');
+            const btn = document.getElementById('btn-codecs-essenciais');
+            const btnReverter = document.querySelector('.btn-reverter');
+
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = '🔄 Revertendo codecs...';
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            try {
+                await fetch(API_URL + '/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comando: 'sudo dnf swap ffmpeg ffmpeg-free --allowerasing -y && sudo dnf clean all && sudo dnf autoremove -y',
+                        idComando: 'codecs-revert'
+                    })
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                desmarcarComoExecutado(idComando);
+
+                if (btn) {
+                    btn.textContent = 'Instalar Codecs';
+                    btn.style.backgroundColor = 'var(--accent, #3c67e3)';
+                    btn.style.cursor = 'pointer';
+                    btn.disabled = false;
+                }
+
+                if (btnReverter) {
+                    btnReverter.style.display = 'none';
+                }
+
+                if (logBox) {
+                    const successLine = document.createElement('div');
+                    successLine.className = 'log-line success';
+                    successLine.textContent = '✅ Codecs revertidos com sucesso!';
+                    logBox.appendChild(successLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+
+                atualizarInterfaceProgresso();
+
+            } catch (e) {
+                if (logBox) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = '❌ Erro ao reverter: ' + e.message;
+                    logBox.appendChild(errorLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            }
+        }
+
+        /**
+         * Executa a instalação dos extras tainted
+         */
+        async function executarExtrasTainted() {
+            const idComando = 'extras-tainted';
+            const comando = 'sudo dnf install rpmfusion-free-release-tainted -y && sudo dnf install rpmfusion-nonfree-release-tainted -y && sudo dnf install libdvdcss -y';
+            await executarComandoGenerico(idComando, comando, 'Instalando Extras');
+        }
+
+        /**
+         * Remove os extras tainted
+         */
+        async function reverterExtrasTainted() {
+            const idComando = 'extras-tainted';
+            if (!isExecutado(idComando)) {
+                alert('Os extras não estão instalados.');
+                return;
+            }
+
+            if (!confirm('Deseja remover os extras e o suporte a DVD?')) return;
+
+            const logBox = document.getElementById('log-extras-tainted');
+            const btn = document.getElementById('btn-extras-tainted');
+            const btnReverter = document.querySelector('.btn-reverter');
+
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = '🗑️ Removendo extras...';
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            try {
+                await fetch(API_URL + '/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comando: 'sudo dnf remove rpmfusion-free-release-tainted rpmfusion-nonfree-release-tainted libdvdcss -y && sudo dnf clean all && sudo dnf autoremove -y',
+                        idComando: 'extras-revert'
+                    })
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                desmarcarComoExecutado(idComando);
+
+                if (btn) {
+                    btn.textContent = 'Instalar Extras';
+                    btn.style.backgroundColor = 'var(--accent, #3c67e3)';
+                    btn.style.cursor = 'pointer';
+                    btn.disabled = false;
+                }
+
+                if (btnReverter) {
+                    btnReverter.style.display = 'none';
+                }
+
+                if (logBox) {
+                    const successLine = document.createElement('div');
+                    successLine.className = 'log-line success';
+                    successLine.textContent = '✅ Extras removidos com sucesso!';
+                    logBox.appendChild(successLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+
+                atualizarInterfaceProgresso();
+
+            } catch (e) {
+                if (logBox) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = '❌ Erro ao remover: ' + e.message;
+                    logBox.appendChild(errorLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            }
+        }
+
+        /**
+         * Executa a instalação do VA-API
+         */
+        async function executarVaapi() {
+            const idComando = 'vaapi-amd';
+            const comando = 'sudo dnf install ffmpeg-libs libva libva-utils -y && sudo dnf install mesa-va-drivers-freeworld mesa-va-drivers-freeworld.i686 -y';
+            await executarComandoGenerico(idComando, comando, 'Instalando VA-API');
+        }
+
+        /**
+         * Executa a substituição dos drivers VA-API
+         */
+        async function executarVaapiSwap() {
+            const idComando = 'vaapi-swap';
+            const comando = 'sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld -y && sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld -y';
+            await executarComandoGenerico(idComando, comando, 'Substituindo drivers VA-API');
+        }
+
+        // ===== DETECTAR DESKTOP =====
+        function detectarDesktopFrontend() {
+            const userAgent = navigator.userAgent || '';
+            const uaLower = userAgent.toLowerCase();
+            if (uaLower.includes('kde') || uaLower.includes('plasma')) return 'KDE';
+            if (uaLower.includes('gnome') || uaLower.includes('gnome-shell')) return 'GNOME';
+            if (uaLower.includes('xfce')) return 'XFCE';
+            if (uaLower.includes('cinnamon')) return 'CINNAMON';
+            if (uaLower.includes('mate')) return 'MATE';
+            if (uaLower.includes('lxqt')) return 'LXQT';
+            if (uaLower.includes('lxde')) return 'LXDE';
+            if (navigator.userAgent.includes('Konqueror')) return 'KDE';
+            return 'UNKNOWN';
+        }
+
+        // ===== RESTAURAR ESTADO DA SESSÃO =====
+        function restaurarEstadoSessao() {
+            const comandos = ['rpm-fusion', 'flatpak-setup', 'codecs-essenciais', 'extras-tainted', 'vaapi-amd', 'vaapi-swap'];
+
+            comandos.forEach(function(id) {
+                if (isExecutado(id)) {
+                    const btn = document.getElementById('btn-' + id);
+                    if (btn) {
+                        const textoFinal = getTextoAposExecucao(id);
+                        btn.textContent = textoFinal;
+                        btn.style.backgroundColor = '#4b5563';
+                        btn.style.cursor = 'default';
+                        btn.disabled = true;
+                    }
+
+                    const btnReverter = document.querySelector('.btn-reverter');
+                    if (btnReverter) {
+                        btnReverter.style.display = 'inline-block';
+                        btnReverter.disabled = false;
+                    }
+                }
+            });
+        }
+
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', function() {
+            restaurarEstadoSessao();
+
+            document.querySelectorAll('.btn-executar').forEach(function(btn) {
+                if (!btn.hasAttribute('data-texto-original')) {
+                    btn.setAttribute('data-texto-original', btn.textContent);
+                }
+            });
+
+            console.log('📦 Componente 03-repositorios carregado!');
+        });
+    </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Inicialização
-# Versão: 0.7.0-alpha
+# Versão: 0.9.5-alpha
 # ============================================================
 #
 # Este script inicia o servidor e abre a interface do FOF
@@ -19,7 +19,7 @@ set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
 cd "$DIR"
 
-VERSION="0.7.0-alpha"
+VERSION="0.9.5-alpha"
 DEBUG=false
 NO_CLEAN=false
 LOG_FILE="/tmp/fof-$(date +%Y%m%d-%H%M%S).log"
@@ -161,7 +161,7 @@ compilar_container() {
 }
 
 # ============================================================
-# VERIFICAÇÕES
+# VERIFICAÇÕES - PARTE ATUALIZADA
 # ============================================================
 
 verificar_arquivos() {
@@ -173,10 +173,9 @@ verificar_arquivos() {
         exit 1
     fi
 
-    # Verifica os novos arquivos
+    # Arquivos principais da interface
     if [ ! -f "$DIR/index.html" ]; then
         log_error "Arquivo index.html não encontrado!"
-        log_error "Certifique-se de estar no diretório correto."
         exit 1
     fi
 
@@ -194,6 +193,33 @@ verificar_arquivos() {
 
     if [ ! -f "$DIR/script.js" ]; then
         log_warning "Arquivo script.js não encontrado!"
+    fi
+
+    # Verifica as sessões (00 a 08)
+    local sessoes=(
+        "00-boas-vindas.html"
+        "01-restauracao.html"
+        "02-otimizacao.html"
+        "03-repositorios.html"
+        "04-fontes.html"
+        "05-launchers.html"
+        "06-loja.html"
+        "07-manutencao.html"
+        "08-fof-manutencao.html"
+    )
+
+    local missing=0
+    for sessao in "${sessoes[@]}"; do
+        if [ ! -f "$DIR/$sessao" ]; then
+            log_warning "Arquivo $sessao não encontrado!"
+            missing=$((missing + 1))
+        fi
+    done
+
+    if [ $missing -eq 0 ]; then
+        log_success "Todas as sessões encontradas!"
+    else
+        log_warning "$missing arquivo(s) de sessão não encontrado(s)"
     fi
 
     if [ ! -f "$DIR/icone_app.png" ]; then

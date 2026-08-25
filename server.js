@@ -1,12 +1,11 @@
 const http = require('http');
-const { exec, execSync, spawn } = require('child_process');
+const { exec, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
 const PORT = 3000;
 const ARQUIVO_PROGRESSO = path.join(__dirname, '.progresso.json');
-const HTML_FILE = path.join(__dirname, 'index.html');
-const FOF_VERSION = '0.7.0-alpha';
+const FOF_VERSION = '0.9.5-alpha';
 
 // ============ VARIÁVEIS DE STREAM ============
 
@@ -49,6 +48,19 @@ function removerProgresso(idComando) {
     }
 }
 
+function resetarProgresso() {
+    try {
+        if (fs.existsSync(ARQUIVO_PROGRESSO)) {
+            fs.unlinkSync(ARQUIVO_PROGRESSO);
+            console.log('[PROGRESS] Arquivo .progresso.json removido');
+        }
+        return true;
+    } catch (e) {
+        console.error("[Erro ao resetar progresso]:", e.message);
+        return false;
+    }
+}
+
 // ============ FUNÇÕES DE STREAM SSE ============
 
 function enviarLog(idComando, mensagem, tipo = 'output') {
@@ -75,17 +87,6 @@ function adicionarClienteSSE(idComando, res) {
         if (clients.length === 0) {
             sseClients.delete(idComando);
         }
-    });
-}
-
-// ============ VERIFICAÇÃO DE VERSÃO ============
-
-function verificarSeVersaoExiste(versao, callback) {
-    const urlCheck = `https://mirrors.fedoraproject.org/mirrorlist?repo=fedora-${versao}&arch=x86_64`;
-    exec(`curl -s --max-time 4 -o /dev/null -w "%{http_code}" "${urlCheck}"`, (err, stdout) => {
-        const statusCode = parseInt(stdout.trim(), 10);
-        if (!err && statusCode === 200) callback(true);
-        else callback(false);
     });
 }
 
@@ -116,27 +117,15 @@ function detectarDesktop() {
     if (desktop.includes('LXDE') || session.includes('LXDE')) {
         return 'LXDE';
     }
-    if (desktop.includes('I3') || desktop.includes('SWAY') || desktop.includes('WM')) {
-        return 'WM';
-    }
 
     return 'UNKNOWN';
 }
 
-// ============ AUTENTICAÇÃO SEGURA ============
+// ============ AUTENTICAÇÃO ============
 
 function verificarDisponibilidadePkexec() {
     try {
-        const result = execSync('which pkexec', { encoding: 'utf8', timeout: 1000 });
-        return result.trim().length > 0;
-    } catch (e) {
-        return false;
-    }
-}
-
-function verificarDisponibilidadeKdesu() {
-    try {
-        const result = execSync('which kdesu', { encoding: 'utf8', timeout: 1000 });
+        const result = require('child_process').execSync('which pkexec', { encoding: 'utf8', timeout: 1000 });
         return result.trim().length > 0;
     } catch (e) {
         return false;
@@ -144,8 +133,6 @@ function verificarDisponibilidadeKdesu() {
 }
 
 function obterMetodoAutenticacao() {
-    const desktop = detectarDesktop();
-
     if (verificarDisponibilidadePkexec()) {
         return {
             tipo: 'pkexec',
@@ -161,11 +148,25 @@ function obterMetodoAutenticacao() {
     };
 }
 
+// ============================================================
+// FUNÇÃO AUXILIAR: Verifica se um comando existe
+// ============================================================
+
+function commandExists(cmd) {
+    try {
+        const result = require('child_process').execSync(`which ${cmd}`, { encoding: 'utf8', timeout: 1000 });
+        return result.trim().length > 0;
+    } catch (e) {
+        return false;
+    }
+}
+
 // ============ EXECUÇÃO COM STREAM ============
 
 function executarComandoComStream(comandoFinal, idComando, isReversao, callback) {
     // ============================================================
     // Comandos que NÃO precisam de autenticação
+    // CORREÇÃO: Removidos todos os comandos flatpak
     // ============================================================
     const comandosSemAutenticacao = [
         'rpm -q',
@@ -176,19 +177,41 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
         'hostname',
         'whoami',
         'test',
-        'gtk-launch'
+        'gtk-launch',
+        'bash <(curl',
+        'echo "s" | bash'
     ];
 
     const precisaAutenticacao = !comandosSemAutenticacao.some(cmd => comandoFinal.includes(cmd));
 
     if (!precisaAutenticacao) {
-        console.log(`[INFO] Comando SEM autenticação: ${comandoFinal}`);
+        console.log(`[INFO] Comando SEM autenticação: ${comandoFinal.substring(0, 50)}...`);
         enviarLog(idComando, `$ ${comandoFinal}\n`, 'info');
+
+        // Configura ambiente para flatpak (caso seja um comando flatpak)
+        const env = { ...process.env };
+        if (comandoFinal.includes('flatpak')) {
+            let uid = 1000;
+            try {
+                uid = process.getuid ? process.getuid() : 1000;
+            } catch (e) {
+                uid = 1000;
+            }
+            env.XDG_RUNTIME_DIR = `/run/user/${uid}`;
+            env.DBUS_SESSION_BUS_ADDRESS = `unix:path=/run/user/${uid}/bus`;
+            if (!env.HOME) {
+                env.HOME = process.env.HOME || '/home/' + (process.env.USER || 'user');
+            }
+            console.log(`[FLATPAK] XDG_RUNTIME_DIR=${env.XDG_RUNTIME_DIR}`);
+            console.log(`[FLATPAK] DBUS_SESSION_BUS_ADDRESS=${env.DBUS_SESSION_BUS_ADDRESS}`);
+            console.log(`[FLATPAK] HOME=${env.HOME}`);
+        }
 
         exec(comandoFinal, {
             shell: '/bin/bash',
             maxBuffer: 1024 * 1024 * 50,
-            timeout: 30000
+            timeout: 30000,
+            env: env
         }, (error, stdout, stderr) => {
             if (stdout) {
                 enviarLog(idComando, stdout, 'output');
@@ -221,7 +244,6 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
     // ============================================================
     // Comandos que precisam de autenticação
     // ============================================================
-
     enviarLog(idComando, `$ ${comandoFinal}\n`, 'info');
     enviarLog(idComando, '─'.repeat(50) + '\n', 'info');
 
@@ -232,7 +254,7 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
     comandoFinal.includes(';');
 
     if (isComplexo) {
-        console.log(`[EXEC] Comando complexo detectado: ${comandoFinal}`);
+        console.log(`[EXEC] Comando complexo: ${comandoFinal.substring(0, 50)}...`);
 
         exec(comandoFinal, {
             shell: '/bin/bash',
@@ -271,6 +293,7 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
         return;
     }
 
+    // Comandos simples com spawn
     const processo = spawn(comandoFinal, {
         shell: '/bin/bash',
         env: process.env,
@@ -322,65 +345,33 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
     });
 }
 
-// ============================================================
-// EXECUÇÃO COM AUTENTICAÇÃO SEGURA
-// ============================================================
+// ============ EXECUÇÃO COM AUTENTICAÇÃO SEGURA ============
 
 function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, callback) {
-
-    if (comandoOriginal.includes('/tmp/fof-setup.sh') || comandoOriginal.includes('setup-snapper')) {
-        console.log(`[SCRIPT] Executando script com pkexec: ${comandoOriginal}`);
-        enviarLog(idComando, `$ ${comandoOriginal}\n`, 'info');
-
-        exec(comandoOriginal, {
-            shell: '/bin/bash',
-            maxBuffer: 1024 * 1024 * 50,
-            timeout: 1200000
-        }, (error, stdout, stderr) => {
-            if (stdout) enviarLog(idComando, stdout, 'output');
-            if (stderr) {
-                const filtrado = stderr.replace(/\[sudo\] password for .+: /g, '');
-                if (filtrado.trim()) enviarLog(idComando, filtrado, 'error');
-            }
-            if (error) {
-                enviarLog(idComando, `\n❌ Comando falhou com código: ${error.code || 1}\n`, 'error');
-                console.error(`[ERRO] ${idComando}: Código ${error.code || 1}`);
-                callback(error, stdout, stderr);
-            } else {
-                if (isReversao) removerProgresso(idComando);
-                else salvarProgresso(idComando);
-                enviarLog(idComando, `\n✅ Comando concluído com sucesso!\n`, 'success');
-                console.log(`[SUCESSO] ${idComando}`);
-                enviarLog(idComando, '__END__', 'end');
-                callback(null, stdout, stderr);
-            }
-        });
-        return;
-    }
-
     const desktop = detectarDesktop();
-    const metodo = obterMetodoAutenticacao();
 
+    // Descrição do comando para o usuário
     const descricoesComandos = {
         'dnf upgrade': 'Atualizar o sistema Fedora',
         'dnf install': 'Instalar pacotes',
         'dnf remove': 'Remover pacotes',
         'dnf autoremove': 'Remover dependências não utilizadas',
         'dnf clean': 'Limpar cache do sistema',
-        'dnf config-manager': 'Configurar gerenciador de pacotes',
+        'dnf config-manager': 'Configurar gerenciador de pacotes DNF',
         'dnf distro-sync': 'Sincronizar pacotes com o canal estável',
         'dnf system-upgrade': 'Atualizar versão do Fedora',
         'dnf swap': 'Substituir pacotes',
         'dnf groupinstall': 'Instalar grupo de pacotes',
+        'localectl': 'Alterar configurações de localidade',
+        'timedatectl': 'Alterar data e hora do sistema',
+        'rm -rf /usr/share/fonts/microsoft': 'Remover fontes Microsoft',
+        'btrfs': 'Gerenciar snapshots Btrfs',
+        'grub2-mkconfig': 'Reconfigurar GRUB',
+        'sed -i': 'Modificar arquivo de configuração',
         'flatpak install': 'Instalar aplicativo Flatpak',
         'flatpak uninstall': 'Remover aplicativo Flatpak',
         'flatpak update': 'Atualizar aplicativos Flatpak',
-        'flatpak remote-add': 'Adicionar repositório Flatpak',
-        'localectl': 'Alterar configurações de localidade',
-        'timedatectl': 'Alterar data e hora do sistema',
-        'fwupdmgr': 'Atualizar firmware do hardware',
-        'snapper': 'Gerenciar snapshots Btrfs',
-        'rsync': 'Sincronizar arquivos'
+        'flatpak remote-add': 'Adicionar repositório Flatpak'
     };
 
     let descricao = 'Executar comando administrativo';
@@ -391,130 +382,132 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         }
     }
 
-    if (descricao === 'Executar comando administrativo' && idComando) {
-        const descricoesPorId = {
-            'atualizacao-inicial': 'Atualizar o sistema Fedora',
-            'dnf-speed': 'Ajustar velocidade de download do DNF',
-            'idioma-packs': 'Instalar pacotes de idioma PT-BR',
-            'idioma-hunspell': 'Instalar corretor ortográfico PT-BR',
-            'idioma-localectl': 'Configurar localidade PT-BR',
-            'dual-boot-time': 'Corrigir relógio para dual-boot',
-            'rpm-fusion': 'Ativar repositórios RPM Fusion',
-            'flatpak-setup': 'Configurar Flatpak e Flathub',
-            'arquivos-compactados': 'Instalar suporte a arquivos compactados',
-            'codecs-essenciais': 'Instalar codecs multimídia',
-            'firmware-update': 'Atualizar firmware do hardware',
-            'extras-tainted': 'Instalar extras e suporte a DVD',
-            'vaapi-amd': 'Instalar aceleração gráfica VA-API',
-            'vaapi-swap': 'Substituir drivers de aceleração gráfica',
-            'fontes-ms-all': 'Instalar fontes Microsoft',
-            'vulkan-amd': 'Instalar drivers Vulkan para AMD',
-            'steam-install': 'Instalar Steam',
-            'obs-cam': 'Instalar câmera virtual para OBS',
-            'instalar-easyeffects': 'Instalar EasyEffects',
-            'limpeza-sistema': 'Limpar arquivos temporários e cache',
-            'system-upgrade': 'Baixar atualização de versão do Fedora',
-            'distro-sync': 'Sincronizar pacotes com o canal estável',
-            'grub': 'Configurar GRUB para snapshots',
-            'snapper-init-config': 'Criar configuração inicial do Snapper'
-        };
-        if (descricoesPorId[idComando]) {
-            descricao = descricoesPorId[idComando];
-        }
-    }
-
     enviarLog(idComando, `🔐 Autenticando para: ${descricao}\n`, 'info');
 
-    // ============================================================
-    // CORREÇÃO: a escapagem de aspas/$/backtick só faz sentido para o
-    // caminho 'sudo_fallback', onde o comando é embutido dentro de um
-    // `sh -c "..."`. No caminho 'pkexec', o comando é escrito
-    // diretamente em um arquivo .sh (fora de qualquer aspas), então
-    // escapar aqui só corrompe o comando: "Subvolume ID" virava
-    // \"Subvolume ID\" (quebrando grep em dois argumentos), $3 virava
-    // \$3 (erro de sintaxe no awk), e \( \) de regex sed viravam \\( \\)
-    // (grupo de captura destruído, saída vazia sem erro aparente).
-    // A exceção antiga isSnapperCommand só cobria comandos "snapper -c
-    // root" especificamente; agora nenhum comando é escapado no
-    // caminho pkexec, então a exceção deixa de ser necessária.
     const comandoSemSudo = comandoOriginal.replace(/sudo\s+/g, '');
 
-    let comandoFinal = '';
+    const hasPkexec = commandExists('pkexec');
+    const hasKdesu = commandExists('kdesu');
+    const hasZenity = commandExists('zenity');
+    const hasKdialog = commandExists('kdialog');
 
-    switch (metodo.tipo) {
-        case 'pkexec': {
-            const timestamp = Date.now();
-            const random = Math.random().toString(36).substring(7);
-            const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
+    console.log(`[AUTH] Desktop: ${desktop}, pkexec: ${hasPkexec}, kdesu: ${hasKdesu}`);
 
-            const scriptContent = `#!/bin/bash
-            # Fedora Only Fans - ${descricao}
-            # Executado em: $(date '+%d/%m/%Y %H:%M:%S')
+    // ============================================================
+    // 1. PRIORIDADE: kdesu (para KDE - mais confiável)
+    // ============================================================
+    if (desktop === 'KDE' && hasKdesu) {
+        enviarLog(idComando, '🪟 Usando kdesu (KDE) com interface gráfica...\n', 'info');
 
-            ${comandoSemSudo}
-            `;
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(7);
+        const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
 
-            try {
-                fs.writeFileSync(scriptTemp, scriptContent, { mode: 0o755 });
-                console.log(`[PKEXEC] Script criado: ${scriptTemp}`);
-            } catch (err) {
-                enviarLog(idComando, `❌ Erro ao criar script temporário: ${err.message}\n`, 'error');
-                return callback(err, "", "");
-            }
+        const homeDir = process.env.HOME || '/home/' + (process.env.USER || 'user');
+        const scriptContent = `#!/bin/bash
+        # Fedora Only Fans - ${descricao}
+        # Executado em: $(date '+%d/%m/%Y %H:%M:%S')
+        export DISPLAY=${process.env.DISPLAY || ':0'}
+        export XAUTHORITY=${process.env.XAUTHORITY || '${homeDir}/.Xauthority'}
+        ${comandoSemSudo}
+        `;
 
-            comandoFinal = `pkexec ${scriptTemp} && rm -f ${scriptTemp}`;
-
-            setTimeout(() => {
-                if (fs.existsSync(scriptTemp)) {
-                    try {
-                        fs.unlinkSync(scriptTemp);
-                        console.log(`[PKEXEC] Limpeza forçada: ${scriptTemp} removido`);
-                    } catch(e) {}
-                }
-            }, 60000);
-            break;
+        try {
+            fs.writeFileSync(scriptTemp, scriptContent, { mode: 0o755 });
+            console.log(`[KDESU] Script criado: ${scriptTemp}`);
+        } catch (err) {
+            enviarLog(idComando, `❌ Erro ao criar script: ${err.message}\n`, 'error');
+            return callback(err, "", "");
         }
 
-        case 'sudo_fallback':
-            enviarLog(idComando, '⚠️ Usando fallback com sudo - pode expor senha!\n', 'warning');
+        const comandoFinal = `kdesu -c "${scriptTemp}" 2>/dev/null && rm -f ${scriptTemp}`;
 
-            let promptSenha;
-            if (desktop === 'KDE' || desktop === 'LXQT') {
-                promptSenha = `kdialog --password "Digite sua senha de administrador:" --title "Fedora Only Fans - ${descricao}" 2>/dev/null`;
-            } else {
-                promptSenha = `zenity --password --title="Fedora Only Fans" --text="🔐 ${descricao}" 2>/dev/null`;
+        setTimeout(() => {
+            if (fs.existsSync(scriptTemp)) {
+                try { fs.unlinkSync(scriptTemp); } catch (e) {}
             }
+        }, 60000);
 
-            const comandoPrompt = `${promptSenha} || ${desktop === 'KDE' ? 'zenity' : 'kdialog'} --password --title="Fedora Only Fans" 2>/dev/null`;
-
-            exec(comandoPrompt, {
-                env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' }
-            }, (errPrompt, senha) => {
-                if (errPrompt || !senha || senha.trim().length === 0) {
-                    enviarLog(idComando, '❌ Autenticação cancelada pelo usuário.\n', 'error');
-                    return callback(new Error("Autenticação cancelada pelo usuário."), "", "");
-                }
-
-                const senhaLimpa = senha.trim().replace(/'/g, "'\\''");
-                // Aqui sim a escapagem é necessária: o comando vai
-                // embutido dentro de um `sh -c "..."`.
-                const comandoEscapadoFallback = comandoSemSudo
-                .replace(/\\/g, '\\\\')
-                .replace(/"/g, '\\"')
-                .replace(/\$/g, '\\$')
-                .replace(/`/g, '\\`');
-                comandoFinal = `echo '${senhaLimpa}' | sudo -S sh -c "${comandoEscapadoFallback}"`;
-                executarComandoComStream(comandoFinal, idComando, isReversao, (error, stdout, stderr) => {
-                    callback(error, stdout, stderr);
-                });
-            });
-            return;
+        executarComandoComStream(comandoFinal, idComando, isReversao, callback);
+        return;
     }
 
-    executarComandoComStream(comandoFinal, idComando, isReversao, callback);
+    // ============================================================
+    // 2. pkexec (para GNOME, XFCE, Cinnamon, etc.)
+    // ============================================================
+    if (hasPkexec) {
+        enviarLog(idComando, '🔑 Usando pkexec com interface gráfica...\n', 'info');
+
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(7);
+        const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
+
+        const homeDir = process.env.HOME || '/home/' + (process.env.USER || 'user');
+        const scriptContent = `#!/bin/bash
+        # Fedora Only Fans - ${descricao}
+        export DISPLAY=${process.env.DISPLAY || ':0'}
+        export XAUTHORITY=${process.env.XAUTHORITY || '${homeDir}/.Xauthority'}
+        export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
+        ${comandoSemSudo}
+        `;
+
+        try {
+            fs.writeFileSync(scriptTemp, scriptContent, { mode: 0o755 });
+            console.log(`[PKEXEC] Script criado: ${scriptTemp}`);
+        } catch (err) {
+            enviarLog(idComando, `❌ Erro ao criar script: ${err.message}\n`, 'error');
+            return callback(err, "", "");
+        }
+
+        const comandoFinal = `pkexec --disable-internal-agent ${scriptTemp} && rm -f ${scriptTemp}`;
+
+        setTimeout(() => {
+            if (fs.existsSync(scriptTemp)) {
+                try { fs.unlinkSync(scriptTemp); } catch (e) {}
+            }
+        }, 60000);
+
+        executarComandoComStream(comandoFinal, idComando, isReversao, callback);
+        return;
+    }
+
+    // ============================================================
+    // 3. Fallback: zenity/kdialog (último recurso)
+    // ============================================================
+    enviarLog(idComando, '⚠️ Usando fallback com zenity/kdialog...\n', 'warning');
+
+    let promptSenha;
+    if (hasKdialog && (desktop === 'KDE' || desktop === 'LXQT')) {
+        promptSenha = `kdialog --password "Digite sua senha de administrador:" --title "Fedora Only Fans - ${descricao}" 2>/dev/null`;
+    } else if (hasZenity) {
+        promptSenha = `zenity --password --title="Fedora Only Fans" --text="🔐 ${descricao}" 2>/dev/null`;
+    } else {
+        promptSenha = `kdialog --password "Digite sua senha de administrador:" --title "Fedora Only Fans - ${descricao}" 2>/dev/null || zenity --password --title="Fedora Only Fans" --text="🔐 ${descricao}" 2>/dev/null`;
+    }
+
+    const comandoPrompt = `${promptSenha}`;
+
+    exec(comandoPrompt, {
+        env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' }
+    }, (errPrompt, senha) => {
+        if (errPrompt || !senha || senha.trim().length === 0) {
+            enviarLog(idComando, '❌ Autenticação cancelada pelo usuário.\n', 'error');
+            return callback(new Error("Autenticação cancelada pelo usuário."), "", "");
+        }
+
+        const senhaLimpa = senha.trim().replace(/'/g, "'\\''");
+        const comandoEscapado = comandoSemSudo
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\$/g, '\\$')
+        .replace(/`/g, '\\`');
+
+        const comandoFinal = `echo '${senhaLimpa}' | sudo -S sh -c "${comandoEscapado}"`;
+        executarComandoComStream(comandoFinal, idComando, isReversao, callback);
+    });
 }
 
-// ============ FUNÇÃO PRINCIPAL DE EXECUÇÃO ============
+// ============ PROCEDER COM EXECUÇÃO ============
 
 function procederComExecucao(comando, idComando, isReversao, res) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -525,7 +518,8 @@ function procederComExecucao(comando, idComando, isReversao, res) {
 
     setImmediate(() => {
         // ============================================================
-        // COMANDOS QUE NÃO PRECISAM DE AUTENTICAÇÃO
+        // Comandos que NÃO precisam de autenticação
+        // CORREÇÃO: Removidos todos os comandos flatpak
         // ============================================================
         const comandosSemAutenticacao = [
             'rpm -q',
@@ -535,84 +529,75 @@ function procederComExecucao(comando, idComando, isReversao, res) {
             'cat /etc/fedora-release',
             'hostname',
             'whoami',
-            'rpm -qa',
             'test',
             'gtk-launch',
-            // CORREÇÃO: Adicionar comandos flatpak que NÃO precisam de sudo
-            'flatpak install',
-            'flatpak uninstall',
-            'flatpak update',
-            'flatpak remote-add',
-            'flatpak remote-delete',
-            'flatpak list',
-            'flatpak info',
-            'flatpak search',
-            'flatpak run'
+            'bash <(curl',
+                 'echo "s" | bash'
         ];
 
-        // ============================================================
-        // COMANDOS QUE PRECISAM DE AUTENTICAÇÃO
-        // ============================================================
         const comandosComAutenticacao = [
-            'sudo ',
-            'pkexec ',
-            'kdesu ',
+            'dnf config-manager',
             'dnf remove',
             'dnf install',
             'dnf autoremove',
             'dnf upgrade',
             'dnf update',
-            'dnf config-manager',
             'dnf swap',
             'dnf distro-sync',
             'dnf system-upgrade',
             'localectl',
             'timedatectl',
+            'rm -rf',
             'btrfs',
             'snapper',
             'grub2-mkconfig',
-            'grub2-editenv'
+            'sed -i',
+            'flatpak install',
+            'flatpak uninstall',
+            'flatpak update',
+            'flatpak remote-add'
         ];
 
         let precisaAutenticacao = false;
         let isSemAutenticacao = false;
 
-        // Verificar se o comando está na lista de comandos sem autenticação
         for (const cmd of comandosSemAutenticacao) {
             if (comando.includes(cmd)) {
                 isSemAutenticacao = true;
+                console.log(`[AUTH] Comando SEM autenticação detectado: ${cmd}`);
                 break;
             }
         }
 
-        // Se NÃO estiver na lista de sem autenticação, verificar se precisa de autenticação
         if (!isSemAutenticacao) {
-            // Verificar se o comando está na lista de comandos que precisam de autenticação
             for (const cmd of comandosComAutenticacao) {
                 if (comando.includes(cmd)) {
                     precisaAutenticacao = true;
+                    console.log(`[AUTH] Comando COM autenticação detectado: ${cmd}`);
                     break;
                 }
             }
-
-            // Se não está em nenhuma lista específica, marcar como precisa autenticação (fallback seguro)
             if (!precisaAutenticacao) {
                 precisaAutenticacao = true;
+                console.log(`[AUTH] Comando não identificado, assumindo que precisa de autenticação`);
             }
         }
 
-        console.log(`[AUTH CHECK] Comando: ${comando.substring(0, 50)}... | SemAuth: ${isSemAutenticacao} | PrecisaAuth: ${precisaAutenticacao}`);
+        if (comando.includes('dnf')) {
+            precisaAutenticacao = true;
+            console.log(`[AUTH] FORÇANDO autenticação gráfica para comando dnf`);
+        }
+
+        console.log(`[AUTH] ${idComando}: SemAuth=${isSemAutenticacao}, PrecisaAuth=${precisaAutenticacao}`);
 
         if (precisaAutenticacao) {
-            console.log(`[AUTH] Comando requer autenticação: ${comando}`);
-            executarComAutenticacaoSegura(comando, idComando, isReversao, (error, stdout, stderr) => {
+            executarComAutenticacaoSegura(comando, idComando, isReversao, (error) => {
                 if (error) {
                     console.error(`[ERRO] ${idComando}:`, error.message);
                 }
             });
         } else {
-            console.log(`[NOAUTH] Comando NÃO requer autenticação: ${comando}`);
-            executarComandoComStream(comando, idComando, isReversao, (error, stdout, stderr) => {
+            executarComandoComStream(comando, idComando, isReversao, (error) => {
                 if (error) {
                     console.error(`[ERRO] ${idComando}:`, error.message);
                 }
@@ -621,7 +606,7 @@ function procederComExecucao(comando, idComando, isReversao, res) {
     });
 }
 
-// ============ SERVER ARQUIVOS ESTÁTICOS ============
+// ============ SERVER - ARQUIVOS ESTÁTICOS ============
 
 function servirArquivoEstatico(req, res, filePath) {
     const fullPath = path.join(__dirname, filePath);
@@ -652,8 +637,9 @@ function servirArquivoEstatico(req, res, filePath) {
 // ============ SERVIDOR HTTP ============
 
 const server = http.createServer((req, res) => {
+    // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
@@ -662,8 +648,11 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    if (req.method === 'GET' && req.url.startsWith('/stream')) {
-        const urlParams = new URL(req.url, `http://${req.headers.host}`);
+    const url = req.url;
+
+    // ===== SSE STREAM =====
+    if (req.method === 'GET' && url.startsWith('/stream')) {
+        const urlParams = new URL(url, `http://${req.headers.host}`);
         const idComando = urlParams.searchParams.get('id');
 
         if (!idComando) {
@@ -695,66 +684,105 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Landing page
-    if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
-        if (fs.existsSync(path.join(__dirname, 'index.html'))) {
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            fs.createReadStream(path.join(__dirname, 'index.html')).pipe(res);
-        } else {
-            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-            res.end('Arquivo index.html não encontrado.');
+    // ===== PROGRESSO - GET =====
+    if (req.method === 'GET' && url === '/progress') {
+        const progresso = lerProgresso();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            executados: progresso,
+            pulados: []
+        }));
+        return;
+    }
+
+    // ===== PROGRESSO - POST =====
+    if (req.method === 'POST' && url === '/progress') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+            try {
+                const { executados } = JSON.parse(body);
+                if (executados && Array.isArray(executados)) {
+                    if (fs.existsSync(ARQUIVO_PROGRESSO)) {
+                        fs.unlinkSync(ARQUIVO_PROGRESSO);
+                    }
+                    executados.forEach(id => salvarProgresso(id));
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true }));
+            } catch (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: err.message }));
+            }
+        });
+        return;
+    }
+
+    // ===== PROGRESSO - DELETE =====
+    if (req.method === 'DELETE' && url === '/progress') {
+        try {
+            if (fs.existsSync(ARQUIVO_PROGRESSO)) {
+                fs.unlinkSync(ARQUIVO_PROGRESSO);
+                console.log('[PROGRESS] Arquivo .progresso.json removido');
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message }));
         }
         return;
     }
 
-    // Modo Guiado
-    if (req.method === 'GET' && req.url === '/guiado.html') {
+    // ===== PÁGINAS HTML =====
+
+    if (req.method === 'GET' && (url === '/' || url === '/index.html')) {
+        servirArquivoEstatico(req, res, 'index.html');
+        return;
+    }
+
+    if (req.method === 'GET' && url === '/guiado.html') {
         servirArquivoEstatico(req, res, 'guiado.html');
         return;
     }
 
-    // Modo Avançado
-    if (req.method === 'GET' && req.url === '/avancado.html') {
+    if (req.method === 'GET' && url === '/avancado.html') {
         servirArquivoEstatico(req, res, 'avancado.html');
         return;
     }
 
-    // Sessões (00 a 08)
-    if (req.method === 'GET' && req.url.match(/^\/(0[0-8]-[a-z-]+\.html)$/)) {
-        const match = req.url.match(/^\/(0[0-8]-[a-z-]+\.html)$/);
+    if (req.method === 'GET' && url.match(/^\/(0[0-8]-[a-z-]+\.html)$/)) {
+        const match = url.match(/^\/(0[0-8]-[a-z-]+\.html)$/);
         if (match) {
             servirArquivoEstatico(req, res, match[1]);
             return;
         }
     }
 
-    // CSS
-    if (req.method === 'GET' && req.url === '/style.css') {
+    if (req.method === 'GET' && url === '/style.css') {
         servirArquivoEstatico(req, res, 'style.css');
         return;
     }
 
-    // JavaScript
-    if (req.method === 'GET' && req.url === '/script.js') {
+    if (req.method === 'GET' && url === '/script.js') {
         servirArquivoEstatico(req, res, 'script.js');
         return;
     }
 
-    // Ícone
-    if (req.method === 'GET' && req.url === '/icone_app.png') {
+    if (req.method === 'GET' && (url === '/icone_app.png' || url === '/favicon.ico')) {
         servirArquivoEstatico(req, res, 'icone_app.png');
         return;
     }
 
-    // Status
-    if (req.method === 'GET' && req.url === '/status') {
+    // ===== API =====
+
+    if (req.method === 'GET' && url === '/status') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ executados: lerProgresso() }));
         return;
     }
 
-    // Info
-    if (req.method === 'GET' && req.url === '/info') {
+    if (req.method === 'GET' && url === '/info') {
         const desktop = detectarDesktop();
         const metodo = obterMetodoAutenticacao();
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -763,23 +791,12 @@ const server = http.createServer((req, res) => {
             autenticacao: metodo.descricao,
             nodeVersion: process.version,
             platform: process.platform,
-            version: '0.7.0-alpha'
+            version: FOF_VERSION
         }));
         return;
     }
 
-    // Security
-    if (req.method === 'GET' && req.url === '/security') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            status: 'Whitelist removida',
-            mensagem: 'Todos os comandos são permitidos'
-        }));
-        return;
-    }
-
-    // Executar / Reverter
-    if (req.method === 'POST' && (req.url === '/executar' || req.url === '/reverter')) {
+    if (req.method === 'POST' && (url === '/executar' || url === '/reverter')) {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
@@ -795,25 +812,6 @@ const server = http.createServer((req, res) => {
                     }));
                 }
 
-                if (comando.includes('system-upgrade download')) {
-                    const match = comando.match(/--releasever=(\d+)/);
-                    const versaoAlvo = match ? match[1] : null;
-
-                    if (versaoAlvo) {
-                        verificarSeVersaoExiste(versaoAlvo, (existe) => {
-                            if (!existe) {
-                                res.writeHead(200, { 'Content-Type': 'application/json' });
-                                return res.end(JSON.stringify({
-                                    success: false,
-                                    output: `[AVISO DE SEGURANÇA]: O Fedora ${versaoAlvo} ainda NÃO foi lançado oficialmente!`
-                                }));
-                            }
-                            procederComExecucao(comando, idComando, isReversao, res);
-                        });
-                        return;
-                    }
-                }
-
                 procederComExecucao(comando, idComando, isReversao, res);
 
             } catch (err) {
@@ -825,10 +823,11 @@ const server = http.createServer((req, res) => {
                 }));
             }
         });
-    } else {
-        res.writeHead(404);
-        res.end();
+        return;
     }
+
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Página não encontrada');
 });
 
 // ============ TRATAMENTO DE ERROS ============
@@ -846,7 +845,7 @@ server.on('error', (e) => {
 
 process.on('SIGINT', () => {
     console.log('\n🛑 Encerrando servidor...');
-    sseClients.forEach((clients, id) => {
+    sseClients.forEach((clients) => {
         clients.forEach(client => {
             client.end();
         });
@@ -870,10 +869,9 @@ server.listen(PORT, () => {
     console.log(` 🖥️  Desktop: ${desktop}`);
     console.log(` 🔐 Autenticação: ${metodo.descricao}`);
     console.log(` 📡 SSE: Ativo (logs em tempo real)`);
-    console.log(` 🛡️  Whitelist: Removida (todos os comandos são permitidos)`);
     console.log(` 📁 Arquivos estáticos: Ativo (HTML, CSS, JS, ícone)`);
-    console.log(` 📝 Script Wrapper: Ativo (pkexec)`);
-    console.log(` 📄 Página inicial: index.html (Landing Page)`);
-    console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, ls /boot/vmlinuz-*, test, gtk-launch`);
+    console.log(` 📄 Páginas: index.html, guiado.html, avancado.html, 00-*.html a 08-*.html`);
+    console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, bash <(curl), etc`);
+    console.log(` 📊 Progresso: .progresso.json (persistente no servidor)`);
     console.log(`====================================================`);
 });
