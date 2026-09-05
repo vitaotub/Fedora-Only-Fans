@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Manutenção</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ===== HEADER ===== -->
+        <div class="header-avancado">
+            <div class="titulo">
+                <img src="icone_app.png" alt="FOF" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain;" onerror="this.style.display='none'">
+                <h1>Manutenção</h1>
+                <span class="badge-modo">🛠️ Fedora e FOF</span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">v<span class="fof-version"></span></span>
+            </div>
+            <a href="index.html" class="voltar">← Voltar ao início</a>
+        </div>
+
+        <!-- ===== CONTAINER DAS SESSÕES DE MANUTENÇÃO ===== -->
+        <div id="sessoes-container">
+            <div class="loading-sessao">
+                <div class="spinner"></div>
+                <p>Carregando manutenção...</p>
+            </div>
+        </div>
+
+        <!-- ===== BOTÃO VOLTAR AO TOPO ===== -->
+        <button class="btn-topo" id="btn-topo" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // ============================================================
+        // MANUTENÇÃO - CARREGAMENTO DAS SESSÕES DE MANUTENÇÃO
+        // ============================================================
+        //
+        // Mostra só as sessões marcadas como manutenção (manutencao: true
+        // em SESSOES, script.js) — kernels, limpeza de temporários, GRUB,
+        // atualizar/desinstalar o FOF. Essas ações não têm dependência de
+        // ordem entre si nem com o restante da configuração do Fedora, por
+        // isso ficam numa página à parte, fora do fluxo sequencial
+        // principal (guiado.html).
+        //
+        // Ao contrário do antigo Modo Avançado, esta página NÃO mostra
+        // nenhum tipo de contador ou barra de progresso agregada — o FOF
+        // não gera relatórios de conclusão. Cada botão só lembra o próprio
+        // estado individual.
+
+        var sessoesCarregadas = {};
+
+        async function carregarSessoesManutencao() {
+            var container = document.getElementById('sessoes-container');
+            if (!container) return;
+
+            if (typeof getProgress === 'undefined' || typeof SESSOES_MANUTENCAO === 'undefined') {
+                console.warn('⏳ Aguardando script.js carregar...');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                if (typeof getProgress === 'undefined') {
+                    console.error('❌ script.js não foi carregado!');
+                    container.innerHTML = `
+                        <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444;">
+                            <h3>❌ Erro: script.js não foi carregado!</h3>
+                            <p style="color: var(--text-muted);">Recarregue a página ou verifique se o arquivo existe.</p>
+                        </div>
+                    `;
+                    return;
+                }
+            }
+
+            // Espera o progresso real do servidor chegar antes de carregar
+            // as sessões (evita corrida entre o fetch do progresso e o
+            // fetch do HTML de cada sessão).
+            await getProgress();
+
+            container.innerHTML = '';
+
+            for (var i = 0; i < SESSOES_MANUTENCAO.length; i++) {
+                var nomeSessao = SESSOES_MANUTENCAO[i];
+                var arquivo = nomeSessao + '.html';
+
+                try {
+                    var response = await fetch(arquivo);
+                    if (!response.ok) {
+                        throw new Error('Erro ao carregar ' + arquivo + ': ' + response.status);
+                    }
+
+                    var html = await response.text();
+                    var bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                    var conteudo = bodyMatch ? bodyMatch[1] : html;
+                    var scriptMatch = conteudo.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+                    var conteudoSemScripts = conteudo.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '');
+
+                    var wrapper = document.createElement('div');
+                    wrapper.className = 'sessao-wrapper';
+                    wrapper.id = 'wrapper-' + nomeSessao;
+                    wrapper.innerHTML = conteudoSemScripts;
+
+                    container.appendChild(wrapper);
+
+                    if (scriptMatch) {
+                        scriptMatch.forEach(function(script) {
+                            var scriptContent = script.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
+                            try {
+                                var win = window;
+                                eval.call(win, scriptContent);
+                            } catch (e) {
+                                console.error('Erro ao executar script da sessão ' + nomeSessao + ':', e);
+                            }
+                        });
+                    }
+
+                    // O 'DOMContentLoaded' que cada sessão registra pra
+                    // chamar sua própria restaurarEstadoSessao() nunca
+                    // dispara, porque o evento já aconteceu pra esta
+                    // página antes da sessão ser injetada dinamicamente.
+                    if (typeof restaurarEstadoSessao === 'function') {
+                        try {
+                            restaurarEstadoSessao();
+                        } catch (e) {
+                            console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
+                        }
+                    }
+
+                    wrapper.querySelectorAll('.btn-executar').forEach(function(btn) {
+                        if (!btn.hasAttribute('data-texto-original')) {
+                            btn.setAttribute('data-texto-original', btn.textContent);
+                        }
+                    });
+
+                    sessoesCarregadas[nomeSessao] = true;
+                    console.log('✅ Sessão de manutenção carregada: ' + nomeSessao);
+
+                } catch (e) {
+                    console.error('Erro ao carregar ' + nomeSessao + ':', e);
+                    var errorDiv = document.createElement('div');
+                    errorDiv.className = 'sessao-container';
+                    errorDiv.style.textAlign = 'center';
+                    errorDiv.style.padding = '2rem 1rem';
+                    errorDiv.style.color = '#ef4444';
+                    errorDiv.style.border = '1px solid #ef4444';
+                    errorDiv.style.borderRadius = '8px';
+                    errorDiv.innerHTML = `
+                        <h3>❌ Erro ao carregar ${nomeDaSessao(nomeSessao)}</h3>
+                        <p style="color: var(--text-muted);">${e.message}</p>
+                    `;
+                    container.appendChild(errorDiv);
+                }
+            }
+
+            var event = new CustomEvent('todas-sessoes-carregadas');
+            document.dispatchEvent(event);
+        }
+
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof getProgress !== 'undefined' && typeof SESSOES_MANUTENCAO !== 'undefined') {
+                carregarSessoesManutencao();
+            } else {
+                console.warn('⏳ Aguardando script.js carregar...');
+                setTimeout(function() {
+                    if (typeof getProgress !== 'undefined' && typeof SESSOES_MANUTENCAO !== 'undefined') {
+                        carregarSessoesManutencao();
+                    } else {
+                        console.error('❌ script.js não carregou corretamente!');
+                        document.getElementById('sessoes-container').innerHTML = `
+                            <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444;">
+                                <h3>❌ Erro: script.js não foi carregado!</h3>
+                                <p style="color: var(--text-muted);">Recarregue a página ou verifique se o arquivo existe.</p>
+                            </div>
+                        `;
+                    }
+                }, 200);
+            }
+
+            var btnTopo = document.getElementById('btn-topo');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 400) {
+                    btnTopo.classList.add('visivel');
+                } else {
+                    btnTopo.classList.remove('visivel');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Fontes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ===== CONTEÚDO DA SESSÃO ===== -->
+    <div class="sessao-container" id="sessao-04-fontes">
+        <div class="sessao-titulo">
+            <span class="sessao-label">Sessão 5</span>
+            🔤 Fontes para Compatibilidade
+        </div>
+
+        <div class="bloco-comando">
+            <div class="comando-info">
+                <h3>Instalar fontes Microsoft para compatibilidade</h3>
+                <p>Instala o instalador de fontes Microsoft do SourceForge para obter Arial, Times, Calibri, etc.</p>
+
+                <div class="aviso-caixa">
+                    ⚠️ Este processo baixa e instala fontes proprietárias da Microsoft.
+                    Certifique-se de estar em conformidade com os termos de licenciamento.
+                </div>
+
+                <div class="grupo-botoes">
+                    <button class="btn-executar azul-claro" onclick="executarFontesMS()" data-comando="fontes-ms-all" id="btn-fontes-ms-all">
+                        📦 Instalar Fontes MS
+                    </button>
+                    <button class="btn-reverter" onclick="reverterFontesMS()" disabled>↩️ Remover</button>
+                </div>
+
+                <div class="info-extra">
+                    ℹ️ Fontes instaladas: Arial, Times New Roman, Calibri, Cambria, Candara, Consolas, Constantia, Corbel, e outras.
+                </div>
+            </div>
+
+            <div class="progress-container" id="progress-fontes-ms-all">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-fontes-ms-all"></div>
+                </div>
+                <div class="progress-text">
+                    <span class="status" id="progress-status-fontes-ms-all">⏳ Iniciando...</span>
+                    <span class="percentage" id="progress-percent-fontes-ms-all">0%</span>
+                </div>
+            </div>
+            <div class="terminal-log" id="log-fontes-ms-all"></div>
+        </div>
+    </div>
+
+    <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
+    <script>
+        // ============================================================
+        // SESSÃO 04: FONTES PARA COMPATIBILIDADE
+        // ============================================================
+
+        // NOTA: 'var' é proposital — ver comentário em 00-boas-vindas.html
+        // sobre por que 'const'/'let' não podem ser usados aqui.
+        var ID_COMANDO = 'fontes-ms-all';
+
+        /**
+         * Executa a instalação das fontes Microsoft
+         */
+        async function executarFontesMS() {
+            const comando = 'sudo dnf install -y curl cabextract fontconfig && curl -L https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm -o /tmp/msfonts.rpm && rpm2cpio /tmp/msfonts.rpm | cpio -idmv -D /tmp/ && sudo mkdir -p /usr/share/fonts/microsoft && sudo mv /tmp/usr/share/fonts/msttcore/* /usr/share/fonts/microsoft/ && sudo fc-cache -f -v && rm -rf /tmp/msfonts.rpm /tmp/usr';
+
+            await executarComandoGenerico(ID_COMANDO, comando, 'Instalando Fontes Microsoft');
+        }
+
+        /**
+         * Remove as fontes Microsoft
+         */
+        async function reverterFontesMS() {
+            if (!isExecutado(ID_COMANDO)) {
+                alert('As fontes Microsoft não estão instaladas.');
+                return;
+            }
+
+            if (!confirm('Deseja remover as fontes Microsoft?')) return;
+
+            const logBox = document.getElementById('log-' + ID_COMANDO);
+            const btn = document.getElementById('btn-' + ID_COMANDO);
+            const btnReverter = document.querySelector('.btn-reverter');
+
+            if (logBox) {
+                logBox.innerHTML = '';
+                logBox.style.display = 'block';
+                logBox.style.height = '100px';
+                logBox.style.maxHeight = '100px';
+                const infoLine = document.createElement('div');
+                infoLine.className = 'log-line info';
+                infoLine.textContent = '🗑️ Removendo fontes Microsoft...';
+                logBox.appendChild(infoLine);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            try {
+                await fetch(API_URL + '/executar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comando: 'sudo rm -rf /usr/share/fonts/microsoft && sudo fc-cache -f -v',
+                        idComando: 'fontes-ms-revert'
+                    })
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                desmarcarComoExecutado(ID_COMANDO);
+
+                if (btn) {
+                    btn.textContent = '📦 Instalar Fontes MS';
+                    btn.style.backgroundColor = '#3b82f6';
+                    btn.style.cursor = 'pointer';
+                    btn.disabled = false;
+                }
+
+                if (btnReverter) {
+                    btnReverter.disabled = true;
+                }
+
+                if (logBox) {
+                    const successLine = document.createElement('div');
+                    successLine.className = 'log-line success';
+                    successLine.textContent = '✅ Fontes Microsoft removidas com sucesso!';
+                    logBox.appendChild(successLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+
+
+            } catch (e) {
+                if (logBox) {
+                    const errorLine = document.createElement('div');
+                    errorLine.className = 'log-line error';
+                    errorLine.textContent = '❌ Erro ao remover: ' + e.message;
+                    logBox.appendChild(errorLine);
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            }
+        }
+
+        // executarComandoGenerico() agora é compartilhada em script.js —
+        // antes existia uma cópia idêntica aqui (ver comentário em script.js).
+
+        // ===== RESTAURAR ESTADO DA SESSÃO =====
+        function restaurarEstadoSessao() {
+            const btnReverter = document.querySelector('.btn-reverter');
+
+            if (isExecutado(ID_COMANDO)) {
+                const btn = document.getElementById('btn-' + ID_COMANDO);
+                if (btn) {
+                    const textoFinal = getTextoAposExecucao(ID_COMANDO);
+                    btn.textContent = textoFinal;
+                    btn.style.backgroundColor = '#4b5563';
+                    btn.style.cursor = 'default';
+                    btn.disabled = true;
+                }
+
+                if (btnReverter) {
+                    btnReverter.disabled = false;
+                }
+            } else if (btnReverter) {
+                btnReverter.disabled = true;
+            }
+        }
+
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', function() {
+            restaurarEstadoSessao();
+
+            document.querySelectorAll('.btn-executar').forEach(function(btn) {
+                if (!btn.hasAttribute('data-texto-original')) {
+                    btn.setAttribute('data-texto-original', btn.textContent);
+                }
+            });
+
+            console.log('📦 Componente 04-fontes carregado!');
+        });
+    </script>
+</body>
+</html>

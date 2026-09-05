@@ -1,0 +1,127 @@
+<!--
+    ============================================================
+    MOLDE PARA UMA NOVA SESSÃO DO FOF
+    ============================================================
+
+    Como usar:
+      1. Copie este arquivo para NN-nome-da-sessao.html (dois dígitos +
+         hífen + nome em minúsculas, ex.: 09-emuladores.html).
+      2. Troque os placeholders entre <> pelo conteúdo real.
+      3. Adicione uma entrada no array SESSOES, em script.js, com o
+         mesmo id do arquivo (sem o .html) e os data-comando dos seus
+         botões. Não precisa editar mais nada — nem guiado.html,
+         manutencao.html, index.html, nem server.js.
+      4. Apague este comentário e os comentários "MOLDE:" abaixo.
+
+    Este molde traz UM botão simples (instalar/desinstalar). Pra ver
+    outros padrões prontos:
+      - Botão sempre clicável (ação repetível, nunca desabilita):
+        veja 'atualizacao-inicial' em 00-boas-vindas.html e a flag
+        sempreClicavel em script.js.
+      - Vários botões instalar/desinstalar lado a lado, cada um com seu
+        próprio par de botões: veja 05-launchers.html (o bloco
+        "Compatibilidade Wine/Proton").
+      - Botão "sempre visível, só desabilita" em vez de aparecer/sumir:
+        veja 06-loja.html (chame desinstalarPacote(..., true) com o 4º
+        argumento true).
+      - Dropdown + botão "aplicar valor selecionado": veja o ajuste de
+        DNF em 02-otimizacao.html.
+      - Fluxo mais elaborado (dropdown populado dinamicamente, duas
+        confirmações, bloqueio condicional): veja o gerenciamento de
+        kernels em 07-manutencao.html.
+    ============================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - <!-- MOLDE: título da aba, ex.: "Emuladores" --></title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ===== CONTEÚDO DA SESSÃO ===== -->
+    <!--
+        O id="sessao-XX-nome" deve ser "sessao-" + o mesmo id que você
+        usar no array SESSOES em script.js. O texto dentro de
+        .sessao-label ("Sessão N") é preenchido automaticamente — não
+        precisa escrever o número certo aqui.
+    -->
+    <div class="sessao-container" id="sessao-XX-nome-da-sessao">
+        <div class="sessao-titulo">
+            <span class="sessao-label">Sessão</span>
+            <!-- MOLDE: emoji + título, ex.: "🕹️ Emuladores" -->
+        </div>
+
+        <div class="bloco-comando">
+            <div class="comando-info">
+                <h3><!-- MOLDE: nome curto do que este botão faz --></h3>
+                <p><!-- MOLDE: explicação de uma ou duas frases --></p>
+
+                <div class="grupo-botoes">
+                    <!--
+                        data-comando é o ID que conecta este botão ao
+                        registro em script.js (SESSOES) e ao progresso
+                        salvo no servidor. Use um ID único no projeto
+                        inteiro, em minúsculas com hífen.
+                    -->
+                    <button class="btn-executar" onclick="executarMeuComando()" data-comando="meu-comando-novo" id="btn-meu-comando-novo">
+                        <!-- MOLDE: texto do botão, ex.: "🕹️ Instalar RetroArch" -->
+                    </button>
+                    <button class="btn-reverter" onclick="reverterMeuComando()" id="btn-reverter-meu-comando-novo" style="display:none;">↩️ Desinstalar</button>
+                </div>
+            </div>
+
+            <div class="progress-container" id="progress-meu-comando-novo">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-meu-comando-novo"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-meu-comando-novo">⏳ Iniciando...</span><span class="percentage" id="progress-percent-meu-comando-novo">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-meu-comando-novo"></div>
+        </div>
+    </div>
+
+    <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
+    <script>
+        /**
+         * MOLDE: troque pelo comando real (dnf, flatpak, script, o que for).
+         * executarComandoGenerico já cuida do texto "instalando...", da
+         * barra de progresso, do log em tempo real (SSE) e de marcar o
+         * botão como concluído ao final — e do callback opcional
+         * (mostrarBotaoDesinstalar) que revela o botão de reverter.
+         */
+        async function executarMeuComando() {
+            const comando = 'flatpak install flathub org.exemplo.Programa -y';
+            await executarComandoGenerico('meu-comando-novo', comando, 'Instalando <!-- MOLDE: nome do programa -->', mostrarBotaoDesinstalar);
+        }
+
+        /**
+         * MOLDE: desinstalarPacote já cuida de tudo (confirmação, log,
+         * desabilitar/reabilitar botões, aguardar conclusão). Só precisa
+         * do comando de remoção. O 4º argumento (true/false/omitido)
+         * decide se o botão de reverter fica sempre visível (true, como
+         * na Sessão 7) ou some de novo depois de desinstalar (omitido,
+         * como nos launchers da Sessão 6).
+         */
+        function reverterMeuComando() {
+            desinstalarPacote('meu-comando-novo', 'flatpak uninstall org.exemplo.Programa -y', '<!-- MOLDE: nome do programa -->');
+        }
+
+        // ===== RESTAURAR ESTADO DA SESSÃO =====
+        // Chamada automaticamente pelo Modo Guiado (ou Manutenção) assim que
+        // esta sessão é carregada — não precisa ser adicionada a nenhum
+        // outro lugar.
+        function restaurarEstadoSessao() {
+            if (isExecutado('meu-comando-novo')) {
+                const btn = document.getElementById('btn-meu-comando-novo');
+                if (btn) {
+                    btn.textContent = getTextoAposExecucao('meu-comando-novo');
+                    btn.style.backgroundColor = '#4b5563';
+                    btn.style.cursor = 'default';
+                    btn.disabled = true;
+                }
+                mostrarBotaoDesinstalar('meu-comando-novo');
+            }
+        }
+    </script>
+</body>
+</html>

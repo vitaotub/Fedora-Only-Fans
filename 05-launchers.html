@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Launchers</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ===== CONTEÚDO DA SESSÃO ===== -->
+    <div class="sessao-container" id="sessao-05-launchers">
+        <div class="sessao-titulo">
+            <span class="sessao-label">Sessão 6</span>
+            🎮 Launchers e Pacotes Essenciais
+        </div>
+
+        <!-- Vulkan -->
+        <div class="bloco-comando">
+            <div class="comando-info">
+                <h3>Drivers Vulkan Completos (Para GPUs AMD)</h3>
+                <p>Instala as ferramentas e bibliotecas Vulkan em versões de 32 e 64 bits para suporte nativo ao Proton.</p>
+                <div class="grupo-botoes">
+                    <button class="btn-executar" onclick="executarVulkan()" data-comando="vulkan-amd" id="btn-vulkan-amd">🚀 Instalar Drivers Vulkan</button>
+                </div>
+            </div>
+
+            <div class="progress-container" id="progress-vulkan-amd">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-vulkan-amd"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-vulkan-amd">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vulkan-amd">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-vulkan-amd"></div>
+        </div>
+
+        <!-- Launchers -->
+        <div class="bloco-comando">
+            <div class="comando-info">
+                <h3>Instalar Launchers e Pacotes Essenciais</h3>
+                <p>Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    ℹ️ Todos os launchers são instalados via Flatpak (não requerem senha de root).
+                </p>
+
+                <div class="grid-launchers">
+                    <div class="launcher-item">
+                        <button class="btn-executar" onclick="executarSteam()" data-comando="steam-install" id="btn-steam-install">🎮 Steam</button>
+                        <button class="btn-reverter" onclick="reverterSteam()" id="btn-reverter-steam-install" disabled>↩️ Desinstalar Steam</button>
+                    </div>
+                    <div class="launcher-item">
+                        <button class="btn-executar verde" onclick="executarHeroic()" data-comando="heroic-install" id="btn-heroic-install">⚡ Heroic Games</button>
+                        <button class="btn-reverter" onclick="reverterHeroic()" id="btn-reverter-heroic-install" disabled>↩️ Desinstalar Heroic</button>
+                    </div>
+                    <div class="launcher-item">
+                        <button class="btn-executar roxo" onclick="executarLutris()" data-comando="lutris-install" id="btn-lutris-install">🎯 Lutris</button>
+                        <button class="btn-reverter" onclick="reverterLutris()" id="btn-reverter-lutris-install" disabled>↩️ Desinstalar Lutris</button>
+                    </div>
+                    <div class="launcher-item">
+                        <button class="btn-executar laranja" onclick="executarProtonUp()" data-comando="protonup-install" id="btn-protonup-install">🔄 ProtonUp-Qt</button>
+                        <button class="btn-reverter" onclick="reverterProtonUp()" id="btn-reverter-protonup-install" disabled>↩️ Desinstalar ProtonUp-Qt</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-container" id="progress-steam-install">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-steam-install"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-steam-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-steam-install">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-steam-install"></div>
+
+            <div class="progress-container" id="progress-heroic-install">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-heroic-install"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-heroic-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-heroic-install">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-heroic-install"></div>
+
+            <div class="progress-container" id="progress-lutris-install">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-lutris-install"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-lutris-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-lutris-install">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-lutris-install"></div>
+
+            <div class="progress-container" id="progress-protonup-install">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-protonup-install"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-protonup-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-protonup-install">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-protonup-install"></div>
+        </div>
+
+        <!-- Wine/Proton e Performance -->
+        <div class="bloco-comando">
+            <div class="comando-info">
+                <h3>🍷 Compatibilidade (Wine/Proton) e Performance</h3>
+                <p>Ferramentas pra rodar jogos e programas do Windows fora da Steam, e recursos que ajudam no desempenho durante o jogo.</p>
+
+                <div class="grid-launchers">
+                    <div class="launcher-item">
+                        <button class="btn-executar" onclick="executarWine()" data-comando="wine-install" id="btn-wine-install">🍷 Wine</button>
+                        <button class="btn-reverter" onclick="reverterWine()" id="btn-reverter-wine-install" disabled>↩️ Desinstalar Wine</button>
+                    </div>
+                    <div class="launcher-item">
+                        <button class="btn-executar verde" onclick="executarWinetricks()" data-comando="winetricks-install" id="btn-winetricks-install">🔧 Winetricks</button>
+                        <button class="btn-reverter" onclick="reverterWinetricks()" id="btn-reverter-winetricks-install" disabled>↩️ Desinstalar Winetricks</button>
+                    </div>
+                    <div class="launcher-item">
+                        <button class="btn-executar roxo" onclick="executarBottles()" data-comando="bottles-install" id="btn-bottles-install">🍾 Bottles</button>
+                        <button class="btn-reverter" onclick="reverterBottles()" id="btn-reverter-bottles-install" disabled>↩️ Desinstalar Bottles</button>
+                    </div>
+                    <div class="launcher-item">
+                        <button class="btn-executar laranja" onclick="executarGameMode()" data-comando="gamemode-install" id="btn-gamemode-install">⚙️ GameMode</button>
+                        <button class="btn-reverter" onclick="reverterGameMode()" id="btn-reverter-gamemode-install" disabled>↩️ Desinstalar GameMode</button>
+                    </div>
+                    <div class="launcher-item">
+                        <button class="btn-executar azul-claro" onclick="executarMangoHud()" data-comando="mangohud-install" id="btn-mangohud-install">📊 MangoHud</button>
+                        <button class="btn-reverter" onclick="reverterMangoHud()" id="btn-reverter-mangohud-install" disabled>↩️ Desinstalar MangoHud</button>
+                    </div>
+                </div>
+
+                <div class="info-extra" style="margin-top: 1rem;">
+                    ℹ️ <strong>Winetricks</strong> instala componentes extras (fontes, bibliotecas) dentro de um prefixo Wine.
+                    <strong>Bottles</strong> é uma alternativa moderna ao Wine puro, com gerenciamento visual de "garrafas" (prefixos) e suporte a runners Proton-GE.
+                    <strong>GameMode</strong> ajusta a CPU/GPU pra prioridade máxima enquanto um jogo roda.
+                    <strong>MangoHud</strong> mostra um overlay de FPS/uso de CPU e GPU dentro do jogo.
+                </div>
+            </div>
+
+            <div class="progress-container" id="progress-wine-install">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-wine-install"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-wine-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-wine-install">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-wine-install"></div>
+
+            <div class="progress-container" id="progress-winetricks-install">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-winetricks-install"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-winetricks-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-winetricks-install">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-winetricks-install"></div>
+
+            <div class="progress-container" id="progress-bottles-install">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-bottles-install"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-bottles-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-bottles-install">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-bottles-install"></div>
+
+            <div class="progress-container" id="progress-gamemode-install">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-gamemode-install"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-gamemode-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-gamemode-install">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-gamemode-install"></div>
+
+            <div class="progress-container" id="progress-mangohud-install">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill-mangohud-install"></div></div>
+                <div class="progress-text"><span class="status" id="progress-status-mangohud-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-mangohud-install">0%</span></div>
+            </div>
+            <div class="terminal-log" id="log-mangohud-install"></div>
+        </div>
+    </div>
+
+    <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
+    <script>
+        // ============================================================
+        // SESSÃO 05: LAUNCHERS E PACOTES ESSENCIAIS
+        // ============================================================
+
+        // executarComandoGenerico() agora é compartilhada em script.js —
+        // antes existia uma cópia idêntica aqui (ver comentário em script.js).
+
+        /**
+         * Executa a instalação dos drivers Vulkan
+         */
+        async function executarVulkan() {
+            const idComando = 'vulkan-amd';
+            const comando = 'sudo dnf install vulkan-tools mesa-vulkan-drivers mesa-vulkan-drivers.i686 libva.i686 mesa-dri-drivers.i686 -y';
+            await executarComandoGenerico(idComando, comando, 'Instalando Drivers Vulkan');
+        }
+
+        /**
+         * Executa a instalação do Steam
+         *
+         * CORREÇÃO: esta função tinha ~100 linhas de código manual próprio
+         * (duas chamadas separadas a /executar, dois loops de polling) só
+         * porque precisa rodar dois comandos em sequência — Steam via
+         * Flatpak, depois o pacote steam-devices via dnf. Os outros 3
+         * launchers já usam a função genérica compartilhada; aqui basta
+         * encadear os dois comandos com '&&' num só. O '|| true' fica
+         * isolado entre parênteses pra afetar só a instalação do
+         * steam-devices (best-effort) sem mascarar uma falha real na
+         * instalação do Steam em si.
+         */
+        async function executarSteam() {
+            const idComando = 'steam-install';
+            const comando = 'flatpak install flathub com.valvesoftware.Steam -y && (sudo dnf install -y steam-devices 2>/dev/null || true)';
+            await executarComandoGenerico(idComando, comando, 'Instalando Steam', mostrarBotaoDesinstalar);
+        }
+
+        /**
+         * Executa a instalação do Heroic Games Launcher
+         */
+        async function executarHeroic() {
+            const idComando = 'heroic-install';
+            const comando = 'flatpak install flathub com.heroicgameslauncher.hgl -y';
+            await executarComandoGenerico(idComando, comando, 'Instalando Heroic Games', mostrarBotaoDesinstalar);
+        }
+
+        /**
+         * Executa a instalação do Lutris
+         */
+        async function executarLutris() {
+            const idComando = 'lutris-install';
+            const comando = 'flatpak install flathub net.lutris.Lutris -y';
+            await executarComandoGenerico(idComando, comando, 'Instalando Lutris', mostrarBotaoDesinstalar);
+        }
+
+        /**
+         * Executa a instalação do ProtonUp-Qt
+         */
+        async function executarProtonUp() {
+            const idComando = 'protonup-install';
+            const comando = 'flatpak install flathub net.davidotek.pupgui2 -y';
+            await executarComandoGenerico(idComando, comando, 'Instalando ProtonUp-Qt', mostrarBotaoDesinstalar);
+        }
+
+        // mostrarBotaoDesinstalar() agora é compartilhada em script.js.
+
+        /**
+         * Desinstala um launcher via Flatpak.
+         * desinstalarLauncher() agora é a função compartilhada
+         * desinstalarPacote() em script.js (generalizada para aceitar
+         * qualquer comando de remoção — flatpak uninstall, dnf remove —
+         * não só Flatpak).
+         */
+
+        function reverterSteam() {
+            // Remove também o pacote steam-devices instalado junto (sem
+            // senha, pois já foi instalado antes; se falhar aqui não é
+            // grave — '|| true' evita interromper a desinstalação principal).
+            desinstalarPacote('steam-install', 'flatpak uninstall com.valvesoftware.Steam -y && (sudo dnf remove steam-devices -y 2>/dev/null || true)', 'Steam');
+        }
+
+        function reverterHeroic() {
+            desinstalarPacote('heroic-install', 'flatpak uninstall com.heroicgameslauncher.hgl -y', 'Heroic Games');
+        }
+
+        function reverterLutris() {
+            desinstalarPacote('lutris-install', 'flatpak uninstall net.lutris.Lutris -y', 'Lutris');
+        }
+
+        function reverterProtonUp() {
+            desinstalarPacote('protonup-install', 'flatpak uninstall net.davidotek.pupgui2 -y', 'ProtonUp-Qt');
+        }
+
+        /**
+         * Wine, Winetricks, GameMode e MangoHud são pacotes do repositório
+         * oficial do Fedora (não precisam do RPM Fusion nem de nenhum
+         * repositório extra). Bottles é via Flatpak, como os launchers.
+         */
+        async function executarWine() {
+            await executarComandoGenerico('wine-install', 'sudo dnf install wine -y', 'Instalando Wine', mostrarBotaoDesinstalar);
+        }
+        function reverterWine() {
+            desinstalarPacote('wine-install', 'sudo dnf remove wine -y', 'Wine');
+        }
+
+        async function executarWinetricks() {
+            await executarComandoGenerico('winetricks-install', 'sudo dnf install winetricks -y', 'Instalando Winetricks', mostrarBotaoDesinstalar);
+        }
+        function reverterWinetricks() {
+            desinstalarPacote('winetricks-install', 'sudo dnf remove winetricks -y', 'Winetricks');
+        }
+
+        async function executarBottles() {
+            await executarComandoGenerico('bottles-install', 'flatpak install flathub com.usebottles.bottles -y', 'Instalando Bottles', mostrarBotaoDesinstalar);
+        }
+        function reverterBottles() {
+            desinstalarPacote('bottles-install', 'flatpak uninstall com.usebottles.bottles -y', 'Bottles');
+        }
+
+        async function executarGameMode() {
+            await executarComandoGenerico('gamemode-install', 'sudo dnf install gamemode -y', 'Instalando GameMode', mostrarBotaoDesinstalar);
+        }
+        function reverterGameMode() {
+            desinstalarPacote('gamemode-install', 'sudo dnf remove gamemode -y', 'GameMode');
+        }
+
+        async function executarMangoHud() {
+            await executarComandoGenerico('mangohud-install', 'sudo dnf install mangohud -y', 'Instalando MangoHud', mostrarBotaoDesinstalar);
+        }
+        function reverterMangoHud() {
+            desinstalarPacote('mangohud-install', 'sudo dnf remove mangohud -y', 'MangoHud');
+        }
+
+        // ===== RESTAURAR ESTADO DA SESSÃO =====
+        function restaurarEstadoSessao() {
+            const comandos = [
+                'vulkan-amd', 'steam-install', 'heroic-install', 'lutris-install', 'protonup-install',
+                'wine-install', 'winetricks-install', 'bottles-install', 'gamemode-install', 'mangohud-install'
+            ];
+
+            comandos.forEach(function(id) {
+                const btnReverter = document.getElementById('btn-reverter-' + id);
+
+                if (isExecutado(id)) {
+                    const btn = document.getElementById('btn-' + id);
+                    if (btn) {
+                        const textoFinal = getTextoAposExecucao(id);
+                        btn.textContent = textoFinal;
+                        btn.style.backgroundColor = '#4b5563';
+                        btn.style.cursor = 'default';
+                        btn.disabled = true;
+                    }
+
+                    // Vulkan não tem botão de desinstalar individual (é um
+                    // driver de sistema, não um launcher via Flatpak/dnf)
+                    if (btnReverter) {
+                        btnReverter.disabled = false;
+                    }
+                } else if (btnReverter) {
+                    btnReverter.disabled = true;
+                }
+            });
+        }
+
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', function() {
+            restaurarEstadoSessao();
+
+            document.querySelectorAll('.btn-executar').forEach(function(btn) {
+                if (!btn.hasAttribute('data-texto-original')) {
+                    btn.setAttribute('data-texto-original', btn.textContent);
+                }
+            });
+
+            console.log('📦 Componente 05-launchers carregado!');
+        });
+    </script>
+</body>
+</html>

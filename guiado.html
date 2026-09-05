@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOF - Configuração</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container modo-guiado">
+        <!-- ===== HEADER ===== -->
+        <div class="header-guide">
+            <div class="titulo">
+                <img src="icone_app.png" alt="FOF" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain;" onerror="this.style.display='none'">
+                <h1>Configuração do Fedora</h1>
+                <span class="badge-modo">🧭 Passo a Passo</span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">v<span class="fof-version"></span></span>
+            </div>
+            <a href="index.html" class="voltar">← Voltar ao início</a>
+        </div>
+
+        <!-- ===== BARRA DE POSIÇÃO ===== -->
+        <div class="progress-guide">
+            <div class="barra">
+                <div class="fill" id="progress-guia-fill"></div>
+            </div>
+            <div class="info">
+                <span class="sessao-atual" id="progress-guia-text">1 de 7</span>
+            </div>
+        </div>
+
+        <!-- ===== INDICADORES DE SESSÃO ===== -->
+        <div class="sessao-indicador" id="sessao-indicadores"></div>
+
+        <!-- ===== CONTAINER DAS SESSÕES ===== -->
+        <div id="sessao-container">
+            <div class="loading-sessao">
+                <div class="spinner"></div>
+                <p>Carregando sessão...</p>
+            </div>
+        </div>
+
+        <!-- ===== NAVEGAÇÃO ===== -->
+        <div class="nav-guide" id="nav-guide">
+            <div class="info">
+                <span id="info-sessao"><strong>1/7</strong> - Carregando...</span>
+            </div>
+            <div class="botoes">
+                <button class="btn-voltar" id="btn-anterior" onclick="sessaoAnterior()">◀ Anterior</button>
+                <button class="btn-proximo" id="btn-proximo" onclick="proximaSessao()">Próximo ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // ============================================================
+        // CONFIGURAÇÃO DO FEDORA - CARREGAMENTO DINÂMICO DE SESSÕES
+        // ============================================================
+
+        var sessaoAtual = 0;
+        var sessoesCarregadas = {};
+
+        // Cores fixas para cada bolinha indicadora de sessão
+        var CORES_SESSOES = [
+            '#f59e0b', // Sessão 1 - Boas-vindas (laranja)
+            '#8b5cf6', // Sessão 2 - Restauração (roxo)
+            '#3c67e3', // Sessão 3 - Otimização (azul)
+            '#10b981', // Sessão 4 - Repositórios (verde)
+            '#3b82f6', // Sessão 5 - Fontes (azul claro)
+            '#d97706', // Sessão 6 - Launchers (laranja escuro)
+            '#357a38'  // Sessão 7 - Produção Multimídia (verde escuro)
+        ];
+
+        async function carregarSessao(index) {
+            var container = document.getElementById('sessao-container');
+            if (!container) return;
+
+            var nomeSessao = SESSOES_PRINCIPAIS[index];
+            var arquivo = nomeSessao + '.html';
+
+            container.innerHTML = `
+                <div class="loading-sessao">
+                    <div class="spinner"></div>
+                    <p>Carregando ${nomeDaSessao(nomeSessao)}...</p>
+                </div>
+            `;
+
+            await getProgress();
+
+            try {
+                var response = await fetch(arquivo);
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar ' + arquivo + ': ' + response.status);
+                }
+
+                var html = await response.text();
+                var bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                var conteudo = bodyMatch ? bodyMatch[1] : html;
+                var scriptMatch = conteudo.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+                var conteudoSemScripts = conteudo.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '');
+
+                container.innerHTML = conteudoSemScripts;
+
+                if (scriptMatch) {
+                    scriptMatch.forEach(function(script) {
+                        var scriptContent = script.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
+                        try {
+                            var win = window;
+                            eval.call(win, scriptContent);
+                        } catch (e) {
+                            console.error('Erro ao executar script:', e);
+                        }
+                    });
+                }
+
+                if (typeof restaurarEstadoSessao === 'function') {
+                    try {
+                        restaurarEstadoSessao();
+                    } catch (e) {
+                        console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
+                    }
+                }
+
+                container.querySelectorAll('.btn-executar').forEach(function(btn) {
+                    if (!btn.hasAttribute('data-texto-original')) {
+                        btn.setAttribute('data-texto-original', btn.textContent);
+                    }
+                });
+
+                numerarSessao(nomeSessao, container);
+
+                sessoesCarregadas[nomeSessao] = true;
+                var event = new CustomEvent('sessao-carregada', { detail: { sessao: nomeSessao } });
+                document.dispatchEvent(event);
+                console.log('✅ Sessão carregada: ' + nomeSessao);
+
+            } catch (e) {
+                console.error('Erro ao carregar sessão:', e);
+                container.innerHTML = `
+                    <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444; border-radius: 12px;">
+                        <h3>❌ Erro ao carregar sessão</h3>
+                        <p style="color: var(--text-muted);">${e.message}</p>
+                        <button onclick="carregarSessao(${index})" style="margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            🔄 Tentar novamente
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function irParaSessao(index) {
+            var total = SESSOES_PRINCIPAIS.length;
+            if (index < 0 || index >= total) return;
+            sessaoAtual = index;
+
+            carregarSessao(index);
+
+            var btnAnterior = document.getElementById('btn-anterior');
+            var btnProximo = document.getElementById('btn-proximo');
+            var infoSessao = document.getElementById('info-sessao');
+
+            if (btnAnterior) btnAnterior.disabled = (index === 0);
+            if (btnProximo) btnProximo.disabled = (index === total - 1);
+
+            if (infoSessao) {
+                infoSessao.innerHTML = '<strong>' + (index + 1) + '/' + total + '</strong> - ' + (nomeDaSessao(SESSOES_PRINCIPAIS[index]));
+            }
+
+            atualizarBarraPosicao(index, total);
+            atualizarIndicadores();
+
+            setTimeout(carregarProgressoInicial, 300);
+        }
+
+        function atualizarBarraPosicao(atual, total) {
+            var fill = document.getElementById('progress-guia-fill');
+            var text = document.getElementById('progress-guia-text');
+            if (fill) {
+                var percent = ((atual + 1) / total) * 100;
+                fill.style.width = percent + '%';
+            }
+            if (text) {
+                text.textContent = (atual + 1) + ' de ' + total;
+            }
+        }
+
+        function sessaoAnterior() {
+            if (sessaoAtual > 0) irParaSessao(sessaoAtual - 1);
+        }
+
+        function proximaSessao() {
+            var total = SESSOES_PRINCIPAIS.length;
+            if (sessaoAtual < total - 1) {
+                irParaSessao(sessaoAtual + 1);
+            }
+        }
+
+        function criarIndicadores() {
+            var container = document.getElementById('sessao-indicadores');
+            if (!container) return;
+            container.innerHTML = '';
+            var total = SESSOES_PRINCIPAIS.length;
+            for (var i = 0; i < total; i++) {
+                var dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.dataset.index = i;
+                dot.title = nomeDaSessao(SESSOES_PRINCIPAIS[i]);
+                // Aplica cor fixa da sessão
+                dot.style.backgroundColor = CORES_SESSOES[i] || '#3c67e3';
+                dot.style.borderColor = CORES_SESSOES[i] || '#3c67e3';
+                dot.addEventListener('click', function() {
+                    var index = parseInt(this.dataset.index);
+                    if (index !== sessaoAtual) irParaSessao(index);
+                });
+                container.appendChild(dot);
+            }
+            atualizarIndicadores();
+        }
+
+        function atualizarIndicadores() {
+            var dots = document.querySelectorAll('.sessao-indicador .dot');
+            dots.forEach(function(dot, index) {
+                // Remove classes de status anteriores
+                dot.classList.remove('ativa', 'concluida', 'pulada');
+                // Aplica cor fixa
+                dot.style.backgroundColor = CORES_SESSOES[index] || '#3c67e3';
+                dot.style.borderColor = CORES_SESSOES[index] || '#3c67e3';
+                // Destaca apenas a sessão atual
+                if (index === sessaoAtual) {
+                    dot.classList.add('ativa');
+                }
+            });
+        }
+
+        // ===== SOBRESCRITAS =====
+        var marcarComoExecutadoOriginal = marcarComoExecutado;
+        var desmarcarComoExecutadoOriginal = desmarcarComoExecutado;
+        var marcarComoPuladoOriginal = marcarComoPulado;
+
+        marcarComoExecutado = function(idComando) {
+            marcarComoExecutadoOriginal(idComando);
+            setTimeout(function() {
+                atualizarIndicadores();
+            }, 100);
+        };
+
+        desmarcarComoExecutado = function(idComando) {
+            desmarcarComoExecutadoOriginal(idComando);
+            atualizarIndicadores();
+        };
+
+        marcarComoPulado = function(idComando) {
+            marcarComoPuladoOriginal(idComando);
+            atualizarIndicadores();
+        };
+
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof getProgress !== 'undefined') {
+                criarIndicadores();
+                irParaSessao(0);
+            } else {
+                console.warn('⏳ Aguardando script.js carregar...');
+                setTimeout(function() {
+                    if (typeof getProgress !== 'undefined') {
+                        criarIndicadores();
+                        irParaSessao(0);
+                    } else {
+                        console.error('❌ script.js não foi carregado!');
+                        document.getElementById('sessao-container').innerHTML = `
+                            <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444;">
+                                <h3>❌ Erro: script.js não foi carregado!</h3>
+                                <p style="color: var(--text-muted);">Recarregue a página ou verifique se o arquivo existe.</p>
+                            </div>
+                        `;
+                    }
+                }, 200);
+            }
+        });
+    </script>
+</body>
+</html>
