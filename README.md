@@ -24,17 +24,11 @@ Isso é tudo! O script cuida de todo o resto. 🎉
 O instalador irá:
 
     ✅ Verificar se você está no Fedora
-
     ✅ Instalar dependências (Node.js, npm, git, curl)
-
     ✅ Baixar o projeto do GitHub
-
     ✅ Instalar dependências Node.js
-
     ✅ Criar o comando fof no terminal
-
     ✅ Criar atalho no menu de aplicativos
-
     ✅ Compilar o container nativo WebKitGTK (opcional)
 
 📦 Comandos Disponíveis
@@ -68,81 +62,111 @@ O objetivo é transformar uma instalação limpa do Fedora em um sistema operaci
 🧭 Configuração e Manutenção
 
 O FOF tem dois pontos de entrada, com propósitos diferentes:
-Destino	Descrição
+
 🧭 Iniciar Configuração	Passo a passo, uma sessão por vez, com navegação intuitiva (Anterior/Próximo/Pular). A ordem importa pro resultado final, então esta é a única forma de percorrer as sessões de configuração do Fedora — não existe um "modo avançado" que pule a ordem.
-🛠️ Manutenção	Kernels, limpeza de temporários, GRUB, atualizar/desinstalar o FOF — tarefas que não têm dependência de ordem entre si nem com o resto da configuração, por isso ficam numa página à parte, acessível a qualquer momento.
+
+🛠️ Manutenção: Kernels, limpeza de temporários, GRUB, atualizar/desinstalar o FOF — tarefas que não têm dependência de ordem entre si nem com o resto da configuração, por isso ficam numa página à parte, acessível a qualquer momento.
 
 O FOF não gera nenhum tipo de relatório de conclusão — cada botão lembra seu próprio estado (executado, pulado, ou pendente), então fechar e reabrir o FOF (ou reiniciar o computador) sempre mostra exatamente onde você parou.
 
 ---
 
 ✨ Funcionalidades Completas
+
 Sessões da Configuração (em ordem)
-#	Sessão	Descrição
-1	👋 Boas-vindas	Atualização completa do sistema Fedora (dnf upgrade --refresh)
-2	💾 Restauração	Instalação do Btrfs-Assistant para gerenciamento de snapshots do sistema
-3	⚙️ Otimização	Ajuste de velocidade do DNF, idioma PT-BR, corretor ortográfico e correção de dual-boot
-4	📦 Repositórios	Ativação do RPM Fusion, configuração do Flatpak/Flathub, codecs multimídia, extras tainted e aceleração gráfica VA-API
-5	🔤 Fontes	Instalação de fontes Microsoft para compatibilidade (Arial, Times, Calibri, etc.)
-6	🎮 Launchers	Instalação de Steam, Heroic Games, Lutris, ProtonUp-Qt, drivers Vulkan para AMD, e ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
-7	🎬 Produção Multimídia	Instalação do OBS Studio (Flatpak), ativação de câmera virtual, EasyEffects, edição de vídeo/áudio (Kdenlive, Audacity), e instalador da suíte Affinity via Wine (projeto de terceiros AffinityOnLinux)
+
+    1	👋 Boas-vindas
+        Atualização completa do sistema Fedora (dnf upgrade --refresh)
+        
+    2	💾 Restauração
+        Instalação do Btrfs-Assistant para gerenciamento de snapshots do sistema
+        
+    3	⚙️ Otimização
+        Ajuste de velocidade do DNF, idioma PT-BR, corretor ortográfico e correção de dual-boot
+        
+    4	📦 Repositórios
+        Ativação do RPM Fusion, configuração do Flatpak/Flathub, codecs multimídia, extras tainted e aceleração gráfica VA-API
+        
+    5	🔤 Fontes
+        Instalação de fontes Microsoft para compatibilidade (Arial, Times, Calibri, etc.)
+        
+    6	🎮 Launchers
+        Instalação de Steam, Heroic Games, Lutris, ProtonUp-Qt, drivers Vulkan para AMD, e ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
+        
+    7	🎬 Produção Multimídia
+        Instalação do OBS Studio (Flatpak), ativação de câmera virtual, EasyEffects, edição de vídeo/áudio (Kdenlive, Audacity), e instalador da suíte Affinity via Wine (projeto de terceiros AffinityOnLinux)
+
+
 Sessões de Manutenção (sem ordem — página à parte)
-Sessão	Descrição
-🛠️ Manutenção	Limpeza de cache, gerenciamento de kernels (listar/remover, com bloqueio do kernel em uso) e configuração do GRUB (timeout e visibilidade do menu)
-🔧 Manutenção FOF	Atualização ou desinstalação completa do Fedora Only Fans
+
+        🛠️ Manutenção
+        Limpeza de cache, gerenciamento de kernels (listar/remover, com bloqueio do kernel em uso) e configuração do GRUB (timeout e visibilidade do menu)
+        
+        🔧 Manutenção FOF
+        Atualização ou desinstalação completa do Fedora Only Fans
+
+
 🎨 Características Técnicas
 
     🖥️ Interface escura e moderna - Design pensado para conforto visual
-
     📡 Logs em tempo real - Acompanhe a execução via Server-Sent Events (SSE)
-
     📊 Barra de progresso - Visualize o andamento das tarefas
-
     🔐 Autenticação segura - Usa pkexec/kdesu (sem expor senhas)
-
     🛡️ Comandos sem autenticação - Comandos de consulta (rpm -q, uname -r, etc.) não solicitam senha
-
     🐧 Suporte a múltiplos desktops - KDE, GNOME, XFCE, Cinnamon, MATE, LXQt, LXDE
-
     🖱️ 100% visual - Nunca precisa abrir o terminal
-
     💾 Persistência - Estado de cada ação salvo automaticamente (servidor local + navegador), sem depender de nenhum relatório agregado
-
     🔄 Botões de reversão - Desfaça alterações com um clique
-
     📦 Container nativo - Aplicação roda em WebKitGTK (sem necessidade de navegador)
 
+
 🖥️ Desktops Suportados
-Desktop	Central de Apps	Status
-KDE Plasma	Discover	✅
-GNOME	GNOME Software	✅
-XFCE	AppFinder	✅
-Cinnamon	Software Center	✅
-MATE	Software Boutique	✅
-LXQt	LXQt Software Center	✅
-LXDE	LXDE Software Center	✅
+
+KDE Plasma
+Discover ✅
+
+GNOME
+GNOME Software	✅
+
+XFCE
+AppFinder	✅
+
+Cinnamon
+Software Center	✅
+
+MATE
+Software Boutique	✅
+
+LXQt
+LXQt Software Center	✅
+
+LXDE
+LXDE Software Center	✅
+
+
 🚀 Como funciona?
 
 Se você veio de distribuições como Linux Mint, Ubuntu ou Zorin OS, sabe que o Fedora é incrível, mas exige alguns passos iniciais (como ativar o RPM Fusion ou configurar o Flathub).
 
+
 Com o FOF você:
 
     Seleciona visualmente o que deseja instalar ou configurar (Codecs de mídia, Drivers, Flatpaks, Otimizações do DNF).
-
+    
     Executa as tarefas diretamente através da interface web integrada, digitando sua senha de administrador apenas quando solicitado pelo sistema.
-
+    
     Acompanha o progresso em tempo real com logs e barra de progresso.
 
+
 💻 Como Rodar o FOF localmente?
+
 📦 Requisitos
 
     Fedora Linux 44+
-
     Node.js 18+
-
     Navegador (Firefox ou Chromium) - opcional, pois o container nativo é preferido
-
     Conexão com internet
+
 
 🚀 Método Rápido
 
@@ -159,15 +183,10 @@ chmod +x iniciar_fof.sh
 O script irá:
 
     ✅ Verificar se todos os arquivos estão presentes
-
     ✅ Instalar o Node.js (se necessário)
-
     ✅ Instalar as dependências do projeto
-
     ✅ Compilar o container nativo WebKitGTK (se possível)
-
     ✅ Iniciar o servidor na porta 3000
-
     ✅ Abrir a interface no container nativo ou navegador
 
 
@@ -201,14 +220,27 @@ firefox http://localhost:3000
 ```
 
 🛠️ Tecnologias Utilizadas
-Tecnologia	Finalidade
-HTML5 / CSS3	Interface responsiva e moderna
-JavaScript	Lógica de requisições à API local
-Node.js	Servidor backend local para execução segura de processos
-Server-Sent Events (SSE)	Logs em tempo real
-Bash	Script de inicialização do ambiente no Fedora
-pkexec / kdesu	Autenticação segura
-WebKitGTK	Container nativo para rodar a aplicação
+
+    HTML5 / CSS3
+    Interface responsiva e moderna
+
+    JavaScript
+    Lógica de requisições à API local
+
+    Node.js
+    Servidor backend local para execução segura de processos
+
+    Server-Sent Events (SSE)
+    Logs em tempo real
+
+    Bash
+    Script de inicialização do ambiente no Fedora
+
+    pkexec / kdesu
+    Autenticação segura
+
+    WebKitGTK
+    Container nativo para rodar a aplicação
 
 
 📂 Estrutura do Projeto
@@ -250,13 +282,9 @@ Fedora-Only-Fans/
 🛡️ Segurança
 
     ✅ Autenticação segura - Usa pkexec/kdesu em vez de echo senha | sudo
-
     ✅ Comandos sem autenticação - Comandos de consulta não solicitam senha
-
     ✅ Sanitização de entrada - Proteção contra injeção de comandos
-
     ✅ Logs detalhados - Registro de todas as operações
-
     ✅ Validação de versão - Verifica se a versão do Fedora existe antes do upgrade
 
 
@@ -278,53 +306,31 @@ tail -f /tmp/fof-*.log
 v0.9.8 (Atual) ✅
 
     ✅ Configuração sequencial em ordem (a ordem das sessões importa pro resultado)
-
     ✅ Página de Manutenção separada (kernels, limpeza, GRUB, FOF — sem dependência de ordem)
-
     ✅ Botões de reversão só onde a ação é reversível — ações repetíveis (sempre clicáveis) nunca têm par de reverter
-
     ✅ Persistência via localStorage/servidor (sem relatório de conclusão — só o estado de cada botão)
-
     ✅ Auditoria completa do código (bugs de segurança, lógica e duplicação corrigidos)
-
     ✅ Instalação do Btrfs-Assistant via interface
-
     ✅ Instalação do OBS Studio via Flatpak
-
     ✅ Sincronização com canal estável (distro-sync)
-
     ✅ Correção da Central de Apps (sem autenticação)
-
     ✅ Launchers com sistema de toggle (instalar/desinstalar)
-
     ✅ Ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
-
     ✅ Edição de vídeo/áudio (Kdenlive, Audacity)
-
     ✅ Progresso com timeout de segurança
-
     ✅ Modo Compatibilidade para GPUs antigas
-
     ✅ Botão "Atualizar FOF" sempre clicável (pode ser reexecutado)
-
     ✅ Remoção do endpoint /reverter não utilizado
-
     ✅ Remoção de classes CSS mortas (.etapa-card, .etapa-titulo)
-
     ✅ WebKitGTK 4.1 como requisito único (removido suporte a 4.0)
-
     ✅ Timeout de remoção de kernel aumentado para 3 minutos
-
     ✅ Variáveis globais convertidas de const para var (evita erro de redeclaração)
-
     ✅ window.close() com fallback de mensagem
 
 v1.0.0 (Futuro) 🔮
 
     □ Perfil EasyEffects com presets
-
     □ Tema claro/escuro
-
     □ Localização
 
 
@@ -333,9 +339,7 @@ v1.0.0 (Futuro) 🔮
 O FOF tem um registro central de sessões (SESSOES, no topo de script.js) — é o único lugar que precisa ser editado pra adicionar uma sessão nova com botões novos.
 
     Copie template-sessao.html para NN-nome-da-sessao.html (dois dígitos + hífen + nome em minúsculas).
-
     Preencha os placeholders com o conteúdo real (título, botões, comandos).
-
     Adicione uma entrada no array SESSOES em script.js, com o mesmo id do arquivo (sem .html) e os data-comando dos seus botões. Se a sessão for uma tarefa sem dependência de ordem com o resto (tipo as de manutenção), marque com manutencao: true — ela vai aparecer em manutencao.html em vez do fluxo sequencial de guiado.html.
 
 Pronto — não precisa editar guiado.html, manutencao.html, index.html nem server.js. A posição da sua entrada no array SESSOES já define a ordem de exibição e o número "Sessão N" (calculado automaticamente) das sessões principais, e a rota do servidor aceita qualquer sessão nomeada nesse padrão.
@@ -373,19 +377,14 @@ Encontrou um bug? Abra uma issue no GitHub: Issues do Projeto
 Informações Necessárias:
 
     Versão do Fedora
-
     Desktop Environment (KDE, GNOME, XFCE, etc.)
-
     Logs do servidor (/tmp/fof-*.log)
-
     Passos para reproduzir o problema
 
 ⚠️ Aviso Legal
 
     ESTE PROJETO ESTÁ EM DESENVOLVIMENTO E SEU STATUS É CONSIDERADO ALPHA.
-
     Não é recomendada a utilização em ambiente de produção, a menos que você saiba o que está fazendo. Utilize por sua conta e risco!
-
     Sempre faça backup dos seus dados antes de executar alterações no sistema.
 
 📄 Licença
