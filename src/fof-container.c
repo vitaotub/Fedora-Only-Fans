@@ -1,6 +1,6 @@
 // ============================================================
 // Fedora Only Fans (FOF) - Container WebKitGTK
-// Versão: 0.9.8-alpha
+// Versão: 0.9.9-alpha
 // ============================================================
 
 #include <gtk/gtk.h>
@@ -32,15 +32,13 @@ typedef struct {
 } AppData;
 
 // ============================================================
-// CORREÇÃO: Função de ícone melhorada para KDE
+// ÍCONE DA APLICAÇÃO
 // ============================================================
 void set_app_icon(GtkWindow *window, const char *icon_path) {
     if (icon_path && g_file_test(icon_path, G_FILE_TEST_EXISTS)) {
-        // Método 1: Direto do arquivo (mais confiável)
         gtk_window_set_icon_from_file(GTK_WINDOW(window), icon_path, NULL);
         g_print("[FOF] ✅ Ícone aplicado: %s\n", icon_path);
 
-        // Método 2: Também define como ícone padrão da aplicação
         GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(icon_path, NULL);
         if (pixbuf) {
             gtk_window_set_icon(GTK_WINDOW(window), pixbuf);
@@ -60,6 +58,9 @@ void atualizar_status(AppData *data, const char *mensagem, const char *estilo) {
     }
 }
 
+// ============================================================
+// CALLBACKS DA WEBVIEW
+// ============================================================
 void on_webview_load_changed(WebKitWebView *webview, WebKitLoadEvent load_event, gpointer user_data) {
     AppData *data = (AppData*)user_data;
 
@@ -131,9 +132,11 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
             }
 
             g_print("[FOF] 🔗 Abrindo link externo: %s\n", uri);
-            char cmd[512];
-            snprintf(cmd, sizeof(cmd), "xdg-open '%s' &", uri);
-            system(cmd);
+            gchar *quoted = g_shell_quote(uri);
+            gchar *cmd = g_strdup_printf("xdg-open %s", quoted);
+            g_spawn_command_line_async(cmd, NULL);
+            g_free(cmd);
+            g_free(quoted);
             webkit_policy_decision_ignore(decision);
             return TRUE;
     }
@@ -149,6 +152,9 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                       }
                                                                   }
 
+                                                                  // ============================================================
+                                                                  // CALLBACKS DA JANELA
+                                                                  // ============================================================
                                                                   void on_close(GtkWidget *widget, gpointer user_data) {
                                                                       g_print("[FOF] 📦 Encerrando container...\n");
                                                                       gtk_main_quit();
@@ -181,7 +187,7 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                       return TRUE;
                                                                           }
 
-                                                                          if (event->keyval == GDK_KEY_Escape) {
+                                                                          if ((event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_q) {
                                                                               on_close(widget, user_data);
                                                                               return TRUE;
                                                                           }
@@ -189,6 +195,20 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                           return FALSE;
                                                                   }
 
+                                                                  static void on_inspect_clicked(GtkButton *button, gpointer user_data) {
+                                                                      (void)button;
+                                                                      AppData *data = (AppData*)user_data;
+                                                                      if (data && data->webview) {
+                                                                          WebKitWebInspector *inspector = webkit_web_view_get_inspector(WEBKIT_WEB_VIEW(data->webview));
+                                                                          if (inspector) {
+                                                                              webkit_web_inspector_show(inspector);
+                                                                          }
+                                                                      }
+                                                                  }
+
+                                                                  // ============================================================
+                                                                  // HEADER BAR
+                                                                  // ============================================================
                                                                   void setup_header_bar(AppData *data) {
                                                                       data->header_bar = gtk_header_bar_new();
                                                                       gtk_header_bar_set_title(GTK_HEADER_BAR(data->header_bar),
@@ -226,17 +246,20 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                           GtkWidget *inspect_btn = gtk_button_new_from_icon_name("system-search", GTK_ICON_SIZE_MENU);
                                                                           gtk_button_set_relief(GTK_BUTTON(inspect_btn), GTK_RELIEF_NONE);
                                                                           gtk_widget_set_tooltip_text(inspect_btn, "Abrir inspecionador (Ctrl+Shift+I)");
-                                                                          g_signal_connect(inspect_btn, "clicked", G_CALLBACK(webkit_web_view_get_inspector), data->webview);
+                                                                          g_signal_connect(inspect_btn, "clicked", G_CALLBACK(on_inspect_clicked), data);
                                                                           gtk_header_bar_pack_end(GTK_HEADER_BAR(data->header_bar), inspect_btn);
                                                                       }
 
                                                                       GtkWidget *quit_btn = gtk_button_new_from_icon_name("window-close", GTK_ICON_SIZE_MENU);
                                                                       gtk_button_set_relief(GTK_BUTTON(quit_btn), GTK_RELIEF_NONE);
-                                                                      gtk_widget_set_tooltip_text(quit_btn, "Sair (Escape)");
+                                                                      gtk_widget_set_tooltip_text(quit_btn, "Sair (Ctrl+Q)");
                                                                       g_signal_connect(quit_btn, "clicked", G_CALLBACK(on_close), data);
                                                                       gtk_header_bar_pack_end(GTK_HEADER_BAR(data->header_bar), quit_btn);
                                                                   }
 
+                                                                  // ============================================================
+                                                                  // MAIN
+                                                                  // ============================================================
                                                                   int main(int argc, char *argv[]) {
                                                                       gtk_init(&argc, &argv);
 
@@ -261,7 +284,7 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                           } else if (strcmp(argv[i], "--debug") == 0) {
                                                                               debug_mode = 1;
                                                                           } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-                                                                              printf("🐧 Fedora Only Fans - Container WebKitGTK v0.9.8-alpha\n");
+                                                                              printf("🐧 Fedora Only Fans - Container WebKitGTK v0.9.9-alpha\n");
                                                                               printf("\nUso: %s [opções]\n", argv[0]);
                                                                               printf("\nOpções:\n");
                                                                               printf("  --url URL        URL do servidor (padrão: http://localhost:3000)\n");
@@ -274,7 +297,7 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                               printf("\nAtalhos:\n");
                                                                               printf("  Ctrl+R / F5      Recarregar página\n");
                                                                               printf("  Ctrl+Shift+I     Abrir inspecionador\n");
-                                                                              printf("  Escape           Sair\n");
+                                                                              printf("  Ctrl+Q           Sair\n");
                                                                               printf("\n");
                                                                               return 0;
                                                                           }
@@ -293,20 +316,38 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                       data.status_label = NULL;
                                                                       data.progress_bar = NULL;
 
+                                                                      // ============================================================
+                                                                      // CORREÇÃO ÍCONE (KDE) — Definir identidade ANTES de criar a janela
+                                                                      // ============================================================
+                                                                      // O WM_CLASS da janela (lido pelo KDE para associar ícone) é
+                                                                      // montado a partir de duas partes: resname (minúscula) e resclass.
+                                                                      // O GTK3 decide o resname com base em:
+                                                                      //   1. g_set_prgname() — se chamado, tem precedência
+                                                                      //   2. g_get_prgname()  — derivado do argv[0] se (1) não foi chamado
+                                                                      // O resclass é definido por gtk_window_set_wmclass().
+                                                                      //
+                                                                      // O problema anterior: setávamos wmclass como "fof-container", mas
+                                                                      // em seguida g_set_prgname("fedora-only-fans") sobrescrevia o
+                                                                      // resname. Resultado: WM_CLASS = ("fedora-only-fans", "fof-container"),
+                                                                      // que não bate com o StartupWMClass=fof-container do .desktop, e o
+                                                                      // KDE caía no ícone padrão do toolkit (o "W" amarelo).
+                                                                      //
+                                                                      // Agora: prgname = "fof-container" (bate com StartupWMClass) e
+                                                                      // wmclass = "fof-container" (bate com hicolor/fof-container.png).
+                                                                      g_set_prgname("fof-container");
+                                                                      g_set_application_name(app_name);
+
                                                                       data.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
                                                                       gtk_window_set_title(GTK_WINDOW(data.window), app_name);
                                                                       gtk_window_set_default_size(GTK_WINDOW(data.window), window_width, window_height);
                                                                       gtk_window_set_position(GTK_WINDOW(data.window), GTK_WIN_POS_CENTER);
                                                                       gtk_window_set_resizable(GTK_WINDOW(data.window), TRUE);
 
-                                                                      // CORREÇÃO: Aplicar ícone ANTES de mostrar a janela
-                                                                      set_app_icon(GTK_WINDOW(data.window), icon_path);
+                                                                      // Reforça o WM_CLASS (resname, resclass). O resname aqui é redundante
+                                                                      // com o g_set_prgname acima, mas garante em qualquer versão do GTK.
+                                                                      gtk_window_set_wmclass(GTK_WINDOW(data.window), "fof-container", "fof-container");
 
-                                                                      // Também definir como ícone da aplicação (para Wayland/KDE)
-                                                                      if (icon_path && g_file_test(icon_path, G_FILE_TEST_EXISTS)) {
-                                                                          g_set_prgname("fedora-only-fans");
-                                                                          g_set_application_name(app_name);
-                                                                      }
+                                                                      set_app_icon(GTK_WINDOW(data.window), icon_path);
 
                                                                       WebKitSettings *settings = webkit_settings_new();
 
@@ -358,7 +399,7 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                       sigaction(SIGTERM, &sa, NULL);
 
                                                                       g_print("============================================================\n");
-                                                                      g_print(" 🐧 Fedora Only Fans - Container WebKitGTK v0.9.8-alpha\n");
+                                                                      g_print(" 🐧 Fedora Only Fans - Container WebKitGTK v0.9.9-alpha\n");
                                                                       g_print("============================================================\n");
                                                                       g_print(" 🌐 URL: %s\n", url);
                                                                       g_print(" 📐 Janela: %dx%d\n", window_width, window_height);
