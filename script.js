@@ -1,9 +1,13 @@
 /**
  * Fedora Only Fans (FOF) - Script Compartilhado
- * Versão: 0.9.8-alpha
+ * Versão: 0.9.9-alpha
  *
  * Este arquivo contém as funções GLOBAIS compartilhadas entre todas as sessões.
  * Cada sessão (00-*.html) tem seu próprio JS específico que usa estas funções.
+ *
+ * i18n: strings visíveis ao usuário usam tOr(chave, fallback) — em pt-BR,
+ *       tOr cai no fallback (texto original), mantendo o comportamento
+ *       idêntico ao anterior. Em en/es, retorna a string traduzida do JSON.
  */
 
 // ============================================================
@@ -12,12 +16,17 @@
 
 let FOF_VERSION = '';
 
+// i18n: versão usada como cache-buster ao carregar locales. É preenchida
+// por carregarVersaoServidor() e consumida por i18n.js (via window).
+window.FOF_VERSION_UI18N = '';
+
 async function carregarVersaoServidor() {
     try {
         const response = await fetch(API_URL + '/info');
         if (response.ok) {
             const data = await response.json();
             FOF_VERSION = data.version || FOF_VERSION;
+            window.FOF_VERSION_UI18N = FOF_VERSION;
         }
     } catch (e) {
         console.warn('[Versão] Não foi possível consultar /info:', e.message);
@@ -25,6 +34,18 @@ async function carregarVersaoServidor() {
     document.querySelectorAll('.fof-version').forEach(function(el) {
         el.textContent = FOF_VERSION || '?';
     });
+
+    // Correção do badge em EN/ES: o badge usa data-i18n-html com {versao}.
+    // Quando i18n.js aplicou as traduções, o valor de FOF_VERSION ainda podia
+    // não ter chegado do servidor, então o placeholder {versao} ficou literal.
+    // Aqui, depois que temos a versão, re-aplicamos a tradução do badge.
+    if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
+        var badges = document.querySelectorAll('[data-i18n-html="index.badge_versao"]');
+        if (badges.length > 0) {
+            I18N.aplicarTraducoes();
+        }
+    }
+
     console.log('🚀 Fedora Only Fans v' + (FOF_VERSION || '?') + ' - Script compartilhado carregado!');
 }
 
@@ -32,13 +53,31 @@ var STORAGE_KEY = 'fof_progress';
 var API_URL = 'http://localhost:3000';
 
 // ============================================================
+// i18n HELPER LOCAL
+// ============================================================
+// tOr(chave, fallback, vars?) — definido em i18n.js. Aqui garantimos
+// que, se i18n.js não carregou, o código continua funcionando.
+function _t(chave, fallback) {
+    return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+}
+function _tVars(chave, fallback, vars) {
+    return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
+}
+
+// ============================================================
 // REGISTRO CENTRAL DE SESSÕES
 // ============================================================
+// i18n: cada sessão ganha um campo `nomeKey` (chave i18n) além do
+// `nome` original (que serve como fallback PT-BR). O código que
+// precisa do nome exibido usa nomeDaSessao(), que prioriza nomeKey.
+// Isso mantém compatibilidade total com qualquer código que ainda
+// leia `sessao.nome` diretamente.
 
 var SESSOES = [
     {
         id: '00-boas-vindas',
         nome: 'Boas-vindas',
+        nomeKey: 'sessoes.00-boas-vindas.nome',
         comandos: {
             'atualizacao-inicial': { sempreClicavel: true }
         }
@@ -46,73 +85,80 @@ var SESSOES = [
 {
     id: '01-restauracao',
     nome: 'Restauração',
+    nomeKey: 'sessoes.01-restauracao.nome',
     comandos: {
-        'btrfs-install': { textoConcluido: '✅ Btrfs-Assistant instalado' }
+        'btrfs-install': { textoConcluido: '✅ Btrfs-Assistant instalado', textoConcluidoKey: 'sessoes.01-restauracao.texto_concluido' }
     }
 },
 {
     id: '02-otimizacao',
     nome: 'Otimização',
+    nomeKey: 'sessoes.02-otimizacao.nome',
     comandos: {
         'dnf-speed': { sempreClicavel: true },
-        'idioma-packs': { textoConcluido: '✅ Tradução instalada' },
-        'idioma-hunspell': { textoConcluido: '✅ Corretor instalado' },
-        'idioma-localectl': { textoConcluido: '✅ Localidade configurada' },
-        'dual-boot-time': { sempreClicavel: true, textoConcluido: '✅ Relógio corrigido' }
+        'idioma-packs': { textoConcluido: '✅ Tradução instalada', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_packs' },
+        'idioma-hunspell': { textoConcluido: '✅ Corretor instalado', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_hunspell' },
+        'idioma-localectl': { textoConcluido: '✅ Localidade configurada', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_localectl' },
+        'dual-boot-time': { sempreClicavel: true, textoConcluido: '✅ Relógio corrigido', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_dual_boot' }
     }
 },
 {
     id: '03-repositorios',
     nome: 'Repositórios',
+    nomeKey: 'sessoes.03-repositorios.nome',
     comandos: {
-        'rpm-fusion': { textoConcluido: '✅ RPM Fusion ativado' },
-        'flatpak-setup': { textoConcluido: '✅ Flatpak configurado' },
-        'codecs-essenciais': { textoConcluido: '✅ Codecs instalados' },
-        'extras-tainted': { textoConcluido: '✅ Extras instalados' },
-        'vaapi-amd': { textoConcluido: '✅ VA-API instalado' },
-        'vaapi-swap': { textoConcluido: '✅ VA-API instalado' }
+        'rpm-fusion': { textoConcluido: '✅ RPM Fusion ativado', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_rpm' },
+        'flatpak-setup': { textoConcluido: '✅ Flatpak configurado', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_flatpak' },
+        'codecs-essenciais': { textoConcluido: '✅ Codecs instalados', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_codecs' },
+        'extras-tainted': { textoConcluido: '✅ Extras instalados', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_extras' },
+        'vaapi-amd': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_vaapi' },
+        'vaapi-swap': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_vaapi' }
     }
 },
 {
     id: '04-fontes',
     nome: 'Fontes',
+    nomeKey: 'sessoes.04-fontes.nome',
     comandos: {
-        'fontes-ms-all': { textoConcluido: '✅ Fontes MS instaladas' }
+        'fontes-ms-all': { textoConcluido: '✅ Fontes MS instaladas', textoConcluidoKey: 'sessoes.04-fontes.texto_concluido' }
     }
 },
 {
     id: '05-launchers',
     nome: 'Launchers',
+    nomeKey: 'sessoes.05-launchers.nome',
     comandos: {
-        'vulkan-amd': { textoConcluido: '✅ Vulkan instalado' },
-        'steam-install': { textoConcluido: '✅ Steam instalado' },
-        'heroic-install': { textoConcluido: '✅ Heroic instalado' },
-        'lutris-install': { textoConcluido: '✅ Lutris instalado' },
-        'protonup-install': { textoConcluido: '✅ ProtonUp instalado' },
-        'wine-install': { textoConcluido: '✅ Wine instalado' },
-        'winetricks-install': { textoConcluido: '✅ Winetricks instalado' },
-        'bottles-install': { textoConcluido: '✅ Bottles instalado' },
-        'gamemode-install': { textoConcluido: '✅ GameMode ativado' },
-        'mangohud-install': { textoConcluido: '✅ MangoHud instalado' }
+        'vulkan-amd': { textoConcluido: '✅ Vulkan instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_vulkan' },
+        'steam-install': { textoConcluido: '✅ Steam instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_steam' },
+        'heroic-install': { textoConcluido: '✅ Heroic instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_heroic' },
+        'lutris-install': { textoConcluido: '✅ Lutris instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_lutris' },
+        'protonup-install': { textoConcluido: '✅ ProtonUp instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_protonup' },
+        'wine-install': { textoConcluido: '✅ Wine instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_wine' },
+        'winetricks-install': { textoConcluido: '✅ Winetricks instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_winetricks' },
+        'bottles-install': { textoConcluido: '✅ Bottles instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_bottles' },
+        'gamemode-install': { textoConcluido: '✅ GameMode ativado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_gamemode' },
+        'mangohud-install': { textoConcluido: '✅ MangoHud instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_mangohud' }
     }
 },
 {
     id: '06-loja',
     nome: 'Produção Multimídia',
+    nomeKey: 'sessoes.06-loja.nome',
     comandos: {
-        'instalar-obs-studio': { textoConcluido: '✅ OBS Studio instalado' },
-        'obs-cam': { textoConcluido: '✅ Câmera Virtual ativada' },
-        'instalar-easyeffects': { textoConcluido: '✅ EasyEffects instalado' },
-        'instalar-kdenlive': { textoConcluido: '✅ Kdenlive instalado' },
-        'instalar-audacity': { textoConcluido: '✅ Audacity instalado' }
+        'instalar-obs-studio': { textoConcluido: '✅ OBS Studio instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_obs' },
+        'obs-cam': { textoConcluido: '✅ Câmera Virtual ativada', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_cam' },
+        'instalar-easyeffects': { textoConcluido: '✅ EasyEffects instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_easyeffects' },
+        'instalar-kdenlive': { textoConcluido: '✅ Kdenlive instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_kdenlive' },
+        'instalar-audacity': { textoConcluido: '✅ Audacity instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_audacity' }
     }
 },
 {
     id: '07-manutencao',
     nome: 'Manutenção',
+    nomeKey: 'sessoes.07-manutencao.nome',
     manutencao: true,
     comandos: {
-        'limpeza-sistema': { sempreClicavel: true, textoConcluido: '✅ Limpeza concluída' },
+        'limpeza-sistema': { sempreClicavel: true, textoConcluido: '✅ Limpeza concluída', textoConcluidoKey: 'sessoes.07-manutencao.texto_concluido_limpeza' },
         'verificar-grub': { sempreClicavel: true },
         'listar-kernels': { sempreClicavel: true },
         'grub-aplicar-recomendado': { sempreClicavel: true, textoConcluido: '✅ Configuração aplicada' },
@@ -122,6 +168,7 @@ var SESSOES = [
 {
     id: '08-fof-manutencao',
     nome: 'Manutenção FOF',
+    nomeKey: 'sessoes.08-fof-manutencao.nome',
     manutencao: true,
     comandos: {
         'atualizar-fof': { sempreClicavel: true, textoConcluido: '✅ FOF atualizado' },
@@ -153,12 +200,18 @@ function numerarSessao(sessaoId, container) {
     const index = SESSOES_PRINCIPAIS.indexOf(sessaoId);
     if (index === -1 || !container) return;
     const label = container.querySelector('.sessao-label');
-    if (label) label.textContent = 'Sessão ' + (index + 1);
+    if (label) label.textContent = _tVars('comum.sessao_label', 'Sessão ' + (index + 1), { n: index + 1 });
 }
 
+// i18n: retorna o nome da sessão no idioma atual. Prioriza nomeKey
+// (tradução), cai para `nome` (PT-BR) se a tradução não existir.
 function nomeDaSessao(sessaoId) {
     const sessao = SESSOES.find(function(s) { return s.id === sessaoId; });
-    return sessao ? sessao.nome : sessaoId;
+    if (!sessao) return sessaoId;
+    if (sessao.nomeKey) {
+        return _t(sessao.nomeKey, sessao.nome);
+    }
+    return sessao.nome;
 }
 
 // ============================================================
@@ -219,6 +272,11 @@ async function saveProgress(progress) {
     progressCache = progress;
     progressLoaded = true;
 
+    // CORREÇÃO #6: salva primeiro no localStorage (síncrono, rápido).
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    } catch (e) { /* ignore */ }
+
     try {
         const response = await fetch(API_URL + '/progress', {
             method: 'POST',
@@ -235,10 +293,6 @@ async function saveProgress(progress) {
     } catch (e) {
         console.warn('⚠️ Não foi possível salvar no servidor. Salvando apenas no localStorage.');
     }
-
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-    } catch (e) { /* ignore */ }
 }
 
 function getProgressSync() {
@@ -331,7 +385,7 @@ function iniciarProgresso(idComando) {
     fill.style.width = '0%';
     fill.className = 'progress-fill';
     percent.textContent = '0%';
-    status.textContent = '⏳ Iniciando...';
+    status.textContent = _t('comum.status_iniciando', '⏳ Iniciando...');
     status.className = 'status running';
 
     let progresso = 0;
@@ -361,7 +415,7 @@ function iniciarProgresso(idComando) {
             progresso = Math.min(85, progresso + incremento);
             fill.style.width = progresso + '%';
             percent.textContent = Math.round(progresso) + '%';
-            status.textContent = '⏳ Executando...';
+            status.textContent = _t('comum.status_executando', '⏳ Executando...');
             status.className = 'status running';
         }
     }, 100);
@@ -392,58 +446,88 @@ function _notificarConclusaoReal(idComando, sucesso) {
 }
 
 function completarProgresso(idComando, sucesso) {
-    _notificarConclusaoReal(idComando, sucesso);
-
     const container = document.getElementById('progress-' + idComando);
-    if (!container) return;
 
-    const fill = document.getElementById('progress-fill-' + idComando);
-    const percent = document.getElementById('progress-percent-' + idComando);
-    const status = document.getElementById('progress-status-' + idComando);
+    const aplicarUI = function() {
+        if (container) {
+            const fill = document.getElementById('progress-fill-' + idComando);
+            const percent = document.getElementById('progress-percent-' + idComando);
+            const status = document.getElementById('progress-status-' + idComando);
 
-    if (!fill || !percent || !status) return;
+            if (progressTimeouts[idComando]) {
+                clearTimeout(progressTimeouts[idComando]);
+                delete progressTimeouts[idComando];
+            }
 
-    if (progressTimeouts[idComando]) {
-        clearTimeout(progressTimeouts[idComando]);
-        delete progressTimeouts[idComando];
-    }
+            if (progressIntervals[idComando]) {
+                clearInterval(progressIntervals[idComando]);
+                delete progressIntervals[idComando];
+            }
 
-    if (progressIntervals[idComando]) {
-        clearInterval(progressIntervals[idComando]);
-        delete progressIntervals[idComando];
-    }
+            if (fill && percent && status) {
+                fill.style.width = '100%';
+                fill.className = 'progress-fill complete';
+                percent.textContent = '100%';
 
-    fill.style.width = '100%';
-    fill.className = 'progress-fill complete';
-    percent.textContent = '100%';
+                if (sucesso) {
+                    status.textContent = _t('comum.status_concluido', '✅ Concluído!');
+                    status.className = 'status success';
+                } else {
+                    status.textContent = _t('comum.status_falha', '❌ Falha na execução');
+                    status.className = 'status error';
+                }
 
-    if (sucesso) {
-        status.textContent = '✅ Concluído!';
-        status.className = 'status success';
+                setTimeout(() => {
+                    container.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        restaurarBotaoAposExecucao(idComando, sucesso);
+        _notificarConclusaoReal(idComando, sucesso);
+    };
+
+    if (sucesso && !SEMPRE_CLICAVEIS.includes(idComando)) {
+        marcarComoExecutado(idComando).then(aplicarUI, aplicarUI);
     } else {
-        status.textContent = '❌ Falha na execução';
-        status.className = 'status error';
+        aplicarUI();
     }
-
-    setTimeout(() => {
-        container.style.display = 'none';
-    }, 5000);
-
-    restaurarBotaoAposExecucao(idComando, sucesso);
 }
 
 // ============================================================
 // TEXTO CORRETO DOS BOTÕES APÓS EXECUÇÃO
 // ============================================================
 
+// i18n: prioriza textoConcluidoKey (chave i18n), cai para textoConcluido
+// (fallback PT-BR), cai para '✅ Concluído' se nenhum existir.
 function getTextoAposExecucao(idComando) {
     const info = _infoComando(idComando);
-    return (info && info.textoConcluido) || '✅ Concluído';
+    if (!info) return _t('comum.btn_concluido', '✅ Concluído');
+    if (info.textoConcluidoKey) {
+        return _t(info.textoConcluidoKey, info.textoConcluido || '✅ Concluído');
+    }
+    return info.textoConcluido || _t('comum.btn_concluido', '✅ Concluído');
 }
 
 // ============================================================
 // RESTAURAR BOTÃO APÓS EXECUÇÃO
 // ============================================================
+
+function _corOriginalDoBotao(btn) {
+    if (btn.hasAttribute('data-cor-original')) {
+        return btn.getAttribute('data-cor-original');
+    }
+    let cor = btn.style.backgroundColor || '';
+    if (!cor) {
+        try {
+            cor = window.getComputedStyle(btn).backgroundColor || '';
+        } catch (e) {
+            cor = '';
+        }
+    }
+    btn.setAttribute('data-cor-original', cor);
+    return cor;
+}
 
 function restaurarBotaoAposExecucao(idComando, sucesso) {
     const botoes = obterBotoesPorId(idComando);
@@ -452,10 +536,12 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
 
     if (!btnExecutar) return;
 
+    const corOriginal = _corOriginalDoBotao(btnExecutar);
+
     if (SEMPRE_CLICAVEIS.includes(idComando)) {
         const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
         btnExecutar.innerHTML = original;
-        btnExecutar.style.backgroundColor = 'var(--accent, #3c67e3)';
+        btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
         btnExecutar.disabled = false;
         btnExecutar.style.opacity = '1';
@@ -479,7 +565,7 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
     } else {
         const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
         btnExecutar.innerHTML = original;
-        btnExecutar.style.backgroundColor = 'var(--accent, #3c67e3)';
+        btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
         btnExecutar.disabled = false;
         btnExecutar.style.opacity = '1';
@@ -505,7 +591,6 @@ function criarToggleParaLog(idComando) {
     const logBox = document.getElementById('log-' + idComando);
     if (!logBox) return;
 
-    // Verifica se já existe o toggle
     if (document.getElementById('log-toggle-' + idComando)) return;
 
     const wrapper = document.createElement('div');
@@ -514,27 +599,26 @@ function criarToggleParaLog(idComando) {
     const toggle = document.createElement('div');
     toggle.className = 'terminal-log-toggle';
     toggle.id = 'log-toggle-' + idComando;
+    // i18n: o texto do toggle é traduzível.
+    const toggleTexto = _t('comum.log_execucao', '📋 Log de execução');
     toggle.innerHTML = `
     <span class="toggle-arrow">▼</span>
-    <span class="toggle-text">📋 Log de execução</span>
+    <span class="toggle-text">${toggleTexto}</span>
     `;
     toggle.addEventListener('click', function() {
         toggleTerminalLog(idComando);
     });
 
-    // Move o logBox para dentro do wrapper
     logBox.parentNode.insertBefore(wrapper, logBox);
     wrapper.appendChild(toggle);
     wrapper.appendChild(logBox);
 
-    // Remove estilos antigos de display
     logBox.style.display = 'block';
     logBox.style.height = '0';
     logBox.style.maxHeight = '0';
 }
 
 function conectarSSE(idComando, logBox) {
-    // Cria o toggle para o log se não existir
     criarToggleParaLog(idComando);
 
     if (sseConnections[idComando]) {
@@ -645,6 +729,9 @@ async function detectarDesktopReal() {
 // FUNÇÕES DE BOTÕES
 // ============================================================
 
+// CORREÇÃO #5: o fallback por substring (`onclick.includes(idComando)`)
+// podia casar botões errados. Só considera match exato por id HTML
+// ou por idComando entre quotes no onclick.
 function obterBotoesPorId(idComando) {
     let btnExecutar = null;
 
@@ -653,10 +740,13 @@ function obterBotoesPorId(idComando) {
     if (!btnExecutar) {
         const allButtons = document.querySelectorAll('.btn-executar');
         for (const btn of allButtons) {
+            if (btn.id === 'btn-' + idComando) {
+                btnExecutar = btn;
+                break;
+            }
             const onclick = btn.getAttribute('onclick') || '';
             if (onclick.includes("'" + idComando + "'") ||
-                onclick.includes('"' + idComando + '"') ||
-                onclick.includes(idComando)) {
+                onclick.includes('"' + idComando + '"')) {
                 btnExecutar = btn;
             break;
                 }
@@ -682,7 +772,7 @@ async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) 
     if (!logBox) return;
 
     if (isExecutado(idComando) && !SEMPRE_CLICAVEIS.includes(idComando)) {
-        alert('Este comando já foi executado anteriormente.');
+        alert(_t('comum.ja_executado', 'Este comando já foi executado anteriormente.'));
         return;
     }
 
@@ -715,7 +805,7 @@ async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) 
         if (!response.ok) {
             const errorLine = document.createElement('div');
             errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro HTTP: ' + response.status;
+            errorLine.textContent = _tVars('comum.erro_http', '❌ Erro HTTP: ' + response.status, { status: response.status });
             logBox.appendChild(errorLine);
             logBox.scrollTop = logBox.scrollHeight;
             completarProgresso(idComando, false);
@@ -734,7 +824,7 @@ async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) 
     } catch (e) {
         const errorLine = document.createElement('div');
         errorLine.className = 'log-line error';
-        errorLine.textContent = '❌ Erro de conexão: ' + e.message;
+        errorLine.textContent = _tVars('comum.erro_conexao', '❌ Erro de conexão: ' + e.message, { msg: e.message });
         logBox.appendChild(errorLine);
         logBox.scrollTop = logBox.scrollHeight;
         completarProgresso(idComando, false);
@@ -753,11 +843,11 @@ async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) 
 
 async function desinstalarPacote(idComando, comandoRemover, nomeExibicao) {
     if (!isExecutado(idComando)) {
-        alert(nomeExibicao + ' não está instalado.');
+        alert(_tVars('comum.nao_instalado', nomeExibicao + ' não está instalado.', { nome: nomeExibicao }));
         return;
     }
 
-    if (!confirm('Deseja desinstalar o ' + nomeExibicao + '?')) return;
+    if (!confirm(_tVars('comum.confirmar_desinstalar', 'Deseja desinstalar o ' + nomeExibicao + '?', { nome: nomeExibicao }))) return;
 
     const logBox = document.getElementById('log-' + idComando);
     const btn = document.getElementById('btn-' + idComando);
@@ -795,8 +885,8 @@ async function desinstalarPacote(idComando, comandoRemover, nomeExibicao) {
                 const errorLine = document.createElement('div');
                 errorLine.className = 'log-line error';
                 errorLine.textContent = sucesso === null
-                ? '❌ Tempo esgotado esperando a desinstalação.'
-                : '❌ Falha ao desinstalar ' + nomeExibicao + '.';
+                ? _t('comum.erro_timeout_desinstalar', '❌ Tempo esgotado esperando a desinstalação.')
+                : _tVars('comum.erro_falha_desinstalar', '❌ Falha ao desinstalar ' + nomeExibicao + '.', { nome: nomeExibicao });
                 logBox.appendChild(errorLine);
                 logBox.scrollTop = logBox.scrollHeight;
             }
@@ -807,7 +897,7 @@ async function desinstalarPacote(idComando, comandoRemover, nomeExibicao) {
 
         if (btn) {
             btn.textContent = btn.getAttribute('data-texto-original') || nomeExibicao;
-            btn.style.backgroundColor = '';
+            btn.style.backgroundColor = _corOriginalDoBotao(btn);
             btn.style.cursor = 'pointer';
             btn.style.opacity = '1';
             btn.disabled = false;
@@ -820,7 +910,7 @@ async function desinstalarPacote(idComando, comandoRemover, nomeExibicao) {
         if (logBox) {
             const successLine = document.createElement('div');
             successLine.className = 'log-line success';
-            successLine.textContent = '✅ ' + nomeExibicao + ' desinstalado com sucesso!';
+            successLine.textContent = _tVars('comum.sucesso_desinstalar', '✅ ' + nomeExibicao + ' desinstalado com sucesso!', { nome: nomeExibicao });
             logBox.appendChild(successLine);
             logBox.scrollTop = logBox.scrollHeight;
         }
@@ -832,7 +922,7 @@ async function desinstalarPacote(idComando, comandoRemover, nomeExibicao) {
         if (logBox) {
             const errorLine = document.createElement('div');
             errorLine.className = 'log-line error';
-            errorLine.textContent = '❌ Erro ao desinstalar: ' + e.message;
+            errorLine.textContent = _tVars('comum.erro_desinstalar', '❌ Erro ao desinstalar: ' + e.message, { msg: e.message });
             logBox.appendChild(errorLine);
             logBox.scrollTop = logBox.scrollHeight;
         }
@@ -945,14 +1035,31 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarProgressoInicial();
     carregarVersaoServidor();
     setTimeout(initCustomSelects, 300);
+
+    // i18n: garante que o seletor de idioma exista em qualquer página
+    // que tenha um container .i18n-seletor-container (idempotente).
+    if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
+        setTimeout(function() { I18N.criarSeletorIdioma(); }, 50);
+    }
 });
 
 document.addEventListener('sessao-carregada', function() {
     setTimeout(initCustomSelects, 200);
     setTimeout(carregarProgressoInicial, 300);
+
+    // i18n: se uma sessão foi injetada depois do boot, o i18n.js já
+    // cuida via aplicarTraducoes(container), chamado pelos shells.
+    // Aqui só garantimos que o seletor existe caso ainda não exista.
+    if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
+        setTimeout(function() { I18N.criarSeletorIdioma(); }, 100);
+    }
 });
 
 document.addEventListener('todas-sessoes-carregadas', function() {
     setTimeout(initCustomSelects, 300);
     setTimeout(carregarProgressoInicial, 400);
+
+    if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
+        setTimeout(function() { I18N.criarSeletorIdioma(); }, 100);
+    }
 });

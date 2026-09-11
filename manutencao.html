@@ -12,18 +12,25 @@
         <div class="header-avancado">
             <div class="titulo">
                 <img src="icone_app.png" alt="FOF" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain;" onerror="this.style.display='none'">
-                <h1>Manutenção</h1>
-                <span class="badge-modo">🛠️ Fedora e FOF</span>
+                <h1 data-i18n="manutencao.titulo">Manutenção</h1>
+                <span class="badge-modo" data-i18n="manutencao.badge_modo">🛠️ Fedora e FOF</span>
                 <span style="color: var(--text-muted); font-size: 0.8rem;">v<span class="fof-version"></span></span>
             </div>
-            <a href="index.html" class="voltar">← Voltar ao início</a>
+            <!--
+                i18n: seletor de idioma injetado dinamicamente.
+                Estilos completos vêm no Lote 10 (style.css).
+            -->
+            <div class="header-direita">
+                <div class="i18n-seletor-container" id="i18n-seletor"></div>
+                <a href="index.html" class="voltar" data-i18n="comum.voltar_inicio">← Voltar ao início</a>
+            </div>
         </div>
 
         <!-- ===== CONTAINER DAS SESSÕES DE MANUTENÇÃO ===== -->
         <div id="sessoes-container">
             <div class="loading-sessao">
                 <div class="spinner"></div>
-                <p>Carregando manutenção...</p>
+                <p id="loading-inicial-texto">Carregando manutenção...</p>
             </div>
         </div>
 
@@ -31,25 +38,21 @@
         <button class="btn-topo" id="btn-topo" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="script.js"></script>
     <script>
         // ============================================================
         // MANUTENÇÃO - CARREGAMENTO DAS SESSÕES DE MANUTENÇÃO
         // ============================================================
-        //
-        // Mostra só as sessões marcadas como manutenção (manutencao: true
-        // em SESSOES, script.js) — kernels, limpeza de temporários, GRUB,
-        // atualizar/desinstalar o FOF. Essas ações não têm dependência de
-        // ordem entre si nem com o restante da configuração do Fedora, por
-        // isso ficam numa página à parte, fora do fluxo sequencial
-        // principal (guiado.html).
-        //
-        // Ao contrário do antigo Modo Avançado, esta página NÃO mostra
-        // nenhum tipo de contador ou barra de progresso agregada — o FOF
-        // não gera relatórios de conclusão. Cada botão só lembra o próprio
-        // estado individual.
 
         var sessoesCarregadas = {};
+
+        // ------------------------------------------------------------
+        // i18n helpers locais
+        // ------------------------------------------------------------
+        function _t(chave, fallback) {
+            return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+        }
 
         async function carregarSessoesManutencao() {
             var container = document.getElementById('sessoes-container');
@@ -60,19 +63,18 @@
                 await new Promise(resolve => setTimeout(resolve, 500));
                 if (typeof getProgress === 'undefined') {
                     console.error('❌ script.js não foi carregado!');
+                    var msgErro = _t('comum.erro_script_js', '❌ Erro: script.js não foi carregado!');
+                    var msgDica = _t('comum.erro_script_js_msg', 'Recarregue a página ou verifique se o arquivo existe.');
                     container.innerHTML = `
                         <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444;">
-                            <h3>❌ Erro: script.js não foi carregado!</h3>
-                            <p style="color: var(--text-muted);">Recarregue a página ou verifique se o arquivo existe.</p>
+                            <h3>${msgErro}</h3>
+                            <p style="color: var(--text-muted);">${msgDica}</p>
                         </div>
                     `;
                     return;
                 }
             }
 
-            // Espera o progresso real do servidor chegar antes de carregar
-            // as sessões (evita corrida entre o fetch do progresso e o
-            // fetch do HTML de cada sessão).
             await getProgress();
 
             container.innerHTML = '';
@@ -112,10 +114,6 @@
                         });
                     }
 
-                    // O 'DOMContentLoaded' que cada sessão registra pra
-                    // chamar sua própria restaurarEstadoSessao() nunca
-                    // dispara, porque o evento já aconteceu pra esta
-                    // página antes da sessão ser injetada dinamicamente.
                     if (typeof restaurarEstadoSessao === 'function') {
                         try {
                             restaurarEstadoSessao();
@@ -130,6 +128,11 @@
                         }
                     });
 
+                    // i18n: aplica traduções no subtree recém-injetado.
+                    if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
+                        I18N.aplicarTraducoes(wrapper);
+                    }
+
                     sessoesCarregadas[nomeSessao] = true;
                     console.log('✅ Sessão de manutenção carregada: ' + nomeSessao);
 
@@ -143,7 +146,7 @@
                     errorDiv.style.border = '1px solid #ef4444';
                     errorDiv.style.borderRadius = '8px';
                     errorDiv.innerHTML = `
-                        <h3>❌ Erro ao carregar ${nomeDaSessao(nomeSessao)}</h3>
+                        <h3>❌ ${nomeDaSessao(nomeSessao)}</h3>
                         <p style="color: var(--text-muted);">${e.message}</p>
                     `;
                     container.appendChild(errorDiv);
@@ -156,6 +159,16 @@
 
         // ===== INICIALIZAÇÃO =====
         document.addEventListener('DOMContentLoaded', function() {
+            // i18n: cria o seletor assim que o DOM estiver pronto.
+            if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
+                I18N.criarSeletorIdioma();
+            }
+
+            var loadingTexto = document.getElementById('loading-inicial-texto');
+            if (loadingTexto) {
+                loadingTexto.textContent = _t('comum.loading_generico', 'Carregando manutenção...');
+            }
+
             if (typeof getProgress !== 'undefined' && typeof SESSOES_MANUTENCAO !== 'undefined') {
                 carregarSessoesManutencao();
             } else {
@@ -165,10 +178,12 @@
                         carregarSessoesManutencao();
                     } else {
                         console.error('❌ script.js não carregou corretamente!');
+                        var msgErro = _t('comum.erro_script_js', '❌ Erro: script.js não foi carregado!');
+                        var msgDica = _t('comum.erro_script_js_msg', 'Recarregue a página ou verifique se o arquivo existe.');
                         document.getElementById('sessoes-container').innerHTML = `
                             <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444;">
-                                <h3>❌ Erro: script.js não foi carregado!</h3>
-                                <p style="color: var(--text-muted);">Recarregue a página ou verifique se o arquivo existe.</p>
+                                <h3>${msgErro}</h3>
+                                <p style="color: var(--text-muted);">${msgDica}</p>
                             </div>
                         `;
                     }

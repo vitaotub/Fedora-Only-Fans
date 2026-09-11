@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Instalação
-# Versão: 0.9.8-alpha
+# Versão: 0.9.9-alpha
 # ============================================================
 
 set -e
@@ -13,11 +13,25 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-VERSION="0.9.8-alpha"
+VERSION="0.9.9-alpha"
 INSTALL_DIR="$HOME/.local/share/fedora-only-fans"
 BIN_DIR="$HOME/.local/bin"
-DESKTOP_FILE="$HOME/.local/share/applications/fedora-only-fans.desktop"
-DESKTOP_FILE_COMPAT="$HOME/.local/share/applications/fedora-only-fans-compat.desktop"
+
+# ============================================================
+# CORREÇÃO ÍCONE (KDE/Wayland): os nomes dos arquivos .desktop
+# agora batem com o app_id definido em g_set_prgname("fof-container")
+# no C. O KDE Plasma em Wayland é rigoroso: se o nome do .desktop
+# não bater com o app_id da janela, o ícone não é associado e o
+# toolkit mostra o ícone genérico ("W" do WebKitGTK).
+# Não alterar sem atualizar o g_set_prgname no src/fof-container.c.
+# ============================================================
+DESKTOP_FILE="$HOME/.local/share/applications/fof-container.desktop"
+DESKTOP_FILE_COMPAT="$HOME/.local/share/applications/fof-container-compat.desktop"
+
+# Nomes antigos (para limpeza em desinstalação/atualização)
+DESKTOP_FILE_OLD="$HOME/.local/share/applications/fedora-only-fans.desktop"
+DESKTOP_FILE_COMPAT_OLD="$HOME/.local/share/applications/fedora-only-fans-compat.desktop"
+
 REPO_URL="https://github.com/vitaotek/Fedora-Only-Fans.git"
 LOG_FILE="/tmp/fof-install-$(date +%Y%m%d-%H%M%S).log"
 
@@ -40,6 +54,7 @@ ARQUIVOS_PRINCIPAIS=(
     "manutencao.html"
     "style.css"
     "script.js"
+    "i18n.js"
     "icone_app.png"
     "iniciar_fof.sh"
     "iniciar_fof_compat.sh"
@@ -267,15 +282,34 @@ instalar_fof() {
 
 criar_atalhos() {
     print_step "Criando atalhos no menu de aplicativos..."
-    local icone="$INSTALL_DIR/icone_app.png"
 
-    if [ ! -f "$icone" ]; then
-        icone="applications-utilities"
-        print_warning "Ícone não encontrado, usando ícone genérico"
+    # ============================================================
+    # CORREÇÃO ÍCONE (KDE/Wayland): o nome do arquivo .desktop agora
+    # é "fof-container.desktop", casando com o app_id definido em
+    # g_set_prgname("fof-container") no src/fof-container.c. Sem essa
+    # correspondência, o KDE Plasma em Wayland não associa o ícone do
+    # .desktop com a janela do container e mostra o ícone genérico do
+    # WebKitGTK (o "W" amarelo).
+    #
+    # O nome exibido no menu (Name=Fedora Only Fans) não depende do
+    # nome do arquivo — pode ser qualquer coisa.
+    # ============================================================
+
+    # Ícone no tema hicolor com o MESMO nome do app_id, para o KDE
+    # achar o ícone por nome (Icon=fof-container) em qualquer tema.
+    if [ -f "$INSTALL_DIR/icone_app.png" ]; then
+        mkdir -p "$HOME/.local/share/icons/hicolor/256x256/apps"
+        cp "$INSTALL_DIR/icone_app.png" "$HOME/.local/share/icons/hicolor/256x256/apps/fof-container.png"
+        gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+        print_success "Ícone do container instalado em hicolor"
     fi
 
     mkdir -p "$(dirname "$DESKTOP_FILE")"
 
+    # Remove .desktops antigos com nome errado (instalações anteriores)
+    rm -f "$DESKTOP_FILE_OLD" "$DESKTOP_FILE_COMPAT_OLD" 2>/dev/null
+
+    # --- Atalho principal ---
     cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Version=1.0
@@ -283,16 +317,18 @@ Type=Application
 Name=Fedora Only Fans
 Comment=Painel de Automação do Fedora
 Exec=$BIN_DIR/fof
-Icon=$icone
+Icon=fof-container
 Terminal=false
 Categories=System;Settings;
 StartupNotify=true
+StartupWMClass=fof-container
 X-GNOME-Autostart-enabled=true
 EOF
 
     chmod +x "$DESKTOP_FILE"
     print_success "Atalho criado: $DESKTOP_FILE"
 
+    # --- Atalho de compatibilidade (modo software rendering) ---
     if [ -f "$INSTALL_DIR/iniciar_fof_compat.sh" ]; then
         cat > "$DESKTOP_FILE_COMPAT" <<EOF
 [Desktop Entry]
@@ -301,10 +337,11 @@ Type=Application
 Name=Fedora Only Fans (Modo Compatibilidade)
 Comment=Painel de Automação do Fedora - Modo compatível com GPUs antigas
 Exec=$BIN_DIR/fof-compat
-Icon=$icone
+Icon=fof-container
 Terminal=false
 Categories=System;Settings;
 StartupNotify=true
+StartupWMClass=fof-container
 X-GNOME-Autostart-enabled=true
 EOF
 
@@ -334,11 +371,11 @@ fixar_na_barra() {
             --group "2" --group Configuration --group General \
             --key launcherList 2>/dev/null || echo "")
 
-        if [[ ! "$current_launchers" == *"fedora-only-fans"* ]]; then
+        if [[ ! "$current_launchers" == *"fof-container"* ]]; then
             if [ -z "$current_launchers" ]; then
-                current_launchers="applications:fedora-only-fans.desktop"
+                current_launchers="applications:fof-container.desktop"
             else
-                current_launchers="$current_launchers,applications:fedora-only-fans.desktop"
+                current_launchers="$current_launchers,applications:fof-container.desktop"
             fi
 
             kwriteconfig5 --file ~/.config/plasma-org.kde.plasma.desktop-appletsrc \
@@ -355,7 +392,7 @@ fixar_na_barra() {
     fi
 
     if [ "$fixed" = false ] && command -v qdbus &> /dev/null; then
-        if qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.addFavorite "applications:fedora-only-fans.desktop" 2>/dev/null; then
+        if qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.addFavorite "applications:fof-container.desktop" 2>/dev/null; then
             fixed=true
             print_success "Atalho fixado na barra de tarefas (qdbus)"
         fi
@@ -419,13 +456,27 @@ desinstalar() {
         fi
     done
 
-    local atalhos=("$DESKTOP_FILE" "$DESKTOP_FILE_COMPAT")
+    # Remove TODOS os nomes possíveis de .desktop (novo e antigo)
+    # para garantir limpeza completa em qualquer instalação.
+    local atalhos=(
+        "$DESKTOP_FILE"
+        "$DESKTOP_FILE_COMPAT"
+        "$DESKTOP_FILE_OLD"
+        "$DESKTOP_FILE_COMPAT_OLD"
+    )
     for atalho in "${atalhos[@]}"; do
         if [ -f "$atalho" ]; then
             rm -f "$atalho"
             print_success "Atalho removido: $atalho"
         fi
     done
+
+    # Ícone hicolor
+    if [ -f "$HOME/.local/share/icons/hicolor/256x256/apps/fof-container.png" ]; then
+        rm -f "$HOME/.local/share/icons/hicolor/256x256/apps/fof-container.png"
+        gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+        print_success "Ícone removido do hicolor"
+    fi
 
     rm -f /tmp/fof-*.log
     print_success "Logs removidos"
@@ -455,7 +506,13 @@ desinstalar() {
     remover_linha_path "$HOME/.zshrc"
     remover_linha_path "$HOME/.profile"
 
+    rm -f "$HOME/.bashrc.fof-backup" \
+          "$HOME/.zshrc.fof-backup" \
+          "$HOME/.profile.fof-backup"
+    print_success "Backups de PATH removidos"
+
     update-desktop-database ~/.local/share/applications/ 2>/dev/null
+    kbuildsycoca6 --noincremental 2>/dev/null || kbuildsycoca5 --noincremental 2>/dev/null || true
 
     echo ""
     print_success "✅ FOF completamente desinstalado!"
@@ -492,6 +549,20 @@ atualizar() {
         chmod +x "$INSTALL_DIR/build-container.sh"
         "$INSTALL_DIR/build-container.sh" 2>/dev/null || print_warning "Não foi possível recompilar o container"
     fi
+
+    print_step "Recriando symlinks dos comandos..."
+    mkdir -p "$BIN_DIR"
+    ln -sf "$INSTALL_DIR/iniciar_fof.sh" "$BIN_DIR/fof"
+    chmod +x "$INSTALL_DIR/iniciar_fof.sh" "$BIN_DIR/fof"
+    if [ -f "$INSTALL_DIR/iniciar_fof_compat.sh" ]; then
+        ln -sf "$INSTALL_DIR/iniciar_fof_compat.sh" "$BIN_DIR/fof-compat"
+        chmod +x "$INSTALL_DIR/iniciar_fof_compat.sh" "$BIN_DIR/fof-compat"
+    fi
+    if [ -f "$INSTALL_DIR/fof-container" ]; then
+        ln -sf "$INSTALL_DIR/fof-container" "$BIN_DIR/fof-container"
+        chmod +x "$BIN_DIR/fof-container"
+    fi
+    print_success "Symlinks atualizados"
 
     verificar_arquivos_instalados
     reaplicar_permissoes

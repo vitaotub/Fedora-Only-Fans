@@ -5,12 +5,21 @@ const path = require('path');
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const ARQUIVO_PROGRESSO = path.join(__dirname, '.progresso.json');
-const FOF_VERSION = '0.9.8-alpha';
+const FOF_VERSION = '0.9.9-alpha';
 
-// CORREÇÃO: esta lista existia duplicada, copiada e colada em duas funções
-// diferentes (executarComandoComStream e procederComExecucao). Editar uma
-// sem lembrar da outra fazia elas divergirem silenciosamente. Agora é uma
-// única fonte de verdade usada nos dois lugares.
+// ============================================================
+// i18n: whitelist de idiomas suportados
+// CORREÇÃO #i18n-1: a rota /locales/:lang só serve arquivos cujo
+// nome está nesta lista. Sem isso, um pedido como
+// `/locales/..%2F..%2Fetc%2Fpasswd.json` poderia virar path
+// traversal. A whitelist elimina esse vetor completamente.
+// ============================================================
+const LANGS_SUPORTADOS = ['pt-BR', 'en', 'es'];
+const LOCALES_DIR = path.join(__dirname, 'locales');
+
+// CORREÇÃO #11: cada padrão agora é avaliado como PREFIXO de comando,
+// não como substring livre. Fecha o vetor de "esconder um
+// `bash <(curl ...)` no meio de um comando composto".
 const COMANDOS_SEM_AUTENTICACAO = [
     'rpm -q',
 'uname -r',
@@ -23,12 +32,22 @@ const COMANDOS_SEM_AUTENTICACAO = [
 'gtk-launch',
 'bash <(curl',
 'echo "s" | bash',
-// Instalador/atualizador de terceiros da AffinityOnLinux (Sessão 7).
-// Roda um instalador Wine com janela própria (PyQt6) — não deve rodar
-// como root (causaria problemas de permissão na janela GUI e deixaria
-// arquivos donos de root no diretório do usuário).
 'raw.githubusercontent.com/ryzendew/AffinityOnLinux'
 ];
+
+// CORREÇÃO #11: helper compartilhado — qualquer mudança na regra de
+// "sem auth" agora vive num único lugar.
+function _cmdSemAutenticacao(comando) {
+    const trimmed = (comando || '').trim();
+    return COMANDOS_SEM_AUTENTICACAO.some(function(cmd) {
+        if (cmd.includes('://') || cmd.includes('raw.githubusercontent.com')) {
+            return trimmed.includes(cmd);
+        }
+        return trimmed === cmd
+        || trimmed.startsWith(cmd + ' ')
+        || trimmed.startsWith(cmd + '\t');
+    });
+}
 
 // ============ VARIÁVEIS DE STREAM ============
 
@@ -41,7 +60,6 @@ function lerProgresso() {
         if (fs.existsSync(ARQUIVO_PROGRESSO)) {
             const dados = JSON.parse(fs.readFileSync(ARQUIVO_PROGRESSO, 'utf8'));
 
-            // Compatibilidade com o formato antigo (array simples = só executados)
             if (Array.isArray(dados)) {
                 return { executados: dados, pulados: [] };
             }
@@ -67,7 +85,6 @@ function salvarProgresso(idComando) {
         if (!progresso.executados.includes(idComando)) {
             progresso.executados.push(idComando);
         }
-        // Se o comando foi executado, ele deixa de estar "pulado"
         progresso.pulados = progresso.pulados.filter(id => id !== idComando);
         escreverProgresso(progresso);
     } catch (e) {
@@ -203,14 +220,13 @@ function commandExists(cmd) {
 // ============ EXECUÇÃO COM STREAM ============
 
 function executarComandoComStream(comandoFinal, idComando, isReversao, callback) {
-    // Comandos que NÃO precisam de autenticação
-    const precisaAutenticacao = !COMANDOS_SEM_AUTENTICACAO.some(cmd => comandoFinal.includes(cmd));
+    // CORREÇÃO #11: usa o helper centralizado em vez do includes() solto.
+    const precisaAutenticacao = !_cmdSemAutenticacao(comandoFinal);
 
     if (!precisaAutenticacao) {
         console.log(`[INFO] Comando SEM autenticação: ${comandoFinal.substring(0, 50)}...`);
         enviarLog(idComando, `$ ${comandoFinal}\n`, 'info');
 
-        // Configura ambiente para flatpak (caso seja um comando flatpak)
         const env = { ...process.env };
         if (comandoFinal.includes('flatpak')) {
             let uid = 1000;
@@ -316,7 +332,6 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
         return;
     }
 
-    // Comandos simples com spawn
     const processo = spawn(comandoFinal, {
         shell: '/bin/bash',
         env: process.env,
@@ -374,7 +389,6 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
 function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, callback) {
     const desktop = detectarDesktop();
 
-    // Descrição do comando para o usuário
     const descricoesComandos = {
         'dnf upgrade': 'Atualizar o sistema Fedora',
         'dnf install': 'Instalar pacotes',
@@ -417,9 +431,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
     console.log(`[AUTH] Desktop: ${desktop}, pkexec: ${hasPkexec}, kdesu: ${hasKdesu}`);
 
-    // ============================================================
-    // 1. PRIORIDADE: kdesu (para KDE - mais confiável)
-    // ============================================================
     if (desktop === 'KDE' && hasKdesu) {
         enviarLog(idComando, '🪟 Usando kdesu (KDE) com interface gráfica...\n', 'info');
 
@@ -457,9 +468,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         return;
     }
 
-    // ============================================================
-    // 2. pkexec (para GNOME, XFCE, Cinnamon, etc.)
-    // ============================================================
     if (hasPkexec) {
         enviarLog(idComando, '🔑 Usando pkexec com interface gráfica...\n', 'info');
 
@@ -496,9 +504,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         return;
     }
 
-    // ============================================================
-    // 3. Fallback: zenity/kdialog (último recurso)
-    // ============================================================
     enviarLog(idComando, '⚠️ Usando fallback com zenity/kdialog...\n', 'warning');
 
     let promptSenha;
@@ -542,8 +547,8 @@ function procederComExecucao(comando, idComando, isReversao, res) {
     }));
 
     setImmediate(() => {
-        const isSemAutenticacao = COMANDOS_SEM_AUTENTICACAO.some(cmd => comando.includes(cmd))
-        && !comando.includes('dnf');
+        // CORREÇÃO #11: usa o helper centralizado em vez do includes() solto.
+        const isSemAutenticacao = _cmdSemAutenticacao(comando) && !comando.includes('dnf');
         const precisaAutenticacao = !isSemAutenticacao;
 
         console.log(`[AUTH] ${idComando}: SemAuth=${isSemAutenticacao}, PrecisaAuth=${precisaAutenticacao}`);
@@ -575,6 +580,7 @@ function servirArquivoEstatico(req, res, filePath) {
             '.html': 'text/html; charset=utf-8',
             '.css': 'text/css; charset=utf-8',
             '.js': 'application/javascript; charset=utf-8',
+            '.json': 'application/json; charset=utf-8',
             '.png': 'image/png',
             '.jpg': 'image/jpeg',
             '.jpeg': 'image/jpeg',
@@ -592,10 +598,51 @@ function servirArquivoEstatico(req, res, filePath) {
     }
 }
 
+// ============================================================
+// i18n: SERVIDOR DE LOCALES
+// CORREÇÃO #i18n-1: função dedicada para servir arquivos de idioma.
+// A whitelist elimina path traversal. Sempre retorna JSON com
+// charset=utf-8 (acentos e caracteres especiais).
+// ============================================================
+function servirLocale(req, res, lang) {
+    // 1. Validação: só aceita idiomas na whitelist
+    if (LANGS_SUPORTADOS.indexOf(lang) === -1) {
+        res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: 'Idioma não suportado: ' + lang }));
+        return;
+    }
+
+    // 2. Caminho seguro: como lang está na whitelist, o nome do arquivo
+    //    é determinístico e nunca sai de LOCALES_DIR.
+    const arquivo = path.join(LOCALES_DIR, lang + '.json');
+
+    // 3. Dupla checagem: o arquivo resolvido precisa continuar dentro
+    //    de LOCALES_DIR (defesa em profundidade, mesmo com whitelist).
+    if (path.resolve(arquivo).indexOf(path.resolve(LOCALES_DIR)) !== 0) {
+        res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: 'Acesso negado' }));
+        return;
+    }
+
+    if (!fs.existsSync(arquivo)) {
+        res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: 'Locale não encontrado: ' + lang }));
+        return;
+    }
+
+    // 4. Serve o arquivo. `no-cache` garante que atualizações no JSON
+    //    apareçam sem o navegador usar versão antiga. É um arquivo
+    //    pequeno, o custo é desprezível.
+    res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache'
+    });
+    fs.createReadStream(arquivo).pipe(res);
+}
+
 // ============ SERVIDOR HTTP ============
 
 const server = http.createServer((req, res) => {
-    // CORS
     res.setHeader('Access-Control-Allow-Origin', `http://localhost:${PORT}`);
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -639,6 +686,35 @@ const server = http.createServer((req, res) => {
             console.log(`[SSE] Cliente desconectado: ${idComando}`);
         });
 
+        return;
+    }
+
+    // ===== i18n: ROTA DE LOCALES =====
+    // CORREÇÃO #i18n-1: /locales/<lang>.json, com whitelist.
+    // Aceita também /locales/<lang> (sem .json) por conveniência.
+    if (req.method === 'GET' && url.startsWith('/locales/')) {
+        // Remove prefixo e (opcional) sufixo .json; ignora query string.
+        let resto = url.substring('/locales/'.length);
+        const interroga = resto.indexOf('?');
+        if (interroga !== -1) resto = resto.substring(0, interroga);
+
+        if (resto.endsWith('.json')) {
+            resto = resto.substring(0, resto.length - '.json'.length);
+        }
+
+        // Decodifica percent-encoding (ex.: pt-BR não precisa, mas
+        // previne surpresas com %2D etc.). try/catch protege contra
+        // sequências malformadas.
+        let lang;
+        try {
+            lang = decodeURIComponent(resto);
+        } catch (e) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ error: 'Requisição inválida' }));
+            return;
+        }
+
+        servirLocale(req, res, lang);
         return;
     }
 
@@ -725,6 +801,12 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // i18n.js — servido como arquivo estático
+    if (req.method === 'GET' && url === '/i18n.js') {
+        servirArquivoEstatico(req, res, 'i18n.js');
+        return;
+    }
+
     if (req.method === 'GET' && (url === '/icone_app.png' || url === '/favicon.ico')) {
         servirArquivoEstatico(req, res, 'icone_app.png');
         return;
@@ -747,20 +829,21 @@ const server = http.createServer((req, res) => {
             autenticacao: metodo.descricao,
             nodeVersion: process.version,
             platform: process.platform,
-            version: FOF_VERSION
+            version: FOF_VERSION,
+            // i18n: informa os idiomas disponíveis para clientes que queiram
+            // montar o seletor dinamicamente (opcional).
+            langsSuportados: LANGS_SUPORTADOS
         }));
         return;
     }
 
-    // CORREÇÃO: endpoint /reverter removido — não era usado por nenhum
-    // cliente. Todas as reversões usam /executar com idComando diferente.
     if (req.method === 'POST' && url === '/executar') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
             try {
                 const { comando, idComando } = JSON.parse(body);
-                const isReversao = false; // Sempre false agora - não há mais endpoint /reverter
+                const isReversao = false;
 
                 if (!comando || !idComando) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -830,6 +913,7 @@ server.listen(PORT, HOST, () => {
     console.log(` 🔐 Autenticação: ${metodo.descricao}`);
     console.log(` 📡 SSE: Ativo (logs em tempo real)`);
     console.log(` 📁 Arquivos estáticos: Ativo (HTML, CSS, JS, ícone)`);
+    console.log(` 🌐 i18n: Ativo (locales em /locales/<lang>.json)`);
     console.log(` 📄 Páginas: index.html, guiado.html, manutencao.html, 00-*.html a 08-*.html`);
     console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, bash <(curl), etc`);
     console.log(` 📊 Progresso: .progresso.json (persistente no servidor)`);

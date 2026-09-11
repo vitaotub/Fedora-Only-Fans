@@ -1,7 +1,7 @@
 # <img src="icone_app.png" width="55" align="center"> Fedora Only Fans (FOF)
 
 ![Autor](https://img.shields.io/badge/Criador-Vit%C3%A3oTub-blue?style=flat-square)
-![Versão](https://img.shields.io/badge/Versão-v0.9.8--alpha-orange?style=flat-square)
+![Versão](https://img.shields.io/badge/Versão-v0.9.9--alpha-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![Licença](https://img.shields.io/badge/Licen%C3%A7a-GPL--3.0-green?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow?style=flat-square)
@@ -252,6 +252,11 @@ Fedora-Only-Fans/
 ├── 📄 manutencao.html         # Manutenção (kernels, limpeza, GRUB, FOF — sem ordem)
 ├── 📄 style.css               # CSS compartilhado (global)
 ├── 📄 script.js               # JS compartilhado (funções globais)
+├── 📄 i18n.js                 # Módulo de internacionalização (PT-BR/EN/ES)
+├── 📂 locales/                # Arquivos de tradução
+│   ├── 📄 pt-BR.json          # Português (padrão)
+│   ├── 📄 en.json             # Inglês
+│   └── 📄 es.json             # Espanhol
 ├── 📄 00-boas-vindas.html     # Sessão 1 (HTML + JS específico)
 ├── 📄 01-restauracao.html     # Sessão 2 (HTML + JS específico)
 ├── 📄 02-otimizacao.html      # Sessão 3 (HTML + JS específico)
@@ -303,35 +308,36 @@ tail -f /tmp/fof-*.log
 ```
 
 🎯 Roadmap
-v0.9.8 (Atual) ✅
+v0.9.9 (Atual) ✅
 
-    ✅ Configuração sequencial em ordem (a ordem das sessões importa pro resultado)
-    ✅ Página de Manutenção separada (kernels, limpeza, GRUB, FOF — sem dependência de ordem)
-    ✅ Botões de reversão só onde a ação é reversível — ações repetíveis (sempre clicáveis) nunca têm par de reverter
-    ✅ Persistência via localStorage/servidor (sem relatório de conclusão — só o estado de cada botão)
-    ✅ Auditoria completa do código (bugs de segurança, lógica e duplicação corrigidos)
-    ✅ Instalação do Btrfs-Assistant via interface
-    ✅ Instalação do OBS Studio via Flatpak
-    ✅ Sincronização com canal estável (distro-sync)
-    ✅ Correção da Central de Apps (sem autenticação)
-    ✅ Launchers com sistema de toggle (instalar/desinstalar)
-    ✅ Ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
-    ✅ Edição de vídeo/áudio (Kdenlive, Audacity)
-    ✅ Progresso com timeout de segurança
-    ✅ Modo Compatibilidade para GPUs antigas
-    ✅ Botão "Atualizar FOF" sempre clicável (pode ser reexecutado)
-    ✅ Remoção do endpoint /reverter não utilizado
-    ✅ Remoção de classes CSS mortas (.etapa-card, .etapa-titulo)
-    ✅ WebKitGTK 4.1 como requisito único (removido suporte a 4.0)
-    ✅ Timeout de remoção de kernel aumentado para 3 minutos
-    ✅ Variáveis globais convertidas de const para var (evita erro de redeclaração)
-    ✅ window.close() com fallback de mensagem
+✅ Configuração sequencial em ordem (a ordem das sessões importa pro resultado)
+✅ Página de Manutenção separada (kernels, limpeza, GRUB, FOF — sem dependência de ordem)
+✅ Botões de reversão só onde a ação é reversível — ações repetíveis (sempre clicáveis) nunca têm par de reverter
+✅ Persistência via localStorage/servidor (sem relatório de conclusão — só o estado de cada botão)
+✅ Auditoria completa do código (bugs de segurança, lógica e duplicação corrigidos)
+✅ Instalação do Btrfs-Assistant via interface
+✅ Instalação do OBS Studio via Flatpak
+✅ Sincronização com canal estável (distro-sync)
+✅ Correção da Central de Apps (sem autenticação)
+✅ Launchers com sistema de toggle (instalar/desinstalar)
+✅ Ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
+✅ Edição de vídeo/áudio (Kdenlive, Audacity)
+✅ Progresso com timeout de segurança
+✅ Modo Compatibilidade para GPUs antigas
+✅ Botão "Atualizar FOF" sempre clicável (pode ser reexecutado)
+✅ Remoção do endpoint /reverter não utilizado
+✅ Remoção de classes CSS mortas (.etapa-card, .etapa-titulo)
+✅ WebKitGTK 4.1 como requisito único (removido suporte a 4.0)
+✅ Timeout de remoção de kernel aumentado para 3 minutos
+✅ Variáveis globais convertidas de const para var (evita erro de redeclaração)
+✅ window.close() com fallback de mensagem
+✅ Internacionalização completa (PT-BR, EN, ES)
+✅ Ícone do container corrigido no KDE (Wayland e X11)
 
 v1.0.0 (Futuro) 🔮
 
-    □ Perfil EasyEffects com presets
-    □ Tema claro/escuro
-    □ Localização
+□ ?
+□ Tema claro/escuro
 
 
 ➕ Como adicionar uma sessão nova

@@ -360,6 +360,54 @@
             text-decoration: underline;
         }
 
+        /* ============================================================
+         * i18n: ESTILO DO SELETOR DE IDIOMA
+         * Adicionado no Lote 3. Não afeta nada em PT-BR (só aparece
+         * quando o usuário tem o seletor no rodapé).
+         * ============================================================ */
+        .i18n-seletor-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .i18n-seletor-container .i18n-seletor-label {
+            font-size: 1rem;
+        }
+
+        .i18n-seletor-container select.i18n-seletor {
+            background-color: #1a2236;
+            color: #ffffff;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding-right: 2rem;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.6rem center;
+            background-size: 1em;
+        }
+
+        .i18n-seletor-container select.i18n-seletor:focus {
+            outline: none;
+            border-color: var(--accent-hover);
+            box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
+        }
+
+        .i18n-seletor-container select.i18n-seletor option {
+            background-color: #0b111e;
+            color: #ffffff;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 1rem;
@@ -408,23 +456,29 @@
             }
         }
     </style>
+    <!--
+        i18n: carregado ANTES de script.js para que t()/tOr() estejam
+        disponíveis quando script.js for executado. Em pt-BR, i18n.js
+        não faz nada (HTML já está correto).
+    -->
+    <script src="i18n.js"></script>
     <script src="script.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="hero">
             <img src="icone_app.png" alt="Fedora Only Fans" class="logo" onerror="this.style.display='none'">
-            <div class="version-badge">🚀 v<span class="fof-version"></span></div>
-            <h1>Fedora Only Fans</h1>
-            <p class="subtitle">
+            <div class="version-badge" data-i18n-html="index.badge_versao">🚀 v<span class="fof-version"></span></div>
+            <h1 data-i18n="index.titulo">Fedora Only Fans</h1>
+            <p class="subtitle" data-i18n="index.subtitulo">
                 Painel de automação para configurar, otimizar e personalizar seu Fedora Linux de forma rápida e segura.
             </p>
 
             <div class="hero-buttons">
-                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans', '_blank', 'noopener,noreferrer');" class="badge">
+                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans', '_blank', 'noopener,noreferrer');" class="badge" data-i18n="index.btn_github">
                     🐙 GitHub
                 </a>
-                <a href="#" onclick="event.preventDefault(); window.open('https://www.vitaotub.com', '_blank', 'noopener,noreferrer');" class="badge">
+                <a href="#" onclick="event.preventDefault(); window.open('https://www.vitaotub.com', '_blank', 'noopener,noreferrer');" class="badge" data-i18n-html="index.btn_criador">
                     👤 Criador: <strong>VitãoTub</strong>
                 </a>
             </div>
@@ -432,83 +486,90 @@
 
         <div class="modos-grid">
             <a href="guiado.html" class="modo-card" id="modo-guiado">
-                <span class="recomendado">⭐ Comece por aqui</span>
+                <span class="recomendado" data-i18n="index.badge_recomendado">⭐ Comece por aqui</span>
                 <span class="icon">🧭</span>
-                <h2>Iniciar Configuração</h2>
-                <p>
+                <h2 data-i18n="index.card_guiado_titulo">Iniciar Configuração</h2>
+                <p data-i18n="index.card_guiado_desc">
                     Siga passo a passo pelas sessões de configuração do Fedora, na ordem certa — a ordem importa pro
                     resultado final, então esta é a única forma de percorrê-las.
                 </p>
                 <ul class="features">
-                    <li>Sessões organizadas em ordem lógica</li>
-                    <li>Navegação com botões Anterior/Próximo</li>
-                    <li>Ideal para a configuração inicial do sistema</li>
+                    <li data-i18n="index.card_guiado_feat1">Sessões organizadas em ordem lógica</li>
+                    <li data-i18n="index.card_guiado_feat2">Navegação com botões Anterior/Próximo</li>
+                    <li data-i18n="index.card_guiado_feat3">Ideal para a configuração inicial do sistema</li>
                 </ul>
-                <span class="badge-modo badge-guided">🧭 Passo a passo</span>
+                <span class="badge-modo badge-guided" data-i18n="index.card_guiado_badge">🧭 Passo a passo</span>
             </a>
 
             <a href="manutencao.html" class="modo-card" id="modo-manutencao">
                 <span class="icon">🛠️</span>
-                <h2>Manutenção</h2>
-                <p>
+                <h2 data-i18n="index.card_manut_titulo">Manutenção</h2>
+                <p data-i18n="index.card_manut_desc">
                     Tarefas do dia a dia que não dependem de ordem: gerenciar kernels, limpar arquivos temporários,
                     ajustar o GRUB, atualizar ou desinstalar o FOF.
                 </p>
                 <ul class="features">
-                    <li>Gerenciamento de kernels instalados</li>
-                    <li>Limpeza de arquivos temporários</li>
-                    <li>Configuração do GRUB</li>
-                    <li>Atualizar ou desinstalar o FOF</li>
+                    <li data-i18n="index.card_manut_feat1">Gerenciamento de kernels instalados</li>
+                    <li data-i18n="index.card_manut_feat2">Limpeza de arquivos temporários</li>
+                    <li data-i18n="index.card_manut_feat3">Configuração do GRUB</li>
+                    <li data-i18n="index.card_manut_feat4">Atualizar ou desinstalar o FOF</li>
                 </ul>
-                <span class="badge-modo badge-advanced">🛠️ Manutenção</span>
+                <span class="badge-modo badge-advanced" data-i18n="index.card_manut_badge">🛠️ Manutenção</span>
             </a>
         </div>
 
         <div class="info-extra">
-            <h3>📋 Sobre o Fedora Only Fans</h3>
-            <p>
+            <h3 data-i18n="index.sobre_titulo">📋 Sobre o Fedora Only Fans</h3>
+            <p data-i18n="index.sobre_texto">
                 O FOF é uma ferramenta open-source que automatiza as principais tarefas de configuração do Fedora Linux, desde a instalação de codecs e repositórios até a otimização do sistema e gerenciamento de kernels.
             </p>
             <div class="dicas">
                 <div class="dica">
                     <span class="emoji">💾</span>
-                    <span>Progresso de cada ação salvo automaticamente no servidor local</span>
+                    <span data-i18n="index.dica1">Progresso de cada ação salvo automaticamente no servidor local</span>
                 </div>
                 <div class="dica">
                     <span class="emoji">🔄</span>
-                    <span>Botões de reversão para desfazer alterações</span>
+                    <span data-i18n="index.dica2">Botões de reversão para desfazer alterações</span>
                 </div>
                 <div class="dica">
                     <span class="emoji">📡</span>
-                    <span>Logs em tempo real via Server-Sent Events</span>
+                    <span data-i18n="index.dica3">Logs em tempo real via Server-Sent Events</span>
                 </div>
                 <div class="dica">
                     <span class="emoji">📊</span>
-                    <span>Barras de progresso para acompanhar a execução</span>
+                    <span data-i18n="index.dica4">Barras de progresso para acompanhar a execução</span>
                 </div>
                 <div class="dica">
                     <span class="emoji">🛡️</span>
-                    <span>Comandos validados e testados para o Fedora</span>
+                    <span data-i18n="index.dica5">Comandos validados e testados para o Fedora</span>
                 </div>
                 <div class="dica">
                     <span class="emoji">🐧</span>
-                    <span>Suporte para GNOME, KDE, XFCE e outros</span>
+                    <span data-i18n="index.dica6">Suporte para GNOME, KDE, XFCE e outros</span>
                 </div>
             </div>
         </div>
 
+        <!-- ============================================================
+             i18n: SELETOR DE IDIOMA
+             O container vazio é preenchido por criarSeletorIdioma()
+             em i18n.js. Em pt-BR funciona igual (o seletor mostra
+             "Português" selecionado, mas nada muda ao redor).
+             ============================================================ -->
+        <div class="i18n-seletor-container" id="i18n-seletor"></div>
+
         <footer>
             <p>
-                Fedora Only Fans — Feito com ❤️ por
-                <a href="#" onclick="event.preventDefault(); window.open('https://www.vitaotub.com', '_blank', 'noopener,noreferrer');">VitãoTub</a>
+                <span data-i18n-html="index.footer_creditos">Fedora Only Fans — Feito com ❤️ por <a href="#" onclick="event.preventDefault(); window.open('https://www.vitaotub.com', '_blank', 'noopener,noreferrer');">VitãoTub</a></span>
                 &bull;
-                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans', '_blank', 'noopener,noreferrer');">GitHub</a>
+                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans', '_blank', 'noopener,noreferrer');" data-i18n="index.footer_link_github">GitHub</a>
                 &bull;
-                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans/blob/main/README.md', '_blank', 'noopener,noreferrer');">Documentação</a>
+                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans/blob/main/README.md', '_blank', 'noopener,noreferrer');" data-i18n="index.footer_link_doc">Documentação</a>
                 &bull;
-                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans/issues', '_blank', 'noopener,noreferrer');">Reportar Bug</a>
+                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans/issues', '_blank', 'noopener,noreferrer');" data-i18n="index.footer_link_bug">Reportar Bug</a>
             </p>
-            <p style="font-size: 0.8rem; color: #4b5563;">
+            <p style="font-size: 0.8rem; color: #4b5563;" data-i18n="index.footer_legal">
                 Fedora é uma marca registrada da Red Hat, Inc. Este projeto não é afiliado à Red Hat.
             </p>
         </footer>

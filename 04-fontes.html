@@ -7,31 +7,30 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ===== CONTEÚDO DA SESSÃO ===== -->
     <div class="sessao-container" id="sessao-04-fontes">
         <div class="sessao-titulo">
             <span class="sessao-label">Sessão 5</span>
-            🔤 Fontes para Compatibilidade
+            <span data-i18n="sessoes.04-fontes.titulo">🔤 Fontes para Compatibilidade</span>
         </div>
 
         <div class="bloco-comando">
             <div class="comando-info">
-                <h3>Instalar fontes Microsoft para compatibilidade</h3>
-                <p>Instala o instalador de fontes Microsoft do SourceForge para obter Arial, Times, Calibri, etc.</p>
+                <h3 data-i18n="sessoes.04-fontes.fontes_titulo">Instalar fontes Microsoft para compatibilidade</h3>
+                <p data-i18n="sessoes.04-fontes.fontes_desc">Instala o instalador de fontes Microsoft do SourceForge para obter Arial, Times, Calibri, etc.</p>
 
-                <div class="aviso-caixa">
+                <div class="aviso-caixa" data-i18n="sessoes.04-fontes.fontes_aviso">
                     ⚠️ Este processo baixa e instala fontes proprietárias da Microsoft.
                     Certifique-se de estar em conformidade com os termos de licenciamento.
                 </div>
 
                 <div class="grupo-botoes">
-                    <button class="btn-executar azul-claro" onclick="executarFontesMS()" data-comando="fontes-ms-all" id="btn-fontes-ms-all">
+                    <button class="btn-executar azul-claro" onclick="executarFontesMS()" data-comando="fontes-ms-all" id="btn-fontes-ms-all" data-i18n="sessoes.04-fontes.btn_instalar">
                         📦 Instalar Fontes MS
                     </button>
-                    <button class="btn-reverter" onclick="reverterFontesMS()" disabled>↩️ Remover</button>
+                    <button class="btn-reverter" onclick="reverterFontesMS()" disabled data-i18n="sessoes.04-fontes.btn_remover">↩️ Remover</button>
                 </div>
 
-                <div class="info-extra">
+                <div class="info-extra" data-i18n="sessoes.04-fontes.info_extra">
                     ℹ️ Fontes instaladas: Arial, Times New Roman, Calibri, Cambria, Candara, Consolas, Constantia, Corbel, e outras.
                 </div>
             </div>
@@ -55,42 +54,41 @@
         // SESSÃO 04: FONTES PARA COMPATIBILIDADE
         // ============================================================
 
-        // NOTA: 'var' é proposital — ver comentário em 00-boas-vindas.html
-        // sobre por que 'const'/'let' não podem ser usados aqui.
-        var ID_COMANDO = 'fontes-ms-all';
+        // CORREÇÃO #15: renomeado para não colidir no escopo global.
+        var ID_COMANDO_FONTES_MS = 'fontes-ms-all';
 
-        /**
-         * Executa a instalação das fontes Microsoft
-         */
+        // i18n helpers locais
+        function _t(chave, fallback) {
+            return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+        }
+        function _tVars(chave, fallback, vars) {
+            return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
+        }
+
         async function executarFontesMS() {
             const comando = 'sudo dnf install -y curl cabextract fontconfig && curl -L https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm -o /tmp/msfonts.rpm && rpm2cpio /tmp/msfonts.rpm | cpio -idmv -D /tmp/ && sudo mkdir -p /usr/share/fonts/microsoft && sudo mv /tmp/usr/share/fonts/msttcore/* /usr/share/fonts/microsoft/ && sudo fc-cache -f -v && rm -rf /tmp/msfonts.rpm /tmp/usr';
 
-            await executarComandoGenerico(ID_COMANDO, comando, 'Instalando Fontes Microsoft');
+            await executarComandoGenerico(ID_COMANDO_FONTES_MS, comando, _t('sessoes.04-fontes.btn_instalar', '📦 Instalar Fontes MS'));
         }
 
-        /**
-         * Remove as fontes Microsoft
-         */
         async function reverterFontesMS() {
-            if (!isExecutado(ID_COMANDO)) {
-                alert('As fontes Microsoft não estão instaladas.');
+            if (!isExecutado(ID_COMANDO_FONTES_MS)) {
+                alert(_tVars('comum.nao_instalado', 'As fontes Microsoft não estão instaladas.', { nome: 'Fontes Microsoft' }));
                 return;
             }
 
-            if (!confirm('Deseja remover as fontes Microsoft?')) return;
+            if (!confirm(_t('sessoes.04-fontes.confirmar_remover', 'Deseja remover as fontes Microsoft?'))) return;
 
-            const logBox = document.getElementById('log-' + ID_COMANDO);
-            const btn = document.getElementById('btn-' + ID_COMANDO);
+            const logBox = document.getElementById('log-' + ID_COMANDO_FONTES_MS);
+            const btn = document.getElementById('btn-' + ID_COMANDO_FONTES_MS);
             const btnReverter = document.querySelector('.btn-reverter');
 
             if (logBox) {
                 logBox.innerHTML = '';
                 logBox.style.display = 'block';
-                logBox.style.height = '100px';
-                logBox.style.maxHeight = '100px';
                 const infoLine = document.createElement('div');
                 infoLine.className = 'log-line info';
-                infoLine.textContent = '🗑️ Removendo fontes Microsoft...';
+                infoLine.textContent = _t('sessoes.04-fontes.log_removendo', '🗑️ Removendo fontes Microsoft...');
                 logBox.appendChild(infoLine);
                 logBox.scrollTop = logBox.scrollHeight;
             }
@@ -107,10 +105,10 @@
 
                 await new Promise(resolve => setTimeout(resolve, 3000));
 
-                desmarcarComoExecutado(ID_COMANDO);
+                desmarcarComoExecutado(ID_COMANDO_FONTES_MS);
 
                 if (btn) {
-                    btn.textContent = '📦 Instalar Fontes MS';
+                    btn.textContent = _t('sessoes.04-fontes.btn_instalar', '📦 Instalar Fontes MS');
                     btn.style.backgroundColor = '#3b82f6';
                     btn.style.cursor = 'pointer';
                     btn.disabled = false;
@@ -123,11 +121,10 @@
                 if (logBox) {
                     const successLine = document.createElement('div');
                     successLine.className = 'log-line success';
-                    successLine.textContent = '✅ Fontes Microsoft removidas com sucesso!';
+                    successLine.textContent = _t('sessoes.04-fontes.log_sucesso_remover', '✅ Fontes Microsoft removidas com sucesso!');
                     logBox.appendChild(successLine);
                     logBox.scrollTop = logBox.scrollHeight;
                 }
-
 
             } catch (e) {
                 if (logBox) {
@@ -140,17 +137,14 @@
             }
         }
 
-        // executarComandoGenerico() agora é compartilhada em script.js —
-        // antes existia uma cópia idêntica aqui (ver comentário em script.js).
-
         // ===== RESTAURAR ESTADO DA SESSÃO =====
         function restaurarEstadoSessao() {
             const btnReverter = document.querySelector('.btn-reverter');
 
-            if (isExecutado(ID_COMANDO)) {
-                const btn = document.getElementById('btn-' + ID_COMANDO);
+            if (isExecutado(ID_COMANDO_FONTES_MS)) {
+                const btn = document.getElementById('btn-' + ID_COMANDO_FONTES_MS);
                 if (btn) {
-                    const textoFinal = getTextoAposExecucao(ID_COMANDO);
+                    const textoFinal = getTextoAposExecucao(ID_COMANDO_FONTES_MS);
                     btn.textContent = textoFinal;
                     btn.style.backgroundColor = '#4b5563';
                     btn.style.cursor = 'default';

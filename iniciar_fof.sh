@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Inicialização
-# Versão: 0.9.8-alpha
+# Versão: 0.9.9-alpha
 # ============================================================
 #
 # Este script inicia o servidor e abre a interface do FOF
@@ -20,7 +20,7 @@ set -o pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
 cd "$DIR"
 
-VERSION="0.9.8-alpha"
+VERSION="0.9.9-alpha"
 DEBUG=false
 NO_CLEAN=false
 LOG_FILE="/tmp/fof-$(date +%Y%m%d-%H%M%S).log"
@@ -97,7 +97,7 @@ abrir_no_terminal_nativo() {
 
     if command -v xfce4-terminal &> /dev/null; then
         log_debug "Usando xfce4-terminal (XFCE)"
-        exec xfce4-terminal --title "$titulo" -e "bash \"$script_path\" --no-fork"
+        exec xfce4-terminal --title="$titulo" -e "bash \"$script_path\" --no-fork"
     fi
 
     for term in tilix alacritty kitty xterm x-terminal-emulator; do
@@ -111,7 +111,16 @@ abrir_no_terminal_nativo() {
     exit 1
 }
 
-if [ "$1" != "--no-fork" ] && [ "$1" != "--debug" ] && [ "$1" != "--no-clean" ] && [ "$1" != "--help" ] && [ "$1" != "-h" ] && [ "$1" != "-d" ]; then
+PRECISA_REINVOCAR=true
+for arg in "$@"; do
+    case "$arg" in
+        --no-fork|--debug|-d|--no-clean|--help|-h)
+            PRECISA_REINVOCAR=false
+            ;;
+    esac
+done
+
+if [ "$PRECISA_REINVOCAR" = true ]; then
     SCRIPT_PATH="$(realpath "${BASH_SOURCE}")"
     abrir_no_terminal_nativo "$SCRIPT_PATH"
     exit 0
@@ -156,7 +165,7 @@ compilar_container() {
 }
 
 # ============================================================
-# VERIFICAÇÕES - PARTE ATUALIZADA
+# VERIFICAÇÕES
 # ============================================================
 
 verificar_arquivos() {
@@ -168,7 +177,6 @@ verificar_arquivos() {
         exit 1
     fi
 
-    # Arquivos principais da interface
     if [ ! -f "$DIR/index.html" ]; then
         log_error "Arquivo index.html não encontrado!"
         exit 1
@@ -190,7 +198,10 @@ verificar_arquivos() {
         log_warning "Arquivo script.js não encontrado!"
     fi
 
-    # Verifica as sessões (00 a 08)
+    if [ ! -f "$DIR/i18n.js" ]; then
+        log_warning "Arquivo i18n.js não encontrado!"
+    fi
+
     local sessoes=(
         "00-boas-vindas.html"
         "01-restauracao.html"
@@ -424,7 +435,6 @@ abrir_chromium() {
 abrir_navegador() {
     local url="http://localhost:3000"
 
-    # Tenta abrir o container primeiro (agora usando a URL do servidor)
     if abrir_container "$url"; then
         return 0
     fi
@@ -437,7 +447,6 @@ abrir_navegador() {
 
     log_warning "Container não disponível. Usando navegador..."
 
-    # Abre a landing page via servidor (não mais via file://)
     if command -v firefox &> /dev/null; then
         abrir_firefox "$url"
         return 0
@@ -463,13 +472,13 @@ abrir_navegador() {
 # ============================================================
 
 criar_atalho() {
-    local desktop_file="$HOME/.local/share/applications/fedora-only-fans.desktop"
+    # O nome do arquivo .desktop DEVE ser igual ao app_id definido em
+    # g_set_prgname() no C (fof-container). O KDE Plasma em Wayland é
+    # rigoroso com isso: se o nome do .desktop não bater com o app_id
+    # da janela, o ícone não é associado e o toolkit mostra o ícone
+    # genérico ("W" do WebKitGTK).
+    local desktop_file="$HOME/.local/share/applications/fof-container.desktop"
     local icone="$DIR/icone_app.png"
-
-    if [ -f "$desktop_file" ] && [ ! "$DEBUG" = true ]; then
-        log_info "Atalho já existe: $desktop_file"
-        return 0
-    fi
 
     log_info "Criando atalho no menu de aplicativos..."
 
@@ -480,6 +489,17 @@ criar_atalho() {
         log_warning "Ícone não encontrado, usando ícone genérico"
     fi
 
+    # Ícone no tema hicolor com o MESMO nome do app_id
+    if [ -f "$DIR/icone_app.png" ]; then
+        mkdir -p "$HOME/.local/share/icons/hicolor/256x256/apps"
+        cp "$DIR/icone_app.png" "$HOME/.local/share/icons/hicolor/256x256/apps/fof-container.png"
+        gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+        log_success "Ícone do container instalado em hicolor"
+    fi
+
+    # Remove .desktop antigo com nome errado, se existir
+    rm -f "$HOME/.local/share/applications/fedora-only-fans.desktop" 2>/dev/null
+
     cat > "$desktop_file" <<EOF
 [Desktop Entry]
 Version=1.0
@@ -487,10 +507,11 @@ Type=Application
 Name=Fedora Only Fans
 Comment=Painel de Automação do Fedora
 Exec=$DIR/iniciar_fof.sh --no-fork
-Icon=$icone
+Icon=fof-container
 Terminal=false
 Categories=System;Settings;
 StartupNotify=true
+StartupWMClass=fof-container
 X-GNOME-Autostart-enabled=true
 EOF
 
@@ -498,7 +519,6 @@ EOF
     update-desktop-database ~/.local/share/applications/ 2>/dev/null
 
     log_success "Atalho criado: $desktop_file"
-    log_info "O FOF aparecerá no menu de aplicativos como 'Fedora Only Fans'"
 }
 
 # ============================================================
@@ -558,8 +578,6 @@ main() {
                 ;;
         esac
     done
-
-    shift $((OPTIND-1)) 2>/dev/null
 
     log_header
 

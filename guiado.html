@@ -12,11 +12,19 @@
         <div class="header-guide">
             <div class="titulo">
                 <img src="icone_app.png" alt="FOF" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain;" onerror="this.style.display='none'">
-                <h1>Configuração do Fedora</h1>
-                <span class="badge-modo">🧭 Passo a Passo</span>
+                <h1 data-i18n="guiado.titulo">Configuração do Fedora</h1>
+                <span class="badge-modo" data-i18n="guiado.badge_modo">🧭 Passo a Passo</span>
                 <span style="color: var(--text-muted); font-size: 0.8rem;">v<span class="fof-version"></span></span>
             </div>
-            <a href="index.html" class="voltar">← Voltar ao início</a>
+            <!--
+                i18n: seletor de idioma injetado dinamicamente por
+                criarSeletorIdioma() do i18n.js. Estilos completos vêm
+                no Lote 10 (style.css).
+            -->
+            <div class="header-direita">
+                <div class="i18n-seletor-container" id="i18n-seletor"></div>
+                <a href="index.html" class="voltar" data-i18n="comum.voltar_inicio">← Voltar ao início</a>
+            </div>
         </div>
 
         <!-- ===== BARRA DE POSIÇÃO ===== -->
@@ -36,7 +44,7 @@
         <div id="sessao-container">
             <div class="loading-sessao">
                 <div class="spinner"></div>
-                <p>Carregando sessão...</p>
+                <p id="loading-inicial-texto">Carregando sessão...</p>
             </div>
         </div>
 
@@ -46,12 +54,13 @@
                 <span id="info-sessao"><strong>1/7</strong> - Carregando...</span>
             </div>
             <div class="botoes">
-                <button class="btn-voltar" id="btn-anterior" onclick="sessaoAnterior()">◀ Anterior</button>
-                <button class="btn-proximo" id="btn-proximo" onclick="proximaSessao()">Próximo ▶</button>
+                <button class="btn-voltar" id="btn-anterior" onclick="sessaoAnterior()" data-i18n="comum.btn_anterior">◀ Anterior</button>
+                <button class="btn-proximo" id="btn-proximo" onclick="proximaSessao()" data-i18n="comum.btn_proximo">Próximo ▶</button>
             </div>
         </div>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="script.js"></script>
     <script>
         // ============================================================
@@ -72,17 +81,32 @@
             '#357a38'  // Sessão 7 - Produção Multimídia (verde escuro)
         ];
 
+        // ------------------------------------------------------------
+        // i18n helpers locais (wrappers sobre tOr global)
+        // tOr(chave, fallback) → string traduzida, ou fallback em PT-BR.
+        // Como o fallback é o próprio texto PT-BR, a UI em pt-BR fica
+        // idêntica ao original.
+        // ------------------------------------------------------------
+        function _t(chave, fallback) {
+            return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+        }
+
+        function _tVars(chave, fallback, vars) {
+            return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
+        }
+
         async function carregarSessao(index) {
             var container = document.getElementById('sessao-container');
             if (!container) return;
 
             var nomeSessao = SESSOES_PRINCIPAIS[index];
             var arquivo = nomeSessao + '.html';
+            var nomeTraduzido = nomeDaSessao(nomeSessao);
 
             container.innerHTML = `
                 <div class="loading-sessao">
                     <div class="spinner"></div>
-                    <p>Carregando ${nomeDaSessao(nomeSessao)}...</p>
+                    <p>${_tVars('comum.loading_sessao', 'Carregando ' + nomeTraduzido + '...', { nome: nomeTraduzido })}</p>
                 </div>
             `;
 
@@ -130,6 +154,12 @@
 
                 numerarSessao(nomeSessao, container);
 
+                // i18n: aplica traduções dentro do subtree recém-injetado
+                // (a sessão carregada tem seus próprios data-i18n).
+                if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
+                    I18N.aplicarTraducoes(container);
+                }
+
                 sessoesCarregadas[nomeSessao] = true;
                 var event = new CustomEvent('sessao-carregada', { detail: { sessao: nomeSessao } });
                 document.dispatchEvent(event);
@@ -137,12 +167,14 @@
 
             } catch (e) {
                 console.error('Erro ao carregar sessão:', e);
+                var msgErro = _t('comum.erro_carregar_sessao', '❌ Erro ao carregar sessão');
+                var msgTentar = _t('comum.btn_tentar_novamente', '🔄 Tentar novamente');
                 container.innerHTML = `
                     <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444; border-radius: 12px;">
-                        <h3>❌ Erro ao carregar sessão</h3>
+                        <h3>${msgErro}</h3>
                         <p style="color: var(--text-muted);">${e.message}</p>
                         <button onclick="carregarSessao(${index})" style="margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer;">
-                            🔄 Tentar novamente
+                            ${msgTentar}
                         </button>
                     </div>
                 `;
@@ -164,7 +196,12 @@
             if (btnProximo) btnProximo.disabled = (index === total - 1);
 
             if (infoSessao) {
-                infoSessao.innerHTML = '<strong>' + (index + 1) + '/' + total + '</strong> - ' + (nomeDaSessao(SESSOES_PRINCIPAIS[index]));
+                // i18n: usa interpolação de {n}, {total} e {nome}.
+                infoSessao.innerHTML = _tVars(
+                    'comum.sessao_info_nav',
+                    '<strong>' + (index + 1) + '/' + total + '</strong> - ' + nomeDaSessao(SESSOES_PRINCIPAIS[index]),
+                    { n: index + 1, total: total, nome: nomeDaSessao(SESSOES_PRINCIPAIS[index]) }
+                );
             }
 
             atualizarBarraPosicao(index, total);
@@ -181,7 +218,11 @@
                 fill.style.width = percent + '%';
             }
             if (text) {
-                text.textContent = (atual + 1) + ' de ' + total;
+                text.textContent = _tVars(
+                    'comum.sessao_posicao',
+                    (atual + 1) + ' de ' + total,
+                    { atual: atual + 1, total: total }
+                );
             }
         }
 
@@ -206,7 +247,6 @@
                 dot.className = 'dot';
                 dot.dataset.index = i;
                 dot.title = nomeDaSessao(SESSOES_PRINCIPAIS[i]);
-                // Aplica cor fixa da sessão
                 dot.style.backgroundColor = CORES_SESSOES[i] || '#3c67e3';
                 dot.style.borderColor = CORES_SESSOES[i] || '#3c67e3';
                 dot.addEventListener('click', function() {
@@ -221,12 +261,12 @@
         function atualizarIndicadores() {
             var dots = document.querySelectorAll('.sessao-indicador .dot');
             dots.forEach(function(dot, index) {
-                // Remove classes de status anteriores
-                dot.classList.remove('ativa', 'concluida', 'pulada');
-                // Aplica cor fixa
+                // CORREÇÃO #8: 'concluida' e 'pulada' nunca são adicionadas —
+                // não há "relatório agregado" no FOF. Só a 'ativa'
+                // (destacada) importa.
+                dot.classList.remove('ativa');
                 dot.style.backgroundColor = CORES_SESSOES[index] || '#3c67e3';
                 dot.style.borderColor = CORES_SESSOES[index] || '#3c67e3';
-                // Destaca apenas a sessão atual
                 if (index === sessaoAtual) {
                     dot.classList.add('ativa');
                 }
@@ -234,29 +274,42 @@
         }
 
         // ===== SOBRESCRITAS =====
+        // CORREÇÃO #7: preserva o contrato async das funções originais.
         var marcarComoExecutadoOriginal = marcarComoExecutado;
         var desmarcarComoExecutadoOriginal = desmarcarComoExecutado;
         var marcarComoPuladoOriginal = marcarComoPulado;
 
-        marcarComoExecutado = function(idComando) {
-            marcarComoExecutadoOriginal(idComando);
+        marcarComoExecutado = async function(idComando) {
+            await marcarComoExecutadoOriginal(idComando);
             setTimeout(function() {
                 atualizarIndicadores();
             }, 100);
         };
 
-        desmarcarComoExecutado = function(idComando) {
-            desmarcarComoExecutadoOriginal(idComando);
+        desmarcarComoExecutado = async function(idComando) {
+            await desmarcarComoExecutadoOriginal(idComando);
             atualizarIndicadores();
         };
 
-        marcarComoPulado = function(idComando) {
-            marcarComoPuladoOriginal(idComando);
+        marcarComoPulado = async function(idComando) {
+            await marcarComoPuladoOriginal(idComando);
             atualizarIndicadores();
         };
 
         // ===== INICIALIZAÇÃO =====
         document.addEventListener('DOMContentLoaded', function() {
+            // i18n: cria o seletor assim que o DOM estiver pronto
+            // (idempotente — chamadas múltiplas não duplicam).
+            if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
+                I18N.criarSeletorIdioma();
+            }
+
+            // i18n: traduz o texto do loading inicial (antes de qualquer sessão)
+            var loadingTexto = document.getElementById('loading-inicial-texto');
+            if (loadingTexto) {
+                loadingTexto.textContent = _t('comum.spinner_carregando_sessao', 'Carregando sessão...');
+            }
+
             if (typeof getProgress !== 'undefined') {
                 criarIndicadores();
                 irParaSessao(0);
@@ -268,16 +321,21 @@
                         irParaSessao(0);
                     } else {
                         console.error('❌ script.js não foi carregado!');
+                        var msgErro = _t('comum.erro_script_js', '❌ Erro: script.js não foi carregado!');
+                        var msgDica = _t('comum.erro_script_js_msg', 'Recarregue a página ou verifique se o arquivo existe.');
                         document.getElementById('sessao-container').innerHTML = `
                             <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444;">
-                                <h3>❌ Erro: script.js não foi carregado!</h3>
-                                <p style="color: var(--text-muted);">Recarregue a página ou verifique se o arquivo existe.</p>
+                                <h3>${msgErro}</h3>
+                                <p style="color: var(--text-muted);">${msgDica}</p>
                             </div>
                         `;
                     }
                 }, 200);
             }
         });
+
+        // i18n: se o idioma for trocado via setLang(), a página recarrega
+        // (ver i18n.js) — não precisa de listener extra aqui.
     </script>
 </body>
 </html>

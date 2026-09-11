@@ -11,17 +11,17 @@
     <div class="sessao-container" id="sessao-03-repositorios">
         <div class="sessao-titulo">
             <span class="sessao-label">Sessão 4</span>
-            📦 Repositórios, Codecs e Aceleração Gráfica
+            <span data-i18n="sessoes.03-repositorios.titulo">📦 Repositórios, Codecs e Aceleração Gráfica</span>
         </div>
 
         <!-- RPM Fusion -->
         <div class="bloco-comando">
             <div class="comando-info">
-                <h3>Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
-                <p>Instala e sincroniza os repositórios oficiais RPM Fusion, adiciona suporte a metadados do AppStream e executa um ajuste de segurança.</p>
+                <h3 data-i18n="sessoes.03-repositorios.rpm_titulo">Ativar Repositórios RPM Fusion (Livre e Não-Livre)</h3>
+                <p data-i18n="sessoes.03-repositorios.rpm_desc">Instala e sincroniza os repositórios oficiais RPM Fusion, adiciona suporte a metadados do AppStream e executa um ajuste de segurança.</p>
                 <div class="grupo-botoes">
-                    <button class="btn-executar" onclick="executarRPMFusion()" data-comando="rpm-fusion" id="btn-rpm-fusion">Ativar RPM Fusion</button>
-                    <button class="btn-reverter" onclick="reverterRPMFusion()" disabled>↩️ Remover</button>
+                    <button class="btn-executar" onclick="executarRPMFusion()" data-comando="rpm-fusion" id="btn-rpm-fusion" data-i18n="sessoes.03-repositorios.btn_ativar_rpm">Ativar RPM Fusion</button>
+                    <button class="btn-reverter" onclick="reverterRPMFusion()" disabled data-i18n="sessoes.03-repositorios.btn_remover_rpm">↩️ Remover</button>
                 </div>
             </div>
 
@@ -35,11 +35,11 @@
         <!-- Flatpak -->
         <div class="bloco-comando">
             <div class="comando-info">
-                <h3>Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
-                <p>Adiciona o repositório global Flathub e garante a instalação do gerenciador de pacotes Flatpak no sistema.</p>
+                <h3 data-i18n="sessoes.03-repositorios.flatpak_titulo">Habilitar Suporte Completo ao Flatpak (Flathub)</h3>
+                <p data-i18n="sessoes.03-repositorios.flatpak_desc">Adiciona o repositório global Flathub e garante a instalação do gerenciador de pacotes Flatpak no sistema.</p>
                 <div class="grupo-botoes">
-                    <button class="btn-executar verde" onclick="executarFlatpak()" data-comando="flatpak-setup" id="btn-flatpak-setup">Configurar Flatpak</button>
-                    <button class="btn-reverter" onclick="reverterFlatpak()" disabled>↩️ Remover</button>
+                    <button class="btn-executar verde" onclick="executarFlatpak()" data-comando="flatpak-setup" id="btn-flatpak-setup" data-i18n="sessoes.03-repositorios.btn_configurar_flatpak">Configurar Flatpak</button>
+                    <button class="btn-reverter" onclick="reverterFlatpak()" disabled data-i18n="sessoes.03-repositorios.btn_remover_flatpak">↩️ Remover</button>
                 </div>
             </div>
 
@@ -53,11 +53,11 @@
         <!-- Codecs -->
         <div class="bloco-comando">
             <div class="comando-info">
-                <h3>Instalar Codecs Multimídia Essenciais</h3>
-                <p>Substitui o ffmpeg-free pela versão completa sem restrições, instala plugins gstreamer essenciais e habilita o Cisco OpenH264.</p>
+                <h3 data-i18n="sessoes.03-repositorios.codecs_titulo">Instalar Codecs Multimídia Essenciais</h3>
+                <p data-i18n="sessoes.03-repositorios.codecs_desc">Substitui o ffmpeg-free pela versão completa sem restrições, instala plugins gstreamer essenciais e habilita o Cisco OpenH264.</p>
                 <div class="grupo-botoes">
-                    <button class="btn-executar" onclick="executarCodecs()" data-comando="codecs-essenciais" id="btn-codecs-essenciais">Instalar Codecs</button>
-                    <button class="btn-reverter" onclick="reverterCodecs()" disabled>↩️ Reverter</button>
+                    <button class="btn-executar" onclick="executarCodecs()" data-comando="codecs-essenciais" id="btn-codecs-essenciais" data-i18n="sessoes.03-repositorios.btn_instalar_codecs">Instalar Codecs</button>
+                    <button class="btn-reverter" onclick="reverterCodecs()" disabled data-i18n="sessoes.03-repositorios.btn_reverter_codecs">↩️ Reverter</button>
                 </div>
             </div>
 
@@ -71,11 +71,11 @@
         <!-- Extras Tainted -->
         <div class="bloco-comando">
             <div class="comando-info">
-                <h3>Extras e DVD Play (Repositórios Tainted)</h3>
-                <p>Habilita sub-repositórios restritos para habilitar reprodução de DVDs comerciais e firmware proprietário.</p>
+                <h3 data-i18n="sessoes.03-repositorios.extras_titulo">Extras e DVD Play (Repositórios Tainted)</h3>
+                <p data-i18n="sessoes.03-repositorios.extras_desc">Habilita sub-repositórios restritos para habilitar reprodução de DVDs comerciais e firmware proprietário.</p>
                 <div class="grupo-botoes">
-                    <button class="btn-executar" onclick="executarExtrasTainted()" data-comando="extras-tainted" id="btn-extras-tainted">Instalar Extras</button>
-                    <button class="btn-reverter" onclick="reverterExtrasTainted()" disabled>↩️ Reverter</button>
+                    <button class="btn-executar" onclick="executarExtrasTainted()" data-comando="extras-tainted" id="btn-extras-tainted" data-i18n="sessoes.03-repositorios.btn_instalar_extras">Instalar Extras</button>
+                    <button class="btn-reverter" onclick="reverterExtrasTainted()" disabled data-i18n="sessoes.03-repositorios.btn_reverter_extras">↩️ Reverter</button>
                 </div>
             </div>
 
@@ -89,11 +89,11 @@
         <!-- VA-API -->
         <div class="bloco-comando destaque">
             <div class="comando-info">
-                <h3>VA-API e Codecs para Aceleração Gráfica</h3>
-                <p>Instala drivers e utilitários de aceleração de vídeo em hardware para placas de vídeo AMD e Intel.</p>
+                <h3 data-i18n="sessoes.03-repositorios.vaapi_titulo">VA-API e Codecs para Aceleração Gráfica</h3>
+                <p data-i18n="sessoes.03-repositorios.vaapi_desc">Instala drivers e utilitários de aceleração de vídeo em hardware para placas de vídeo AMD e Intel.</p>
                 <div class="botoes-flex">
-                    <button class="btn-executar" onclick="executarVaapi()" data-comando="vaapi-amd" id="btn-vaapi-amd">🚀 Instalação Padrão</button>
-                    <button class="btn-executar cinza" onclick="executarVaapiSwap()" data-comando="vaapi-swap" id="btn-vaapi-swap">🔄 Alternativa</button>
+                    <button class="btn-executar" onclick="executarVaapi()" data-comando="vaapi-amd" id="btn-vaapi-amd" data-i18n="sessoes.03-repositorios.btn_vaapi_padrao">🚀 Instalação Padrão</button>
+                    <button class="btn-executar cinza" onclick="executarVaapiSwap()" data-comando="vaapi-swap" id="btn-vaapi-swap" data-i18n="sessoes.03-repositorios.btn_vaapi_alt">🔄 Alternativa</button>
                 </div>
             </div>
 
@@ -117,35 +117,28 @@
         // SESSÃO 03: REPOSITÓRIOS, CODECS E ACELERAÇÃO GRÁFICA
         // ============================================================
 
-        // executarComandoGenerico() agora é compartilhada em script.js —
-        // antes existia uma cópia idêntica aqui (ver comentário em script.js).
-
-        /**
-         * Executa a ativação do RPM Fusion
-         */
-        async function executarRPMFusion() {
-            const idComando = 'rpm-fusion';
-            // CORREÇÃO: a versão do Fedora estava fixa em "44" na URL do
-            // RPM Fusion — funcionava só em quem estivesse exatamente no
-            // Fedora 44, falhando (404) em qualquer outra versão. Agora usa
-            // $(rpm -E %fedora), que resolve para a versão real do sistema
-            // em tempo de execução (funciona em qualquer Fedora, presente
-            // ou futuro).
-            const comando = 'sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && sudo dnf install -y rpmfusion-*-appstream-data && sudo dnf update -y --refresh';
-            await executarComandoGenerico(idComando, comando, 'Ativando RPM Fusion');
+        // i18n helpers locais
+        function _t(chave, fallback) {
+            return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+        }
+        function _tVars(chave, fallback, vars) {
+            return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
         }
 
-        /**
-         * Remove o RPM Fusion
-         */
+        async function executarRPMFusion() {
+            const idComando = 'rpm-fusion';
+            const comando = 'sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && sudo dnf install -y rpmfusion-*-appstream-data && sudo dnf update -y --refresh';
+            await executarComandoGenerico(idComando, comando, _t('sessoes.03-repositorios.btn_ativar_rpm', 'Ativar RPM Fusion'));
+        }
+
         async function reverterRPMFusion() {
             const idComando = 'rpm-fusion';
             if (!isExecutado(idComando)) {
-                alert('RPM Fusion não está ativado.');
+                alert(_tVars('comum.nao_instalado', 'RPM Fusion não está ativado.', { nome: 'RPM Fusion' }));
                 return;
             }
 
-            if (!confirm('Deseja remover os repositórios RPM Fusion?')) return;
+            if (!confirm(_t('sessoes.03-repositorios.confirmar_remover_rpm', 'Deseja remover os repositórios RPM Fusion?'))) return;
 
             const logBox = document.getElementById('log-rpm-fusion');
             const btn = document.getElementById('btn-rpm-fusion');
@@ -154,11 +147,9 @@
             if (logBox) {
                 logBox.innerHTML = '';
                 logBox.style.display = 'block';
-                logBox.style.height = '100px';
-                logBox.style.maxHeight = '100px';
                 const infoLine = document.createElement('div');
                 infoLine.className = 'log-line info';
-                infoLine.textContent = '🗑️ Removendo RPM Fusion...';
+                infoLine.textContent = _t('sessoes.03-repositorios.log_removendo_rpm', '🗑️ Removendo RPM Fusion...');
                 logBox.appendChild(infoLine);
                 logBox.scrollTop = logBox.scrollHeight;
             }
@@ -178,7 +169,7 @@
                 desmarcarComoExecutado(idComando);
 
                 if (btn) {
-                    btn.textContent = 'Ativar RPM Fusion';
+                    btn.textContent = _t('sessoes.03-repositorios.btn_ativar_rpm', 'Ativar RPM Fusion');
                     btn.style.backgroundColor = 'var(--accent, #3c67e3)';
                     btn.style.cursor = 'pointer';
                     btn.disabled = false;
@@ -191,11 +182,10 @@
                 if (logBox) {
                     const successLine = document.createElement('div');
                     successLine.className = 'log-line success';
-                    successLine.textContent = '✅ RPM Fusion removido com sucesso!';
+                    successLine.textContent = _t('sessoes.03-repositorios.log_sucesso_remover_rpm', '✅ RPM Fusion removido com sucesso!');
                     logBox.appendChild(successLine);
                     logBox.scrollTop = logBox.scrollHeight;
                 }
-
 
             } catch (e) {
                 if (logBox) {
@@ -208,9 +198,6 @@
             }
         }
 
-        /**
-         * Executa a configuração do Flatpak
-         */
         async function executarFlatpak() {
             const idComando = 'flatpak-setup';
             const desktop = await detectarDesktopReal();
@@ -223,20 +210,17 @@
             }
 
             const comando = comandoExtra + ' && flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo';
-            await executarComandoGenerico(idComando, comando, 'Configurando Flatpak');
+            await executarComandoGenerico(idComando, comando, _t('sessoes.03-repositorios.btn_configurar_flatpak', 'Configurar Flatpak'));
         }
 
-        /**
-         * Remove o Flatpak
-         */
         async function reverterFlatpak() {
             const idComando = 'flatpak-setup';
             if (!isExecutado(idComando)) {
-                alert('Flatpak não está configurado.');
+                alert(_tVars('comum.nao_configurado', 'Flatpak não está configurado.', { nome: 'Flatpak' }));
                 return;
             }
 
-            if (!confirm('Deseja remover o Flatpak e o Flathub?')) return;
+            if (!confirm(_t('sessoes.03-repositorios.confirmar_remover_flatpak', 'Deseja remover o Flatpak e o Flathub?'))) return;
 
             const logBox = document.getElementById('log-flatpak-setup');
             const btn = document.getElementById('btn-flatpak-setup');
@@ -245,11 +229,9 @@
             if (logBox) {
                 logBox.innerHTML = '';
                 logBox.style.display = 'block';
-                logBox.style.height = '100px';
-                logBox.style.maxHeight = '100px';
                 const infoLine = document.createElement('div');
                 infoLine.className = 'log-line info';
-                infoLine.textContent = '🗑️ Removendo Flatpak...';
+                infoLine.textContent = _t('sessoes.03-repositorios.log_removendo_flatpak', '🗑️ Removendo Flatpak...');
                 logBox.appendChild(infoLine);
                 logBox.scrollTop = logBox.scrollHeight;
             }
@@ -277,7 +259,7 @@
                 desmarcarComoExecutado(idComando);
 
                 if (btn) {
-                    btn.textContent = 'Configurar Flatpak';
+                    btn.textContent = _t('sessoes.03-repositorios.btn_configurar_flatpak', 'Configurar Flatpak');
                     btn.style.backgroundColor = '#10b981';
                     btn.style.cursor = 'pointer';
                     btn.disabled = false;
@@ -290,11 +272,10 @@
                 if (logBox) {
                     const successLine = document.createElement('div');
                     successLine.className = 'log-line success';
-                    successLine.textContent = '✅ Flatpak removido com sucesso!';
+                    successLine.textContent = _t('sessoes.03-repositorios.log_sucesso_remover_flatpak', '✅ Flatpak removido com sucesso!');
                     logBox.appendChild(successLine);
                     logBox.scrollTop = logBox.scrollHeight;
                 }
-
 
             } catch (e) {
                 if (logBox) {
@@ -307,26 +288,20 @@
             }
         }
 
-        /**
-         * Executa a instalação dos codecs
-         */
         async function executarCodecs() {
             const idComando = 'codecs-essenciais';
             const comando = 'sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y && sudo dnf install --setopt=\'install_weak_deps=False\' gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-plugin-openh264 gstreamer1-plugin-libav --exclude=PackageKit-gstreamer-plugin -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1';
-            await executarComandoGenerico(idComando, comando, 'Instalando Codecs');
+            await executarComandoGenerico(idComando, comando, _t('sessoes.03-repositorios.btn_instalar_codecs', 'Instalar Codecs'));
         }
 
-        /**
-         * Reverte os codecs
-         */
         async function reverterCodecs() {
             const idComando = 'codecs-essenciais';
             if (!isExecutado(idComando)) {
-                alert('Os codecs não estão instalados.');
+                alert(_tVars('comum.nao_instalado', 'Os codecs não estão instalados.', { nome: 'Codecs' }));
                 return;
             }
 
-            if (!confirm('Deseja reverter os codecs (voltar para ffmpeg-free)?')) return;
+            if (!confirm(_t('sessoes.03-repositorios.confirmar_reverter_codecs', 'Deseja reverter os codecs (voltar para ffmpeg-free)?'))) return;
 
             const logBox = document.getElementById('log-codecs-essenciais');
             const btn = document.getElementById('btn-codecs-essenciais');
@@ -335,11 +310,9 @@
             if (logBox) {
                 logBox.innerHTML = '';
                 logBox.style.display = 'block';
-                logBox.style.height = '100px';
-                logBox.style.maxHeight = '100px';
                 const infoLine = document.createElement('div');
                 infoLine.className = 'log-line info';
-                infoLine.textContent = '🔄 Revertendo codecs...';
+                infoLine.textContent = _t('sessoes.03-repositorios.log_revertendo_codecs', '🔄 Revertendo codecs...');
                 logBox.appendChild(infoLine);
                 logBox.scrollTop = logBox.scrollHeight;
             }
@@ -359,7 +332,7 @@
                 desmarcarComoExecutado(idComando);
 
                 if (btn) {
-                    btn.textContent = 'Instalar Codecs';
+                    btn.textContent = _t('sessoes.03-repositorios.btn_instalar_codecs', 'Instalar Codecs');
                     btn.style.backgroundColor = 'var(--accent, #3c67e3)';
                     btn.style.cursor = 'pointer';
                     btn.disabled = false;
@@ -372,11 +345,10 @@
                 if (logBox) {
                     const successLine = document.createElement('div');
                     successLine.className = 'log-line success';
-                    successLine.textContent = '✅ Codecs revertidos com sucesso!';
+                    successLine.textContent = _t('sessoes.03-repositorios.log_sucesso_reverter_codecs', '✅ Codecs revertidos com sucesso!');
                     logBox.appendChild(successLine);
                     logBox.scrollTop = logBox.scrollHeight;
                 }
-
 
             } catch (e) {
                 if (logBox) {
@@ -389,26 +361,20 @@
             }
         }
 
-        /**
-         * Executa a instalação dos extras tainted
-         */
         async function executarExtrasTainted() {
             const idComando = 'extras-tainted';
             const comando = 'sudo dnf install rpmfusion-free-release-tainted -y && sudo dnf install rpmfusion-nonfree-release-tainted -y && sudo dnf install libdvdcss -y';
-            await executarComandoGenerico(idComando, comando, 'Instalando Extras');
+            await executarComandoGenerico(idComando, comando, _t('sessoes.03-repositorios.btn_instalar_extras', 'Instalar Extras'));
         }
 
-        /**
-         * Remove os extras tainted
-         */
         async function reverterExtrasTainted() {
             const idComando = 'extras-tainted';
             if (!isExecutado(idComando)) {
-                alert('Os extras não estão instalados.');
+                alert(_tVars('comum.nao_instalado', 'Os extras não estão instalados.', { nome: 'Extras' }));
                 return;
             }
 
-            if (!confirm('Deseja remover os extras e o suporte a DVD?')) return;
+            if (!confirm(_t('sessoes.03-repositorios.confirmar_reverter_extras', 'Deseja remover os extras e o suporte a DVD?'))) return;
 
             const logBox = document.getElementById('log-extras-tainted');
             const btn = document.getElementById('btn-extras-tainted');
@@ -417,11 +383,9 @@
             if (logBox) {
                 logBox.innerHTML = '';
                 logBox.style.display = 'block';
-                logBox.style.height = '100px';
-                logBox.style.maxHeight = '100px';
                 const infoLine = document.createElement('div');
                 infoLine.className = 'log-line info';
-                infoLine.textContent = '🗑️ Removendo extras...';
+                infoLine.textContent = _t('sessoes.03-repositorios.log_removendo_extras', '🗑️ Removendo extras...');
                 logBox.appendChild(infoLine);
                 logBox.scrollTop = logBox.scrollHeight;
             }
@@ -441,7 +405,7 @@
                 desmarcarComoExecutado(idComando);
 
                 if (btn) {
-                    btn.textContent = 'Instalar Extras';
+                    btn.textContent = _t('sessoes.03-repositorios.btn_instalar_extras', 'Instalar Extras');
                     btn.style.backgroundColor = 'var(--accent, #3c67e3)';
                     btn.style.cursor = 'pointer';
                     btn.disabled = false;
@@ -454,11 +418,10 @@
                 if (logBox) {
                     const successLine = document.createElement('div');
                     successLine.className = 'log-line success';
-                    successLine.textContent = '✅ Extras removidos com sucesso!';
+                    successLine.textContent = _t('sessoes.03-repositorios.log_sucesso_remover_extras', '✅ Extras removidos com sucesso!');
                     logBox.appendChild(successLine);
                     logBox.scrollTop = logBox.scrollHeight;
                 }
-
 
             } catch (e) {
                 if (logBox) {
@@ -471,28 +434,17 @@
             }
         }
 
-        /**
-         * Executa a instalação do VA-API
-         */
         async function executarVaapi() {
             const idComando = 'vaapi-amd';
             const comando = 'sudo dnf install ffmpeg-libs libva libva-utils -y && sudo dnf install mesa-va-drivers-freeworld mesa-va-drivers-freeworld.i686 -y';
-            await executarComandoGenerico(idComando, comando, 'Instalando VA-API');
+            await executarComandoGenerico(idComando, comando, _t('sessoes.03-repositorios.btn_vaapi_padrao', '🚀 Instalação Padrão'));
         }
 
-        /**
-         * Executa a substituição dos drivers VA-API
-         */
         async function executarVaapiSwap() {
             const idComando = 'vaapi-swap';
             const comando = 'sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld -y && sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld -y';
-            await executarComandoGenerico(idComando, comando, 'Substituindo drivers VA-API');
+            await executarComandoGenerico(idComando, comando, _t('sessoes.03-repositorios.btn_vaapi_alt', '🔄 Alternativa'));
         }
-
-        // ===== DETECTAR DESKTOP =====
-        // Removido: usava navigator.userAgent, que nunca contém o desktop
-        // em navegadores Linux (sempre caía em 'UNKNOWN'). Ver
-        // detectarDesktopReal() em script.js, que consulta o servidor.
 
         // ===== RESTAURAR ESTADO DA SESSÃO =====
         function restaurarEstadoSessao() {

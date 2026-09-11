@@ -1,5 +1,6 @@
 # ============================================================
 # Fedora Only Fans - .gitignore
+# Versão: 0.9.9-alpha
 # ============================================================
 
 # ============================================================
@@ -42,7 +43,6 @@ pnpm-lock.yaml
 # Logs
 # ============================================================
 logs/
-*.log
 /tmp/fof-*.log
 fof.log
 server.log
@@ -70,11 +70,11 @@ Thumbs.db
 *.diff
 
 # ============================================================
-# Binarios Compilados (container nativo)
-# CORRECAO: o binario "fof-container" (gerado por make/build-container.sh
-# a partir de src/fof-container.c) nao estava coberto por nenhuma regra
-# aqui. Cada usuario gera o seu proprio ao instalar/rodar o FOF, entao
-# ele nunca deveria ir para o repositorio.
+# Binários Compilados (container nativo)
+# O binário "fof-container" é gerado por make/build-container.sh
+# a partir de src/fof-container.c. Cada usuário gera o seu
+# próprio ao instalar/rodar o FOF, então ele nunca vai para o
+# repositório.
 # ============================================================
 /fof-container
 *.o
@@ -100,8 +100,6 @@ coverage/
 # ============================================================
 # Arquivos do Sistema
 # ============================================================
-.DS_Store
-Thumbs.db
 desktop.ini
 *.lnk
 
@@ -111,9 +109,3 @@ desktop.ini
 .config/
 .local/
 .cache/
-
-# ============================================================
-# Instalação
-# ============================================================
-install.sh
-*.install.sh

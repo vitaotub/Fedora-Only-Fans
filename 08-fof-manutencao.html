@@ -9,21 +9,21 @@
 <body>
     <!-- ===== CONTEÚDO DA SESSÃO ===== -->
     <div class="sessao-container" id="sessao-08-fof-manutencao" style="border-left: 4px solid var(--accent);">
-        <div class="sessao-titulo">
+        <div class="sessao-titulo" data-i18n="sessoes.08-fof-manutencao.titulo">
             🔧 Manutenção do FOF
         </div>
 
         <!-- Atualizar FOF -->
         <div class="bloco-comando">
             <div class="comando-info">
-                <h3>🔄 Atualizar Fedora Only Fans</h3>
-                <p>Baixa e instala a versão mais recente do FOF diretamente do GitHub. Mantenha seu app sempre atualizado!</p>
+                <h3 data-i18n="sessoes.08-fof-manutencao.atualizar_titulo">🔄 Atualizar Fedora Only Fans</h3>
+                <p data-i18n="sessoes.08-fof-manutencao.atualizar_desc">Baixa e instala a versão mais recente do FOF diretamente do GitHub. Mantenha seu app sempre atualizado!</p>
                 <div style="margin-top: 1rem;">
-                    <button class="btn-executar" style="background-color: #3c67e3;" onclick="atualizarFOF()" data-comando="atualizar-fof" id="btn-atualizar-fof">
+                    <button class="btn-executar" style="background-color: #3c67e3;" onclick="atualizarFOF()" data-comando="atualizar-fof" id="btn-atualizar-fof" data-i18n="sessoes.08-fof-manutencao.btn_atualizar">
                         🔄 Atualizar FOF
                     </button>
                 </div>
-                <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);" data-i18n="sessoes.08-fof-manutencao.atualizar_info">
                     ℹ️ A atualização mantém suas configurações e histórico.
                 </div>
             </div>
@@ -33,11 +33,11 @@
         <!-- Desinstalar FOF -->
         <div class="bloco-comando" style="border-left: 4px solid #ef4444;">
             <div class="comando-info">
-                <h3>🗑️ Desinstalar Fedora Only Fans</h3>
-                <p>Remove completamente o FOF do seu sistema, incluindo todos os arquivos, configurações e atalhos.</p>
-                <div class="aviso-caixa">⚠️ ATENÇÃO: Esta ação é irreversível! Todos os dados do FOF serão removidos.</div>
+                <h3 data-i18n="sessoes.08-fof-manutencao.desinstalar_titulo">🗑️ Desinstalar Fedora Only Fans</h3>
+                <p data-i18n="sessoes.08-fof-manutencao.desinstalar_desc">Remove completamente o FOF do seu sistema, incluindo todos os arquivos, configurações e atalhos.</p>
+                <div class="aviso-caixa" data-i18n="sessoes.08-fof-manutencao.desinstalar_aviso">⚠️ ATENÇÃO: Esta ação é irreversível! Todos os dados do FOF serão removidos.</div>
                 <div style="margin-top: 1rem;">
-                    <button class="btn-executar" style="background-color: #ef4444;" onclick="desinstalarFOF()" data-comando="desinstalar-fof" id="btn-desinstalar-fof">
+                    <button class="btn-executar" style="background-color: #ef4444;" onclick="desinstalarFOF()" data-comando="desinstalar-fof" id="btn-desinstalar-fof" data-i18n="sessoes.08-fof-manutencao.btn_desinstalar">
                         🗑️ Desinstalar FOF
                     </button>
                 </div>
@@ -52,10 +52,11 @@
         // SESSÃO 08: MANUTENÇÃO DO FOF
         // ============================================================
 
-        /**
-         * Atualiza o FOF via script do GitHub
-         * CORREÇÃO: Botão sempre clicável (sempreClicavel: true em script.js)
-         */
+        // i18n helpers locais
+        function _t(chave, fallback) {
+            return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+        }
+
         async function atualizarFOF() {
             const idComando = 'atualizar-fof';
             const logBox = document.getElementById('log-' + idComando);
@@ -63,10 +64,8 @@
 
             if (!logBox) return;
 
-            const confirmacao = confirm(
-                '🔄 Deseja atualizar o Fedora Only Fans para a versão mais recente?\n\n' +
-                'Isso irá baixar e instalar a última versão do GitHub.'
-            );
+            const confirmacao = confirm(_t('sessoes.08-fof-manutencao.atualizar_confirmar',
+                '🔄 Deseja atualizar o Fedora Only Fans para a versão mais recente?\n\nIsso irá baixar e instalar a última versão do GitHub.'));
 
             if (!confirmacao) return;
 
@@ -74,12 +73,10 @@
 
             logBox.innerHTML = '';
             logBox.style.display = 'block';
-            logBox.style.height = '100px';
-            logBox.style.maxHeight = '100px';
 
             const header = document.createElement('div');
             header.className = 'log-line info';
-            header.textContent = '🔄 Atualizando FOF... (' + new Date().toLocaleTimeString() + ')';
+            header.textContent = _t('sessoes.08-fof-manutencao.atualizar_log_iniciando', '🔄 Atualizando FOF...') + ' (' + new Date().toLocaleTimeString() + ')';
             logBox.appendChild(header);
             logBox.scrollTop = logBox.scrollHeight;
 
@@ -87,7 +84,7 @@
 
             if (btn) {
                 btn.disabled = true;
-                btn.textContent = '⏳ Atualizando...';
+                btn.textContent = '⏳ ' + _t('sessoes.08-fof-manutencao.btn_atualizar', '🔄 Atualizar FOF').replace(/^[^\s]+\s/, '') + '...';
                 btn.style.opacity = '0.6';
             }
 
@@ -110,7 +107,7 @@
 
                     if (btn) {
                         btn.disabled = false;
-                        btn.textContent = '🔄 Atualizar FOF';
+                        btn.textContent = _t('sessoes.08-fof-manutencao.btn_atualizar', '🔄 Atualizar FOF');
                         btn.style.opacity = '1';
                     }
                 }
@@ -124,15 +121,12 @@
 
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = '🔄 Atualizar FOF';
+                    btn.textContent = _t('sessoes.08-fof-manutencao.btn_atualizar', '🔄 Atualizar FOF');
                     btn.style.opacity = '1';
                 }
             }
         }
 
-        /**
-         * Desinstala o FOF
-         */
         async function desinstalarFOF() {
             const idComando = 'desinstalar-fof';
             const logBox = document.getElementById('log-' + idComando);
@@ -140,17 +134,13 @@
 
             if (!logBox) return;
 
-            const confirmacao = confirm(
-                '⚠️ ATENÇÃO!\n\nVocê está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\n' +
-                'Isso irá remover:\n• Todos os arquivos do FOF\n• Atalhos do menu\n• Comando "fof" do terminal\n\n' +
-                'Esta ação é IRREVERSÍVEL!\n\nTem certeza que deseja continuar?'
-            );
+            const confirmacao = confirm(_t('sessoes.08-fof-manutencao.desinstalar_confirmar1',
+                '⚠️ ATENÇÃO!\n\nVocê está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\nIsso irá remover:\n• Todos os arquivos do FOF\n• Atalhos do menu\n• Comando "fof" do terminal\n\nEsta ação é IRREVERSÍVEL!\n\nTem certeza que deseja continuar?'));
 
             if (!confirmacao) return;
 
-            const confirmacao2 = confirm(
-                '🔄 Última confirmação!\n\nTodos os dados do FOF serão perdidos.\n\nDeseja realmente desinstalar o Fedora Only Fans?'
-            );
+            const confirmacao2 = confirm(_t('sessoes.08-fof-manutencao.desinstalar_confirmar2',
+                '🔄 Última confirmação!\n\nTodos os dados do FOF serão perdidos.\n\nDeseja realmente desinstalar o Fedora Only Fans?'));
 
             if (!confirmacao2) return;
 
@@ -158,12 +148,10 @@
 
             logBox.innerHTML = '';
             logBox.style.display = 'block';
-            logBox.style.height = '100px';
-            logBox.style.maxHeight = '100px';
 
             const header = document.createElement('div');
             header.className = 'log-line info';
-            header.textContent = '🗑️ Desinstalando FOF... (' + new Date().toLocaleTimeString() + ')';
+            header.textContent = _t('sessoes.08-fof-manutencao.desinstalar_log_iniciando', '🗑️ Desinstalando FOF...') + ' (' + new Date().toLocaleTimeString() + ')';
             logBox.appendChild(header);
             logBox.scrollTop = logBox.scrollHeight;
 
@@ -171,7 +159,7 @@
 
             if (btn) {
                 btn.disabled = true;
-                btn.textContent = '⏳ Desinstalando...';
+                btn.textContent = '⏳ ' + _t('sessoes.08-fof-manutencao.btn_desinstalar', '🗑️ Desinstalar FOF').replace(/^[^\s]+\s/, '') + '...';
                 btn.style.opacity = '0.6';
             }
 
@@ -194,41 +182,26 @@
 
                     if (btn) {
                         btn.disabled = false;
-                        btn.textContent = '🗑️ Desinstalar FOF';
+                        btn.textContent = _t('sessoes.08-fof-manutencao.btn_desinstalar', '🗑️ Desinstalar FOF');
                         btn.style.opacity = '1';
                     }
                 } else {
-                    await new Promise((resolve) => {
-                        const checkInterval = setInterval(() => {
-                            if (isExecutado(idComando)) {
-                                clearInterval(checkInterval);
-                                resolve();
-                            }
-                        }, 1000);
-                        setTimeout(() => {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }, 180000);
-                    });
+                    const sucesso = await aguardarConclusaoReal(idComando, 180000);
 
-                    if (isExecutado(idComando)) {
+                    if (sucesso && isExecutado(idComando)) {
                         const successLine = document.createElement('div');
                         successLine.className = 'log-line success';
-                        successLine.textContent = '✅ FOF desinstalado com sucesso!';
+                        successLine.textContent = _t('sessoes.08-fof-manutencao.desinstalar_log_sucesso', '✅ FOF desinstalado com sucesso!');
                         logBox.appendChild(successLine);
                         logBox.scrollTop = logBox.scrollHeight;
 
                         localStorage.removeItem(STORAGE_KEY);
 
-                        // CORREÇÃO: window.close() nem sempre funciona em
-                        // containers WebKitGTK ou navegadores comuns.
-                        // Mostra mensagem clara e tenta fechar como cortesia.
-                        alert('✅ Fedora Only Fans foi desinstalado completamente do seu computador.\n\nVocê pode fechar esta janela agora.');
+                        alert(_t('sessoes.08-fof-manutencao.desinstalar_msg_final',
+                            '✅ Fedora Only Fans foi desinstalado completamente do seu computador.\n\nVocê pode fechar esta janela agora.'));
                         try {
                             window.close();
-                        } catch(e) {
-                            // Ignora - usuário fecha manualmente
-                        }
+                        } catch(e) { /* usuário fecha manualmente */ }
                     }
                 }
             } catch (e) {
@@ -241,7 +214,7 @@
 
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = '🗑️ Desinstalar FOF';
+                    btn.textContent = _t('sessoes.08-fof-manutencao.btn_desinstalar', '🗑️ Desinstalar FOF');
                     btn.style.opacity = '1';
                 }
             }
@@ -264,11 +237,10 @@
                 }
             });
 
-            // CORREÇÃO: Botão atualizar-fof é sempre clicável
             const btnAtualizar = document.getElementById('btn-atualizar-fof');
             if (btnAtualizar) {
                 btnAtualizar.disabled = false;
-                btnAtualizar.textContent = '🔄 Atualizar FOF';
+                btnAtualizar.textContent = _t('sessoes.08-fof-manutencao.btn_atualizar', '🔄 Atualizar FOF');
                 btnAtualizar.style.backgroundColor = '#3c67e3';
                 btnAtualizar.style.opacity = '1';
                 btnAtualizar.style.cursor = 'pointer';
