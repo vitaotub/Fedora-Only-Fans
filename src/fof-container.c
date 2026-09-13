@@ -1,6 +1,6 @@
 // ============================================================
 // Fedora Only Fans (FOF) - Container WebKitGTK
-// Versão: 0.9.9-alpha
+// Versão: 1.0.0-rc.1
 // ============================================================
 
 #include <gtk/gtk.h>
@@ -284,7 +284,7 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                           } else if (strcmp(argv[i], "--debug") == 0) {
                                                                               debug_mode = 1;
                                                                           } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-                                                                              printf("🐧 Fedora Only Fans - Container WebKitGTK v0.9.9-alpha\n");
+                                                                              printf("🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.1\n");
                                                                               printf("\nUso: %s [opções]\n", argv[0]);
                                                                               printf("\nOpções:\n");
                                                                               printf("  --url URL        URL do servidor (padrão: http://localhost:3000)\n");
@@ -399,7 +399,7 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                       sigaction(SIGTERM, &sa, NULL);
 
                                                                       g_print("============================================================\n");
-                                                                      g_print(" 🐧 Fedora Only Fans - Container WebKitGTK v0.9.9-alpha\n");
+                                                                      g_print(" 🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.1\n");
                                                                       g_print("============================================================\n");
                                                                       g_print(" 🌐 URL: %s\n", url);
                                                                       g_print(" 📐 Janela: %dx%d\n", window_width, window_height);
