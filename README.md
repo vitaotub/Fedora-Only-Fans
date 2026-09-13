@@ -1,10 +1,13 @@
 # <img src="icone_app.png" width="55" align="center"> Fedora Only Fans (FOF)
 
+**🌐 Idioma:** Português (BR) | [English](README.en.md) | [Español](README.es.md)
+
 ![Autor](https://img.shields.io/badge/Criador-Vit%C3%A3oTub-blue?style=flat-square)
-![Versão](https://img.shields.io/badge/Versão-v0.9.9--alpha-orange?style=flat-square)
+![Versão](https://img.shields.io/badge/Versão-v1.0.0--rc.1-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![Licença](https://img.shields.io/badge/Licen%C3%A7a-GPL--3.0-green?style=flat-square)
-![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow?style=flat-square)
+![Idiomas](https://img.shields.io/badge/Idiomas-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Release%20Candidate-orange?style=flat-square)
 [![Instalar](https://img.shields.io/badge/🚀_Instalar_com_um_comando-Fedora_Only_Fans-3c67e3?style=flat-square)](https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh)
 
 > Deixando o seu Fedora pronto para o "play" de forma visual, rápida e sem complicação.
@@ -94,7 +97,10 @@ Sessões da Configuração (em ordem)
         Instalação de Steam, Heroic Games, Lutris, ProtonUp-Qt, drivers Vulkan para AMD, e ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
         
     7	🎬 Produção Multimídia
-        Instalação do OBS Studio (Flatpak), ativação de câmera virtual, EasyEffects, edição de vídeo/áudio (Kdenlive, Audacity), e instalador da suíte Affinity via Wine (projeto de terceiros AffinityOnLinux)
+        Instalação do OBS Studio (Flatpak), ativação de câmera virtual e EasyEffects (processador de áudio para PipeWire)
+        
+    8	📦 Aplicativos Recomendados
+        Curadoria de softwares úteis para o dia-a-dia, todos via Flatpak: produtividade (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entretenimento (Haruna, VLC, MPV, Spotify, Plex, Stremio), ferramentas gráficas (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP e a Suíte Affinity), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), edição de vídeo e modelagem 3D (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift, Blender), edição e criação de áudio (Ardour, LMMS, Audacity) e sincronização em nuvem (Rclone, Rclone Manager)
 
 
 Sessões de Manutenção (sem ordem — página à parte)
@@ -109,14 +115,16 @@ Sessões de Manutenção (sem ordem — página à parte)
 🎨 Características Técnicas
 
     🖥️ Interface escura e moderna - Design pensado para conforto visual
+    🌐 Multilíngue - Interface em Português (BR), Inglês e Espanhol, com troca em tempo real
     📡 Logs em tempo real - Acompanhe a execução via Server-Sent Events (SSE)
+    📋 Log único por sessão - Cada sessão compartilha um log unificado, em ordem cronológica, com separadores entre execuções
+    🔒 Bloqueio de sessão - Durante uma instalação, os outros botões da mesma sessão ficam desabilitados para evitar execuções simultâneas
     📊 Barra de progresso - Visualize o andamento das tarefas
     🔐 Autenticação segura - Usa pkexec/kdesu (sem expor senhas)
     🛡️ Comandos sem autenticação - Comandos de consulta (rpm -q, uname -r, etc.) não solicitam senha
     🐧 Suporte a múltiplos desktops - KDE, GNOME, XFCE, Cinnamon, MATE, LXQt, LXDE
     🖱️ 100% visual - Nunca precisa abrir o terminal
     💾 Persistência - Estado de cada ação salvo automaticamente (servidor local + navegador), sem depender de nenhum relatório agregado
-    🔄 Botões de reversão - Desfaça alterações com um clique
     📦 Container nativo - Aplicação roda em WebKitGTK (sem necessidade de navegador)
 
 
@@ -225,7 +233,7 @@ firefox http://localhost:3000
     Interface responsiva e moderna
 
     JavaScript
-    Lógica de requisições à API local
+    Lógica de requisições à API local + internacionalização (PT-BR, EN, ES)
 
     Node.js
     Servidor backend local para execução segura de processos
@@ -266,6 +274,7 @@ Fedora-Only-Fans/
 ├── 📄 06-loja.html            # Sessão 7 (HTML + JS específico)
 ├── 📄 07-manutencao.html      # Manutenção — kernels, limpeza, GRUB (sem ordem)
 ├── 📄 08-fof-manutencao.html  # Manutenção FOF — atualizar/desinstalar (sem ordem)
+├── 📄 09-softwares-uteis.html # Sessão 8 — Aplicativos Recomendados
 ├── 📄 template-sessao.html    # Molde pra criar uma sessão nova
 ├── 📄 iniciar_fof.sh          # Script de inicialização
 ├── 📄 iniciar_fof_compat.sh   # Modo compatibilidade (GPUs antigas)
@@ -273,7 +282,9 @@ Fedora-Only-Fans/
 ├── 📄 server.js               # Servidor Node.js
 ├── 📄 icone_app.png           # Ícone do aplicativo
 ├── 📄 package.json            # Dependências Node.js
-├── 📄 README.md               # Documentação
+├── 📄 README.md               # Documentação (PT-BR)
+├── 📄 README.en.md            # Documentação (English)
+├── 📄 README.es.md            # Documentación (Español)
 ├── 📄 LICENSE                 # Licença GPL-3.0
 ├── 📄 .gitignore              # Arquivos ignorados pelo Git
 ├── 📄 Makefile                # Build do container nativo
@@ -308,36 +319,36 @@ tail -f /tmp/fof-*.log
 ```
 
 🎯 Roadmap
-v0.9.9 (Atual) ✅
+v1.0.0-rc.1 (Atual) 🚧
 
-✅ Configuração sequencial em ordem (a ordem das sessões importa pro resultado)
-✅ Página de Manutenção separada (kernels, limpeza, GRUB, FOF — sem dependência de ordem)
-✅ Botões de reversão só onde a ação é reversível — ações repetíveis (sempre clicáveis) nunca têm par de reverter
-✅ Persistência via localStorage/servidor (sem relatório de conclusão — só o estado de cada botão)
-✅ Auditoria completa do código (bugs de segurança, lógica e duplicação corrigidos)
-✅ Instalação do Btrfs-Assistant via interface
-✅ Instalação do OBS Studio via Flatpak
-✅ Sincronização com canal estável (distro-sync)
-✅ Correção da Central de Apps (sem autenticação)
-✅ Launchers com sistema de toggle (instalar/desinstalar)
-✅ Ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
-✅ Edição de vídeo/áudio (Kdenlive, Audacity)
-✅ Progresso com timeout de segurança
-✅ Modo Compatibilidade para GPUs antigas
-✅ Botão "Atualizar FOF" sempre clicável (pode ser reexecutado)
-✅ Remoção do endpoint /reverter não utilizado
-✅ Remoção de classes CSS mortas (.etapa-card, .etapa-titulo)
-✅ WebKitGTK 4.1 como requisito único (removido suporte a 4.0)
-✅ Timeout de remoção de kernel aumentado para 3 minutos
-✅ Variáveis globais convertidas de const para var (evita erro de redeclaração)
-✅ window.close() com fallback de mensagem
-✅ Internacionalização completa (PT-BR, EN, ES)
-✅ Ícone do container corrigido no KDE (Wayland e X11)
+    ✅ Configuração sequencial em ordem (a ordem das sessões importa pro resultado)
+    ✅ Página de Manutenção separada (kernels, limpeza, GRUB, FOF — sem dependência de ordem)
+    ✅ Botões de reversão só onde a ação é reversível
+    ✅ Persistência via localStorage/servidor
+    ✅ Auditoria completa do código (bugs de segurança, lógica e duplicação corrigidos)
+    ✅ Instalação do Btrfs-Assistant via interface
+    ✅ Instalação do OBS Studio via Flatpak
+    ✅ Sincronização com canal estável (distro-sync)
+    ✅ Correção da Central de Apps (sem autenticação)
+    ✅ Ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
+    ✅ Progresso com timeout de segurança
+    ✅ Modo Compatibilidade para GPUs antigas
+    ✅ Botão "Atualizar FOF" sempre clicável
+    ✅ WebKitGTK 4.1 como requisito único
+    ✅ Internacionalização completa (PT-BR, EN, ES)
+    ✅ Ícone do container corrigido no KDE (Wayland e X11)
+    ✅ Sessão 8 "Aplicativos Recomendados" com curadoria de ~40 softwares
+    ✅ Log único por sessão (compartilhado entre múltiplos botões)
+    ✅ Bloqueio de sessão durante execução (evita execuções simultâneas)
+    ✅ Rclone Manager instalado via RPM oficial do GitHub (sempre a última versão)
+    ✅ Drift adicionado à sessão de edição de vídeo
+    ✅ Blender movido para "Edição de Vídeo e Modelagem 3D"
+    ✅ Avisos em HTML renderizados corretamente em EN/ES
 
 v1.0.0 (Futuro) 🔮
 
-□ ?
-□ Tema claro/escuro
+    □ Perfil EasyEffects com presets
+    □ ?
 
 
 ➕ Como adicionar uma sessão nova
@@ -351,6 +362,13 @@ O FOF tem um registro central de sessões (SESSOES, no topo de script.js) — é
 Pronto — não precisa editar guiado.html, manutencao.html, index.html nem server.js. A posição da sua entrada no array SESSOES já define a ordem de exibição e o número "Sessão N" (calculado automaticamente) das sessões principais, e a rota do servidor aceita qualquer sessão nomeada nesse padrão.
 
 O template-sessao.html traz comentários apontando pra sessões existentes que servem de exemplo pra padrões mais específicos (botão sempre clicável, vários botões lado a lado, dropdown, fluxo com confirmação dupla, etc.). Importante: um comando sempreClicavel: true nunca deve ter um botão de reverter/remover associado — se a ação tiver um "desfazer" com sentido, modele como um segundo botão independente, também sempre clicável (veja grub-aplicar-recomendado/grub-restaurar-padrao em 07-manutencao.html).
+
+🌐 Como adicionar um idioma novo
+
+    Copie locales/pt-BR.json para locales/XX.json (código do idioma).
+    Traduza todos os valores (mantenha as chaves idênticas).
+    Adicione o código do idioma em LANGS_DISPONIVEIS no i18n.js e em LANGS_SUPORTADOS no server.js.
+    Adicione uma <option> no array `opcoes` dentro de criarSeletorIdioma() em i18n.js.
 
 🤝 Como contribuir
 
