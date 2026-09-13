@@ -1,6 +1,6 @@
 /**
  * Fedora Only Fans (FOF) - Script Compartilhado
- * Versão: 0.9.9-alpha
+ * Versão: 1.0.0-rc.1
  *
  * Este arquivo contém as funções GLOBAIS compartilhadas entre todas as sessões.
  * Cada sessão (00-*.html) tem seu próprio JS específico que usa estas funções.
@@ -8,6 +8,10 @@
  * i18n: strings visíveis ao usuário usam tOr(chave, fallback) — em pt-BR,
  *       tOr cai no fallback (texto original), mantendo o comportamento
  *       idêntico ao anterior. Em en/es, retorna a string traduzida do JSON.
+ *
+ * LOG ÚNICO POR SESSÃO: sessões com múltiplos botões compartilham um único
+ *       logBox. O botão carrega data-logbox="<id-do-log>" para indicar onde
+ *       escrever. Sessões com 1 botão continuam usando log-<idComando>.
  */
 
 // ============================================================
@@ -36,9 +40,6 @@ async function carregarVersaoServidor() {
     });
 
     // Correção do badge em EN/ES: o badge usa data-i18n-html com {versao}.
-    // Quando i18n.js aplicou as traduções, o valor de FOF_VERSION ainda podia
-    // não ter chegado do servidor, então o placeholder {versao} ficou literal.
-    // Aqui, depois que temos a versão, re-aplicamos a tradução do badge.
     if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
         var badges = document.querySelectorAll('[data-i18n-html="index.badge_versao"]');
         if (badges.length > 0) {
@@ -55,8 +56,6 @@ var API_URL = 'http://localhost:3000';
 // ============================================================
 // i18n HELPER LOCAL
 // ============================================================
-// tOr(chave, fallback, vars?) — definido em i18n.js. Aqui garantimos
-// que, se i18n.js não carregou, o código continua funcionando.
 function _t(chave, fallback) {
     return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 }
@@ -67,11 +66,6 @@ function _tVars(chave, fallback, vars) {
 // ============================================================
 // REGISTRO CENTRAL DE SESSÕES
 // ============================================================
-// i18n: cada sessão ganha um campo `nomeKey` (chave i18n) além do
-// `nome` original (que serve como fallback PT-BR). O código que
-// precisa do nome exibido usa nomeDaSessao(), que prioriza nomeKey.
-// Isso mantém compatibilidade total com qualquer código que ainda
-// leia `sessao.nome` diretamente.
 
 var SESSOES = [
     {
@@ -147,9 +141,7 @@ var SESSOES = [
     comandos: {
         'instalar-obs-studio': { textoConcluido: '✅ OBS Studio instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_obs' },
         'obs-cam': { textoConcluido: '✅ Câmera Virtual ativada', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_cam' },
-        'instalar-easyeffects': { textoConcluido: '✅ EasyEffects instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_easyeffects' },
-        'instalar-kdenlive': { textoConcluido: '✅ Kdenlive instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_kdenlive' },
-        'instalar-audacity': { textoConcluido: '✅ Audacity instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_audacity' }
+        'instalar-easyeffects': { textoConcluido: '✅ EasyEffects instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_easyeffects' }
     }
 },
 {
@@ -173,6 +165,73 @@ var SESSOES = [
     comandos: {
         'atualizar-fof': { sempreClicavel: true, textoConcluido: '✅ FOF atualizado' },
         'desinstalar-fof': { textoConcluido: '✅ FOF desinstalado' }
+    }
+},
+{
+    id: '09-softwares-uteis',
+    nome: 'Aplicativos Recomendados',
+    nomeKey: 'sessoes.09-softwares-uteis.nome',
+    comandos: {
+        // Bloco 1 — Produtividade e Escritório
+        'instalar-onlyoffice': { textoConcluido: '✅ OnlyOffice instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_onlyoffice' },
+        'instalar-libreoffice': { textoConcluido: '✅ LibreOffice instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_libreoffice' },
+        'instalar-obsidian': { textoConcluido: '✅ Obsidian instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_obsidian' },
+        'instalar-thunderbird': { textoConcluido: '✅ Thunderbird instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_thunderbird' },
+        'instalar-okular': { textoConcluido: '✅ Okular instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_okular' },
+        'instalar-joplin': { textoConcluido: '✅ Joplin instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_joplin' },
+        'instalar-foliate': { textoConcluido: '✅ Foliate instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_foliate' },
+
+        // Bloco 2 — Entretenimento e Multimídia
+        'instalar-haruna': { textoConcluido: '✅ Haruna instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_haruna' },
+        'instalar-vlc': { textoConcluido: '✅ VLC instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_vlc' },
+        'instalar-mpv': { textoConcluido: '✅ MPV instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_mpv' },
+        'instalar-spotify': { textoConcluido: '✅ Spotify instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_spotify' },
+        'instalar-plex': { textoConcluido: '✅ Plex instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_plex' },
+        'instalar-stremio': { textoConcluido: '✅ Stremio instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_stremio' },
+
+        // Bloco 3 — Ferramentas Gráficas
+        'instalar-krita': { textoConcluido: '✅ Krita instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_krita' },
+        'instalar-inkscape': { textoConcluido: '✅ Inkscape instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_inkscape' },
+        'instalar-pinta': { textoConcluido: '✅ Pinta instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_pinta' },
+        'instalar-gimp': { textoConcluido: '✅ GIMP instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_gimp' },
+        'instalar-darktable': { textoConcluido: '✅ Darktable instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_darktable' },
+        'instalar-freecad': { textoConcluido: '✅ FreeCAD instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_freecad' },
+        'instalar-librecad': { textoConcluido: '✅ LibreCAD instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_librecad' },
+        'instalar-cura': { textoConcluido: '✅ Cura instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_cura' },
+        'instalar-upscayl': { textoConcluido: '✅ Upscayl instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_upscayl' },
+        'instalar-xnviewmp': { textoConcluido: '✅ XnView MP instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_xnviewmp' },
+        'instalar-affinity': { sempreClicavel: true },
+
+        // Bloco 4 — Internet e Comunicação
+        'instalar-opera': { textoConcluido: '✅ Opera instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_opera' },
+        'instalar-brave': { textoConcluido: '✅ Brave instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_brave' },
+        'instalar-zen': { textoConcluido: '✅ Zen Browser instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_zen' },
+        'instalar-edge': { textoConcluido: '✅ Microsoft Edge instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_edge' },
+        'instalar-chromium': { textoConcluido: '✅ Chromium instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_chromium' },
+        'instalar-zoom': { textoConcluido: '✅ Zoom instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_zoom' },
+        'instalar-vivaldi': { textoConcluido: '✅ Vivaldi instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_vivaldi' },
+        'instalar-discord': { textoConcluido: '✅ Discord instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_discord' },
+        'instalar-telegram': { textoConcluido: '✅ Telegram instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_telegram' },
+        'instalar-signal': { textoConcluido: '✅ Signal instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_signal' },
+
+        // Bloco 5A — Edição de Vídeo
+        'instalar-kdenlive': { textoConcluido: '✅ Kdenlive instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_kdenlive' },
+        'instalar-shotcut': { textoConcluido: '✅ Shotcut instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_shotcut' },
+        'instalar-pitivi': { textoConcluido: '✅ Pitivi instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_pitivi' },
+        'instalar-openshot': { textoConcluido: '✅ OpenShot instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_openshot' },
+        'instalar-avidemux': { textoConcluido: '✅ Avidemux instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_avidemux' },
+		'instalar-drift': { textoConcluido: '✅ Drift instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_drift' },
+        'instalar-lightworks': { textoConcluido: '✅ Lightworks instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_lightworks' },
+
+        // Bloco 5B — Áudio e 3D
+        'instalar-ardour': { textoConcluido: '✅ Ardour instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_ardour' },
+        'instalar-lmms': { textoConcluido: '✅ LMMS instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_lmms' },
+        'instalar-audacity': { textoConcluido: '✅ Audacity instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_audacity' },
+        'instalar-blender': { textoConcluido: '✅ Blender instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_blender' },
+
+        // Bloco 6 — Sincronização em Nuvem
+        'instalar-rclone': { textoConcluido: '✅ Rclone instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_rclone' },
+        'instalar-rclone-manager': { textoConcluido: '✅ Rclone Manager instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_rclone_manager' }
     }
 }
 ];
@@ -212,6 +271,97 @@ function nomeDaSessao(sessaoId) {
         return _t(sessao.nomeKey, sessao.nome);
     }
     return sessao.nome;
+}
+
+// ============================================================
+// LOG ÚNICO POR SESSÃO — helpers
+// ============================================================
+
+/**
+ * Resolve qual logBox usar para um determinado idComando.
+ * Prioridade:
+ *   1. Botão com `data-comando="<idComando>"` e `data-logbox` (log compartilhado).
+ *   2. Botão `#btn-<idComando>` com `data-logbox` (caso o data-comando esteja ausente).
+ *   3. Fallback: `log-<idComando>` (log individual, sessões de 1 botão).
+ */
+function _getLogBox(idComando) {
+    // 1. Botão com data-comando + data-logbox
+    var btn1 = document.querySelector('[data-comando="' + idComando + '"][data-logbox]');
+    if (btn1) {
+        var el = document.getElementById(btn1.dataset.logbox);
+        if (el) return el;
+    }
+    // 2. Botão com id btn-<idComando> + data-logbox
+    var btn2 = document.getElementById('btn-' + idComando);
+    if (btn2 && btn2.dataset && btn2.dataset.logbox) {
+        var el2 = document.getElementById(btn2.dataset.logbox);
+        if (el2) return el2;
+    }
+    // 3. Fallback (sessões de 1 botão)
+    return document.getElementById('log-' + idComando);
+}
+
+/**
+ * Insere um separador visual no log, antes de uma nova execução.
+ * Só insere se o log já tiver conteúdo (evita separador "solto" na primeira execução).
+ */
+function _separadorLog(logBox, nomeAcao) {
+    if (!logBox) return;
+    if (logBox.children.length === 0) return;
+    var sep = document.createElement('div');
+    sep.className = 'log-line separator';
+    sep.textContent = '────── Iniciando: ' + nomeAcao + ' ──────';
+    logBox.appendChild(sep);
+    logBox.scrollTop = logBox.scrollHeight;
+}
+
+// ============================================================
+// BLOQUEIO DE SESSÃO DURANTE EXECUÇÃO
+// ============================================================
+
+/**
+ * Bloqueia todos os outros botões `.btn-executar` do mesmo `.sessao-container`
+ * do botão `btn-<idComando>`. Preserva o estado anterior (para que botões já
+ * desabilitados por "já executado" não sejam acidentalmente reabilitados).
+ */
+function _bloquearSessao(idComando) {
+    var btn = document.getElementById('btn-' + idComando);
+    if (!btn) return;
+    var sessaoContainer = btn.closest('.sessao-container');
+    if (!sessaoContainer) return;
+
+    var botoes = sessaoContainer.querySelectorAll('.btn-executar');
+    botoes.forEach(function(b) {
+        if (b.id === 'btn-' + idComando) return; // não mexe no botão que está rodando
+        if (b.hasAttribute('data-sessao-bloqueado')) return; // já bloqueado
+        // Guarda estado anterior
+        b.setAttribute('data-was-disabled', b.disabled ? '1' : '0');
+        b.setAttribute('data-sessao-bloqueado', '1');
+        b.disabled = true;
+        b.style.opacity = '0.4';
+        b.style.pointerEvents = 'none';
+    });
+}
+
+/**
+ * Reabilita os botões que foram bloqueados por `_bloquearSessao`, restaurando
+ * o estado `disabled` original.
+ */
+function _liberarSessao(idComando) {
+    var btn = document.getElementById('btn-' + idComando);
+    if (!btn) return;
+    var sessaoContainer = btn.closest('.sessao-container');
+    if (!sessaoContainer) return;
+
+    var botoes = sessaoContainer.querySelectorAll('.btn-executar[data-sessao-bloqueado="1"]');
+    botoes.forEach(function(b) {
+        var wasDisabled = b.getAttribute('data-was-disabled') === '1';
+        b.removeAttribute('data-sessao-bloqueado');
+        b.removeAttribute('data-was-disabled');
+        b.disabled = wasDisabled;
+        b.style.opacity = '';
+        b.style.pointerEvents = '';
+    });
 }
 
 // ============================================================
@@ -272,7 +422,6 @@ async function saveProgress(progress) {
     progressCache = progress;
     progressLoaded = true;
 
-    // CORREÇÃO #6: salva primeiro no localStorage (síncrono, rápido).
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
     } catch (e) { /* ignore */ }
@@ -485,6 +634,10 @@ function completarProgresso(idComando, sucesso) {
 
         restaurarBotaoAposExecucao(idComando, sucesso);
         _notificarConclusaoReal(idComando, sucesso);
+
+        // Log único por sessão: libera os outros botões da mesma sessão
+        // assim que o comando termina (sucesso ou falha).
+        _liberarSessao(idComando);
     };
 
     if (sucesso && !SEMPRE_CLICAVEIS.includes(idComando)) {
@@ -498,8 +651,6 @@ function completarProgresso(idComando, sucesso) {
 // TEXTO CORRETO DOS BOTÕES APÓS EXECUÇÃO
 // ============================================================
 
-// i18n: prioriza textoConcluidoKey (chave i18n), cai para textoConcluido
-// (fallback PT-BR), cai para '✅ Concluído' se nenhum existir.
 function getTextoAposExecucao(idComando) {
     const info = _infoComando(idComando);
     if (!info) return _t('comum.btn_concluido', '✅ Concluído');
@@ -573,40 +724,52 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
 }
 
 // ============================================================
-// SSE - LOGS EM TEMPO REAL (com suporte a toggle)
+// SSE - LOGS EM TEMPO REAL
 // ============================================================
 
 var sseConnections = {};
 
-function toggleTerminalLog(idComando) {
-    const toggle = document.getElementById('log-toggle-' + idComando);
-    const logBox = document.getElementById('log-' + idComando);
-    if (!toggle || !logBox) return;
-
+function toggleTerminalLog(logBoxId) {
+    var logBox = document.getElementById(logBoxId);
+    if (!logBox) return;
+    var toggle = document.getElementById('log-toggle-' + logBoxId);
+    if (!toggle) return;
     toggle.classList.toggle('expandido');
     logBox.classList.toggle('expandido');
 }
 
-function criarToggleParaLog(idComando) {
-    const logBox = document.getElementById('log-' + idComando);
+/**
+ * Cria o wrapper com toggle para um logBox, se ainda não existir.
+ * Idempotente: se o logBox já está dentro de um `.terminal-log-wrapper`,
+ * não faz nada. Isso permite que vários `idComando` compartilhem o mesmo
+ * logBox sem recriar o toggle múltiplas vezes.
+ *
+ * @param {HTMLElement} logBox - o logBox em si (não o id).
+ * @param {string} [labelKey] - chave i18n do texto do toggle. Padrão:
+ *   'comum.log_execucao'. Para logs de sessão, passar 'comum.log_sessao'.
+ */
+function criarToggleParaLog(logBox, labelKey) {
     if (!logBox) return;
 
-    if (document.getElementById('log-toggle-' + idComando)) return;
+    // Já tem wrapper? Não recria.
+    if (logBox.parentElement && logBox.parentElement.classList.contains('terminal-log-wrapper')) {
+        return;
+    }
 
-    const wrapper = document.createElement('div');
+    var wrapper = document.createElement('div');
     wrapper.className = 'terminal-log-wrapper';
 
-    const toggle = document.createElement('div');
+    var toggle = document.createElement('div');
     toggle.className = 'terminal-log-toggle';
-    toggle.id = 'log-toggle-' + idComando;
-    // i18n: o texto do toggle é traduzível.
-    const toggleTexto = _t('comum.log_execucao', '📋 Log de execução');
-    toggle.innerHTML = `
-    <span class="toggle-arrow">▼</span>
-    <span class="toggle-text">${toggleTexto}</span>
-    `;
+    toggle.id = 'log-toggle-' + logBox.id;
+
+    var chave = labelKey || 'comum.log_execucao';
+    var fallback = (chave === 'comum.log_sessao') ? '📋 Log da Sessão' : '📋 Log de execução';
+    var toggleTexto = _t(chave, fallback);
+
+    toggle.innerHTML = '<span class="toggle-arrow">▼</span><span class="toggle-text">' + toggleTexto + '</span>';
     toggle.addEventListener('click', function() {
-        toggleTerminalLog(idComando);
+        toggleTerminalLog(logBox.id);
     });
 
     logBox.parentNode.insertBefore(wrapper, logBox);
@@ -619,7 +782,15 @@ function criarToggleParaLog(idComando) {
 }
 
 function conectarSSE(idComando, logBox) {
-    criarToggleParaLog(idComando);
+    if (!logBox) return;
+
+    // Se o logBox é de sessão (id começa com "log-sessao-"), usa o label
+    // "Log da Sessão". Senão, mantém o label padrão "Log de execução".
+    var labelKey = (logBox.id && logBox.id.indexOf('log-sessao-') === 0)
+        ? 'comum.log_sessao'
+        : 'comum.log_execucao';
+
+    criarToggleParaLog(logBox, labelKey);
 
     if (sseConnections[idComando]) {
         sseConnections[idComando].close();
@@ -630,8 +801,8 @@ function conectarSSE(idComando, logBox) {
         const eventSource = new EventSource(API_URL + '/stream?id=' + idComando);
         sseConnections[idComando] = eventSource;
 
-        let linhas = 0;
-        const MAX_LINHAS = 100;
+        let linhas = logBox.children.length;
+        const MAX_LINHAS = 500;
 
         eventSource.onmessage = function(event) {
             try {
@@ -672,10 +843,10 @@ function conectarSSE(idComando, logBox) {
 
                 if (linhas > MAX_LINHAS) {
                     const children = logBox.children;
-                    for (let j = 0; j < linhas - MAX_LINHAS; j++) {
+                    const excesso = linhas - MAX_LINHAS;
+                    for (let j = 0; j < excesso; j++) {
                         if (children[j]) children[j].remove();
                     }
-                    linhas = MAX_LINHAS;
                 }
 
                 logBox.scrollTop = logBox.scrollHeight;
@@ -698,10 +869,8 @@ function conectarSSE(idComando, logBox) {
         const errorLine = document.createElement('div');
         errorLine.className = 'log-line error';
         errorLine.textContent = '❌ Erro ao conectar SSE: ' + e.message;
-        if (logBox) {
-            logBox.appendChild(errorLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
+        logBox.appendChild(errorLine);
+        logBox.scrollTop = logBox.scrollHeight;
     }
 }
 
@@ -729,9 +898,6 @@ async function detectarDesktopReal() {
 // FUNÇÕES DE BOTÕES
 // ============================================================
 
-// CORREÇÃO #5: o fallback por substring (`onclick.includes(idComando)`)
-// podia casar botões errados. Só considera match exato por id HTML
-// ou por idComando entre quotes no onclick.
 function obterBotoesPorId(idComando) {
     let btnExecutar = null;
 
@@ -748,8 +914,8 @@ function obterBotoesPorId(idComando) {
             if (onclick.includes("'" + idComando + "'") ||
                 onclick.includes('"' + idComando + '"')) {
                 btnExecutar = btn;
-            break;
-                }
+                break;
+            }
         }
     }
 
@@ -766,7 +932,7 @@ function obterBotoesPorId(idComando) {
 // ============================================================
 
 async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) {
-    const logBox = document.getElementById('log-' + idComando);
+    const logBox = _getLogBox(idComando);
     const btn = document.getElementById('btn-' + idComando);
 
     if (!logBox) return;
@@ -778,8 +944,9 @@ async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) 
 
     iniciarProgresso(idComando);
 
-    logBox.innerHTML = '';
     logBox.style.display = 'block';
+
+    _separadorLog(logBox, nomeAcao);
 
     const header = document.createElement('div');
     header.className = 'log-line info';
@@ -794,6 +961,9 @@ async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) 
         btn.textContent = '⏳ ' + nomeAcao + '...';
         btn.style.opacity = '0.6';
     }
+
+    // Bloqueia os outros botões da sessão enquanto este roda
+    _bloquearSessao(idComando);
 
     try {
         const response = await fetch(API_URL + '/executar', {
@@ -849,14 +1019,14 @@ async function desinstalarPacote(idComando, comandoRemover, nomeExibicao) {
 
     if (!confirm(_tVars('comum.confirmar_desinstalar', 'Deseja desinstalar o ' + nomeExibicao + '?', { nome: nomeExibicao }))) return;
 
-    const logBox = document.getElementById('log-' + idComando);
+    const logBox = _getLogBox(idComando);
     const btn = document.getElementById('btn-' + idComando);
     const btnReverter = document.getElementById('btn-reverter-' + idComando);
     const idRevert = idComando + '-revert';
 
     if (logBox) {
-        logBox.innerHTML = '';
         logBox.style.display = 'block';
+        _separadorLog(logBox, '🗑️ Desinstalar ' + nomeExibicao);
         const infoLine = document.createElement('div');
         infoLine.className = 'log-line info';
         infoLine.textContent = '🗑️ Desinstalando ' + nomeExibicao + '...';
@@ -940,11 +1110,11 @@ function abrirFerramentaExterna(comando, idLog, nomeExibicao) {
         body: JSON.stringify({ comando: comando, idComando: idLog + '-open' })
     });
 
-    const logBox = document.getElementById('log-' + idLog);
+    var logBox = _getLogBox(idLog);
     if (logBox) {
-        logBox.innerHTML = '';
         logBox.style.display = 'block';
-        const infoLine = document.createElement('div');
+        _separadorLog(logBox, '🚀 Abrir ' + nomeExibicao);
+        var infoLine = document.createElement('div');
         infoLine.className = 'log-line success';
         infoLine.textContent = '🚀 ' + nomeExibicao + ' aberto!';
         logBox.appendChild(infoLine);
@@ -1036,8 +1206,6 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarVersaoServidor();
     setTimeout(initCustomSelects, 300);
 
-    // i18n: garante que o seletor de idioma exista em qualquer página
-    // que tenha um container .i18n-seletor-container (idempotente).
     if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 50);
     }
@@ -1047,9 +1215,6 @@ document.addEventListener('sessao-carregada', function() {
     setTimeout(initCustomSelects, 200);
     setTimeout(carregarProgressoInicial, 300);
 
-    // i18n: se uma sessão foi injetada depois do boot, o i18n.js já
-    // cuida via aplicarTraducoes(container), chamado pelos shells.
-    // Aqui só garantimos que o seletor existe caso ainda não exista.
     if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 100);
     }

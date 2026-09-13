@@ -24,10 +24,14 @@
                 </div>
 
                 <div class="grupo-botoes">
-                    <button class="btn-executar azul-claro" onclick="executarFontesMS()" data-comando="fontes-ms-all" id="btn-fontes-ms-all" data-i18n="sessoes.04-fontes.btn_instalar">
+                    <button class="btn-executar azul-claro"
+                            onclick="executarFontesMS()"
+                            data-comando="fontes-ms-all"
+                            data-logbox="log-sessao-04-fontes"
+                            id="btn-fontes-ms-all"
+                            data-i18n="sessoes.04-fontes.btn_instalar">
                         📦 Instalar Fontes MS
                     </button>
-                    <button class="btn-reverter" onclick="reverterFontesMS()" disabled data-i18n="sessoes.04-fontes.btn_remover">↩️ Remover</button>
                 </div>
 
                 <div class="info-extra" data-i18n="sessoes.04-fontes.info_extra">
@@ -44,8 +48,10 @@
                     <span class="percentage" id="progress-percent-fontes-ms-all">0%</span>
                 </div>
             </div>
-            <div class="terminal-log" id="log-fontes-ms-all"></div>
         </div>
+
+        <!-- Log único da sessão -->
+        <div class="terminal-log sessao-compartilhado" id="log-sessao-04-fontes"></div>
     </div>
 
     <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
@@ -54,15 +60,10 @@
         // SESSÃO 04: FONTES PARA COMPATIBILIDADE
         // ============================================================
 
-        // CORREÇÃO #15: renomeado para não colidir no escopo global.
         var ID_COMANDO_FONTES_MS = 'fontes-ms-all';
 
-        // i18n helpers locais
         function _t(chave, fallback) {
             return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
-        }
-        function _tVars(chave, fallback, vars) {
-            return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
         }
 
         async function executarFontesMS() {
@@ -71,76 +72,8 @@
             await executarComandoGenerico(ID_COMANDO_FONTES_MS, comando, _t('sessoes.04-fontes.btn_instalar', '📦 Instalar Fontes MS'));
         }
 
-        async function reverterFontesMS() {
-            if (!isExecutado(ID_COMANDO_FONTES_MS)) {
-                alert(_tVars('comum.nao_instalado', 'As fontes Microsoft não estão instaladas.', { nome: 'Fontes Microsoft' }));
-                return;
-            }
-
-            if (!confirm(_t('sessoes.04-fontes.confirmar_remover', 'Deseja remover as fontes Microsoft?'))) return;
-
-            const logBox = document.getElementById('log-' + ID_COMANDO_FONTES_MS);
-            const btn = document.getElementById('btn-' + ID_COMANDO_FONTES_MS);
-            const btnReverter = document.querySelector('.btn-reverter');
-
-            if (logBox) {
-                logBox.innerHTML = '';
-                logBox.style.display = 'block';
-                const infoLine = document.createElement('div');
-                infoLine.className = 'log-line info';
-                infoLine.textContent = _t('sessoes.04-fontes.log_removendo', '🗑️ Removendo fontes Microsoft...');
-                logBox.appendChild(infoLine);
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-
-            try {
-                await fetch(API_URL + '/executar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        comando: 'sudo rm -rf /usr/share/fonts/microsoft && sudo fc-cache -f -v',
-                        idComando: 'fontes-ms-revert'
-                    })
-                });
-
-                await new Promise(resolve => setTimeout(resolve, 3000));
-
-                desmarcarComoExecutado(ID_COMANDO_FONTES_MS);
-
-                if (btn) {
-                    btn.textContent = _t('sessoes.04-fontes.btn_instalar', '📦 Instalar Fontes MS');
-                    btn.style.backgroundColor = '#3b82f6';
-                    btn.style.cursor = 'pointer';
-                    btn.disabled = false;
-                }
-
-                if (btnReverter) {
-                    btnReverter.disabled = true;
-                }
-
-                if (logBox) {
-                    const successLine = document.createElement('div');
-                    successLine.className = 'log-line success';
-                    successLine.textContent = _t('sessoes.04-fontes.log_sucesso_remover', '✅ Fontes Microsoft removidas com sucesso!');
-                    logBox.appendChild(successLine);
-                    logBox.scrollTop = logBox.scrollHeight;
-                }
-
-            } catch (e) {
-                if (logBox) {
-                    const errorLine = document.createElement('div');
-                    errorLine.className = 'log-line error';
-                    errorLine.textContent = '❌ Erro ao remover: ' + e.message;
-                    logBox.appendChild(errorLine);
-                    logBox.scrollTop = logBox.scrollHeight;
-                }
-            }
-        }
-
         // ===== RESTAURAR ESTADO DA SESSÃO =====
         function restaurarEstadoSessao() {
-            const btnReverter = document.querySelector('.btn-reverter');
-
             if (isExecutado(ID_COMANDO_FONTES_MS)) {
                 const btn = document.getElementById('btn-' + ID_COMANDO_FONTES_MS);
                 if (btn) {
@@ -150,12 +83,6 @@
                     btn.style.cursor = 'default';
                     btn.disabled = true;
                 }
-
-                if (btnReverter) {
-                    btnReverter.disabled = false;
-                }
-            } else if (btnReverter) {
-                btnReverter.disabled = true;
             }
         }
 

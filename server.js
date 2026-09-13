@@ -5,7 +5,7 @@ const path = require('path');
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const ARQUIVO_PROGRESSO = path.join(__dirname, '.progresso.json');
-const FOF_VERSION = '0.9.9-alpha';
+const FOF_VERSION = '1.0.0-rc.1';
 
 // ============================================================
 // i18n: whitelist de idiomas suportados

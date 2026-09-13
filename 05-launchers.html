@@ -19,7 +19,14 @@
                 <h3 data-i18n="sessoes.05-launchers.vulkan_titulo">Drivers Vulkan Completos (Para GPUs AMD)</h3>
                 <p data-i18n="sessoes.05-launchers.vulkan_desc">Instala as ferramentas e bibliotecas Vulkan em versões de 32 e 64 bits para suporte nativo ao Proton.</p>
                 <div class="grupo-botoes">
-                    <button class="btn-executar" onclick="executarVulkan()" data-comando="vulkan-amd" id="btn-vulkan-amd" data-i18n="sessoes.05-launchers.btn_instalar_vulkan">🚀 Instalar Drivers Vulkan</button>
+                    <button class="btn-executar"
+                            onclick="executarVulkan()"
+                            data-comando="vulkan-amd"
+                            data-logbox="log-sessao-05-launchers"
+                            id="btn-vulkan-amd"
+                            data-i18n="sessoes.05-launchers.btn_instalar_vulkan">
+                        🚀 Instalar Drivers Vulkan
+                    </button>
                 </div>
             </div>
 
@@ -27,7 +34,6 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-vulkan-amd"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-vulkan-amd">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vulkan-amd">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-vulkan-amd"></div>
         </div>
 
         <!-- Launchers -->
@@ -41,20 +47,44 @@
 
                 <div class="grid-launchers">
                     <div class="launcher-item">
-                        <button class="btn-executar" onclick="executarSteam()" data-comando="steam-install" id="btn-steam-install" data-i18n="sessoes.05-launchers.btn_steam">🎮 Steam</button>
-                        <button class="btn-reverter" onclick="reverterSteam()" id="btn-reverter-steam-install" disabled data-i18n="comum.btn_desinstalar">↩️ Desinstalar</button>
+                        <button class="btn-executar"
+                                onclick="executarSteam()"
+                                data-comando="steam-install"
+                                data-logbox="log-sessao-05-launchers"
+                                id="btn-steam-install"
+                                data-i18n="sessoes.05-launchers.btn_steam">
+                            🎮 Steam
+                        </button>
                     </div>
                     <div class="launcher-item">
-                        <button class="btn-executar verde" onclick="executarHeroic()" data-comando="heroic-install" id="btn-heroic-install" data-i18n="sessoes.05-launchers.btn_heroic">⚡ Heroic Games</button>
-                        <button class="btn-reverter" onclick="reverterHeroic()" id="btn-reverter-heroic-install" disabled data-i18n="comum.btn_desinstalar">↩️ Desinstalar</button>
+                        <button class="btn-executar verde"
+                                onclick="executarHeroic()"
+                                data-comando="heroic-install"
+                                data-logbox="log-sessao-05-launchers"
+                                id="btn-heroic-install"
+                                data-i18n="sessoes.05-launchers.btn_heroic">
+                            ⚡ Heroic Games
+                        </button>
                     </div>
                     <div class="launcher-item">
-                        <button class="btn-executar roxo" onclick="executarLutris()" data-comando="lutris-install" id="btn-lutris-install" data-i18n="sessoes.05-launchers.btn_lutris">🎯 Lutris</button>
-                        <button class="btn-reverter" onclick="reverterLutris()" id="btn-reverter-lutris-install" disabled data-i18n="comum.btn_desinstalar">↩️ Desinstalar</button>
+                        <button class="btn-executar roxo"
+                                onclick="executarLutris()"
+                                data-comando="lutris-install"
+                                data-logbox="log-sessao-05-launchers"
+                                id="btn-lutris-install"
+                                data-i18n="sessoes.05-launchers.btn_lutris">
+                            🎯 Lutris
+                        </button>
                     </div>
                     <div class="launcher-item">
-                        <button class="btn-executar laranja" onclick="executarProtonUp()" data-comando="protonup-install" id="btn-protonup-install" data-i18n="sessoes.05-launchers.btn_protonup">🔄 ProtonUp-Qt</button>
-                        <button class="btn-reverter" onclick="reverterProtonUp()" id="btn-reverter-protonup-install" disabled data-i18n="comum.btn_desinstalar">↩️ Desinstalar</button>
+                        <button class="btn-executar laranja"
+                                onclick="executarProtonUp()"
+                                data-comando="protonup-install"
+                                data-logbox="log-sessao-05-launchers"
+                                id="btn-protonup-install"
+                                data-i18n="sessoes.05-launchers.btn_protonup">
+                            🔄 ProtonUp-Qt
+                        </button>
                     </div>
                 </div>
             </div>
@@ -63,25 +93,21 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-steam-install"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-steam-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-steam-install">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-steam-install"></div>
 
             <div class="progress-container" id="progress-heroic-install">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-heroic-install"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-heroic-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-heroic-install">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-heroic-install"></div>
 
             <div class="progress-container" id="progress-lutris-install">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-lutris-install"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-lutris-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-lutris-install">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-lutris-install"></div>
 
             <div class="progress-container" id="progress-protonup-install">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-protonup-install"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-protonup-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-protonup-install">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-protonup-install"></div>
         </div>
 
         <!-- Wine/Proton e Performance -->
@@ -92,24 +118,54 @@
 
                 <div class="grid-launchers">
                     <div class="launcher-item">
-                        <button class="btn-executar" onclick="executarWine()" data-comando="wine-install" id="btn-wine-install" data-i18n="sessoes.05-launchers.btn_wine">🍷 Wine</button>
-                        <button class="btn-reverter" onclick="reverterWine()" id="btn-reverter-wine-install" disabled data-i18n="comum.btn_desinstalar">↩️ Desinstalar</button>
+                        <button class="btn-executar"
+                                onclick="executarWine()"
+                                data-comando="wine-install"
+                                data-logbox="log-sessao-05-launchers"
+                                id="btn-wine-install"
+                                data-i18n="sessoes.05-launchers.btn_wine">
+                            🍷 Wine
+                        </button>
                     </div>
                     <div class="launcher-item">
-                        <button class="btn-executar verde" onclick="executarWinetricks()" data-comando="winetricks-install" id="btn-winetricks-install" data-i18n="sessoes.05-launchers.btn_winetricks">🔧 Winetricks</button>
-                        <button class="btn-reverter" onclick="reverterWinetricks()" id="btn-reverter-winetricks-install" disabled data-i18n="comum.btn_desinstalar">↩️ Desinstalar</button>
+                        <button class="btn-executar verde"
+                                onclick="executarWinetricks()"
+                                data-comando="winetricks-install"
+                                data-logbox="log-sessao-05-launchers"
+                                id="btn-winetricks-install"
+                                data-i18n="sessoes.05-launchers.btn_winetricks">
+                            🔧 Winetricks
+                        </button>
                     </div>
                     <div class="launcher-item">
-                        <button class="btn-executar roxo" onclick="executarBottles()" data-comando="bottles-install" id="btn-bottles-install" data-i18n="sessoes.05-launchers.btn_bottles">🍾 Bottles</button>
-                        <button class="btn-reverter" onclick="reverterBottles()" id="btn-reverter-bottles-install" disabled data-i18n="comum.btn_desinstalar">↩️ Desinstalar</button>
+                        <button class="btn-executar roxo"
+                                onclick="executarBottles()"
+                                data-comando="bottles-install"
+                                data-logbox="log-sessao-05-launchers"
+                                id="btn-bottles-install"
+                                data-i18n="sessoes.05-launchers.btn_bottles">
+                            🍾 Bottles
+                        </button>
                     </div>
                     <div class="launcher-item">
-                        <button class="btn-executar laranja" onclick="executarGameMode()" data-comando="gamemode-install" id="btn-gamemode-install" data-i18n="sessoes.05-launchers.btn_gamemode">⚙️ GameMode</button>
-                        <button class="btn-reverter" onclick="reverterGameMode()" id="btn-reverter-gamemode-install" disabled data-i18n="comum.btn_desinstalar">↩️ Desinstalar</button>
+                        <button class="btn-executar laranja"
+                                onclick="executarGameMode()"
+                                data-comando="gamemode-install"
+                                data-logbox="log-sessao-05-launchers"
+                                id="btn-gamemode-install"
+                                data-i18n="sessoes.05-launchers.btn_gamemode">
+                            ⚙️ GameMode
+                        </button>
                     </div>
                     <div class="launcher-item">
-                        <button class="btn-executar azul-claro" onclick="executarMangoHud()" data-comando="mangohud-install" id="btn-mangohud-install" data-i18n="sessoes.05-launchers.btn_mangohud">📊 MangoHud</button>
-                        <button class="btn-reverter" onclick="reverterMangoHud()" id="btn-reverter-mangohud-install" disabled data-i18n="comum.btn_desinstalar">↩️ Desinstalar</button>
+                        <button class="btn-executar azul-claro"
+                                onclick="executarMangoHud()"
+                                data-comando="mangohud-install"
+                                data-logbox="log-sessao-05-launchers"
+                                id="btn-mangohud-install"
+                                data-i18n="sessoes.05-launchers.btn_mangohud">
+                            📊 MangoHud
+                        </button>
                     </div>
                 </div>
 
@@ -125,32 +181,30 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-wine-install"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-wine-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-wine-install">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-wine-install"></div>
 
             <div class="progress-container" id="progress-winetricks-install">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-winetricks-install"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-winetricks-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-winetricks-install">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-winetricks-install"></div>
 
             <div class="progress-container" id="progress-bottles-install">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-bottles-install"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-bottles-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-bottles-install">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-bottles-install"></div>
 
             <div class="progress-container" id="progress-gamemode-install">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-gamemode-install"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-gamemode-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-gamemode-install">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-gamemode-install"></div>
 
             <div class="progress-container" id="progress-mangohud-install">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-mangohud-install"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-mangohud-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-mangohud-install">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-mangohud-install"></div>
         </div>
+
+        <!-- Log único da sessão -->
+        <div class="terminal-log sessao-compartilhado" id="log-sessao-05-launchers"></div>
     </div>
 
     <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
@@ -159,7 +213,6 @@
         // SESSÃO 05: LAUNCHERS E PACOTES ESSENCIAIS
         // ============================================================
 
-        // i18n helpers locais
         function _t(chave, fallback) {
             return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
         }
@@ -194,55 +247,24 @@
             await executarComandoGenerico(idComando, comando, _t('sessoes.05-launchers.btn_protonup', '🔄 ProtonUp-Qt'), mostrarBotaoDesinstalar);
         }
 
-        function reverterSteam() {
-            desinstalarPacote('steam-install', 'flatpak uninstall com.valvesoftware.Steam -y && (sudo dnf remove steam-devices -y 2>/dev/null || true)', 'Steam');
-        }
-
-        function reverterHeroic() {
-            desinstalarPacote('heroic-install', 'flatpak uninstall com.heroicgameslauncher.hgl -y', 'Heroic Games');
-        }
-
-        function reverterLutris() {
-            desinstalarPacote('lutris-install', 'flatpak uninstall net.lutris.Lutris -y', 'Lutris');
-        }
-
-        function reverterProtonUp() {
-            desinstalarPacote('protonup-install', 'flatpak uninstall net.davidotek.pupgui2 -y', 'ProtonUp-Qt');
-        }
-
         async function executarWine() {
             await executarComandoGenerico('wine-install', 'sudo dnf install wine -y', _t('sessoes.05-launchers.btn_wine', '🍷 Wine'), mostrarBotaoDesinstalar);
-        }
-        function reverterWine() {
-            desinstalarPacote('wine-install', 'sudo dnf remove wine -y', 'Wine');
         }
 
         async function executarWinetricks() {
             await executarComandoGenerico('winetricks-install', 'sudo dnf install winetricks -y', _t('sessoes.05-launchers.btn_winetricks', '🔧 Winetricks'), mostrarBotaoDesinstalar);
         }
-        function reverterWinetricks() {
-            desinstalarPacote('winetricks-install', 'sudo dnf remove winetricks -y', 'Winetricks');
-        }
 
         async function executarBottles() {
             await executarComandoGenerico('bottles-install', 'flatpak install flathub com.usebottles.bottles -y', _t('sessoes.05-launchers.btn_bottles', '🍾 Bottles'), mostrarBotaoDesinstalar);
-        }
-        function reverterBottles() {
-            desinstalarPacote('bottles-install', 'flatpak uninstall com.usebottles.bottles -y', 'Bottles');
         }
 
         async function executarGameMode() {
             await executarComandoGenerico('gamemode-install', 'sudo dnf install gamemode -y', _t('sessoes.05-launchers.btn_gamemode', '⚙️ GameMode'), mostrarBotaoDesinstalar);
         }
-        function reverterGameMode() {
-            desinstalarPacote('gamemode-install', 'sudo dnf remove gamemode -y', 'GameMode');
-        }
 
         async function executarMangoHud() {
             await executarComandoGenerico('mangohud-install', 'sudo dnf install mangohud -y', _t('sessoes.05-launchers.btn_mangohud', '📊 MangoHud'), mostrarBotaoDesinstalar);
-        }
-        function reverterMangoHud() {
-            desinstalarPacote('mangohud-install', 'sudo dnf remove mangohud -y', 'MangoHud');
         }
 
         // ===== RESTAURAR ESTADO DA SESSÃO =====
@@ -253,8 +275,6 @@
             ];
 
             comandos.forEach(function(id) {
-                const btnReverter = document.getElementById('btn-reverter-' + id);
-
                 if (isExecutado(id)) {
                     const btn = document.getElementById('btn-' + id);
                     if (btn) {
@@ -264,12 +284,6 @@
                         btn.style.cursor = 'default';
                         btn.disabled = true;
                     }
-
-                    if (btnReverter) {
-                        btnReverter.disabled = false;
-                    }
-                } else if (btnReverter) {
-                    btnReverter.disabled = true;
                 }
             });
         }

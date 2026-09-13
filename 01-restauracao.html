@@ -20,14 +20,19 @@
                 <p data-i18n="sessoes.01-restauracao.btrfs_desc">O Btrfs-Assistant é uma ferramenta gráfica para gerenciar snapshots do sistema de arquivos Btrfs, permitindo criar e restaurar backups do seu sistema.</p>
 
                 <div class="botoes-flex">
-                    <button class="btn-executar roxo" onclick="instalarBtrfsAssistant()" data-comando="btrfs-install" id="btn-btrfs" data-i18n="sessoes.01-restauracao.btn_instalar">
+                    <button class="btn-executar roxo"
+                            onclick="instalarBtrfsAssistant()"
+                            data-comando="btrfs-install"
+                            data-logbox="log-sessao-01-restauracao"
+                            id="btn-btrfs"
+                            data-i18n="sessoes.01-restauracao.btn_instalar">
                         📦 Instalar Btrfs-Assistant
                     </button>
-                    <button class="btn-executar verde" onclick="abrirBtrfsAssistant()" data-i18n="sessoes.01-restauracao.btn_abrir">
+                    <button class="btn-executar verde"
+                            onclick="abrirBtrfsAssistant()"
+                            data-logbox="log-sessao-01-restauracao"
+                            data-i18n="sessoes.01-restauracao.btn_abrir">
                         🚀 Abrir Btrfs-Assistant
-                    </button>
-                    <button class="btn-reverter" onclick="reverterBtrfsAssistant()" disabled data-i18n="sessoes.01-restauracao.btn_desinstalar">
-                        ↩️ Desinstalar
                     </button>
                 </div>
 
@@ -45,8 +50,10 @@
                     <span class="percentage" id="progress-percent-btrfs-install">0%</span>
                 </div>
             </div>
-            <div class="terminal-log" id="log-btrfs-install"></div>
         </div>
+
+        <!-- Log único da sessão (compartilhado por todos os botões) -->
+        <div class="terminal-log sessao-compartilhado" id="log-sessao-01-restauracao"></div>
     </div>
 
     <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
@@ -65,9 +72,8 @@
 
         async function instalarBtrfsAssistant() {
             const comando = 'sudo dnf install btrfs-assistant -y';
-            const logBox = document.getElementById('log-' + ID_COMANDO);
+            const logBox = _getLogBox(ID_COMANDO);
             const btn = document.getElementById('btn-btrfs');
-            const btnReverter = document.querySelector('.btn-reverter');
 
             if (!logBox) return;
 
@@ -78,8 +84,8 @@
 
             iniciarProgresso(ID_COMANDO);
 
-            logBox.innerHTML = '';
             logBox.style.display = 'block';
+            _separadorLog(logBox, _t('sessoes.01-restauracao.btn_instalar', '📦 Instalar Btrfs-Assistant').replace(/^[^\s]+\s/, ''));
 
             const header = document.createElement('div');
             header.className = 'log-line info';
@@ -94,6 +100,8 @@
                 btn.textContent = '⏳ ' + _t('sessoes.01-restauracao.btn_instalar', '📦 Instalar Btrfs-Assistant').replace(/^[^\s]+\s/, '') + '...';
                 btn.style.opacity = '0.6';
             }
+
+            _bloquearSessao(ID_COMANDO);
 
             try {
                 const response = await fetch(API_URL + '/executar', {
@@ -136,98 +144,17 @@
             abrirFerramentaExterna('gtk-launch btrfs-assistant 2>/dev/null &', ID_COMANDO, 'Btrfs-Assistant');
         }
 
-        async function reverterBtrfsAssistant() {
-            if (!isExecutado(ID_COMANDO)) {
-                alert(_tVarsSafe('comum.nao_instalado', 'Btrfs-Assistant não está instalado.', { nome: 'Btrfs-Assistant' }));
-                return;
-            }
-
-            if (!confirm(_t('sessoes.01-restauracao.confirmar_desinstalar', 'Deseja desinstalar o Btrfs-Assistant?'))) return;
-
-            const logBox = document.getElementById('log-' + ID_COMANDO);
-            const btn = document.getElementById('btn-btrfs');
-            const btnReverter = document.querySelector('.btn-reverter');
-
-            if (logBox) {
-                logBox.innerHTML = '';
-                logBox.style.display = 'block';
-                const infoLine = document.createElement('div');
-                infoLine.className = 'log-line info';
-                infoLine.textContent = _t('sessoes.01-restauracao.log_desinstalando', '🗑️ Desinstalando Btrfs-Assistant...');
-                logBox.appendChild(infoLine);
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-
-            try {
-                await fetch(API_URL + '/executar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        comando: 'sudo dnf remove btrfs-assistant -y && sudo dnf clean all && sudo dnf autoremove -y',
-                        idComando: 'btrfs-uninstall'
-                    })
-                });
-
-                await new Promise(resolve => setTimeout(resolve, 3000));
-
-                desmarcarComoExecutado(ID_COMANDO);
-
-                if (btn) {
-                    btn.textContent = _t('sessoes.01-restauracao.btn_instalar', '📦 Instalar Btrfs-Assistant');
-                    btn.style.backgroundColor = '#8b5cf6';
-                    btn.style.cursor = 'pointer';
-                    btn.disabled = false;
-                }
-
-                if (btnReverter) {
-                    btnReverter.disabled = true;
-                }
-
-                if (logBox) {
-                    const successLine = document.createElement('div');
-                    successLine.className = 'log-line success';
-                    successLine.textContent = _t('sessoes.01-restauracao.log_sucesso_desinstalar', '✅ Btrfs-Assistant desinstalado com sucesso!');
-                    logBox.appendChild(successLine);
-                    logBox.scrollTop = logBox.scrollHeight;
-                }
-
-            } catch (e) {
-                if (logBox) {
-                    const errorLine = document.createElement('div');
-                    errorLine.className = 'log-line error';
-                    errorLine.textContent = '❌ Erro ao desinstalar: ' + e.message;
-                    logBox.appendChild(errorLine);
-                    logBox.scrollTop = logBox.scrollHeight;
-                }
-            }
-        }
-
-        // Helper extra: var com interpolação
-        function _tVarsSafe(chave, fallback, vars) {
-            return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
-        }
-
         // ===== RESTAURAR ESTADO DA SESSÃO =====
         function restaurarEstadoSessao() {
-            const comandos = ['btrfs-install'];
-            const btnReverter = document.querySelector('.btn-reverter');
-
-            comandos.forEach(function(id) {
-                if (isExecutado(id)) {
-                    const btn = document.getElementById('btn-btrfs');
-                    if (btn) {
-                        btn.textContent = getTextoAposExecucao(id);
-                        btn.style.backgroundColor = '#4b5563';
-                        btn.style.cursor = 'default';
-                        btn.disabled = true;
-                    }
-                    if (btnReverter) {
-                        btnReverter.disabled = false;
-                    }
-                } else if (btnReverter) {
-                    btnReverter.disabled = true;
+            if (isExecutado(ID_COMANDO)) {
+                const btn = document.getElementById('btn-btrfs');
+                if (btn) {
+                    btn.textContent = getTextoAposExecucao(ID_COMANDO);
+                    btn.style.backgroundColor = '#4b5563';
+                    btn.style.cursor = 'default';
+                    btn.disabled = true;
                 }
-            });
+            }
         }
 
         // ===== INICIALIZAÇÃO =====

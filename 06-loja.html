@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOF - Loja</title>
+    <title>FOF - Produção Multimídia</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,15 +21,23 @@
                 <p data-i18n="sessoes.06-loja.obs_desc">Instale o OBS Studio para gravação/streaming e ative a câmera virtual para chamadas de vídeo.</p>
 
                 <div class="botoes-flex">
-                    <button class="btn-executar verde-escuro" onclick="executarOBSStudio()" data-comando="instalar-obs-studio" id="btn-instalar-obs-studio" data-i18n="sessoes.06-loja.btn_instalar_obs">
+                    <button class="btn-executar verde-escuro"
+                            onclick="executarOBSStudio()"
+                            data-comando="instalar-obs-studio"
+                            data-logbox="log-sessao-06-loja"
+                            id="btn-instalar-obs-studio"
+                            data-i18n="sessoes.06-loja.btn_instalar_obs">
                         📹 Instalar OBS Studio
                     </button>
-                    <button class="btn-reverter" onclick="reverterOBSStudio()" id="btn-reverter-instalar-obs-studio" disabled data-i18n="sessoes.06-loja.btn_remover_obs">↩️ Remover</button>
 
-                    <button class="btn-executar" onclick="executarOBSCam()" data-comando="obs-cam" id="btn-obs-cam" data-i18n="sessoes.06-loja.btn_ativar_cam">
+                    <button class="btn-executar"
+                            onclick="executarOBSCam()"
+                            data-comando="obs-cam"
+                            data-logbox="log-sessao-06-loja"
+                            id="btn-obs-cam"
+                            data-i18n="sessoes.06-loja.btn_ativar_cam">
                         🎥 Ativar Câmera Virtual
                     </button>
-                    <button class="btn-reverter" onclick="reverterOBSCam()" id="btn-reverter-obs-cam" disabled data-i18n="sessoes.06-loja.btn_remover_cam">↩️ Remover</button>
                 </div>
 
                 <div class="aviso-caixa" style="margin-top: 0.5rem; font-size: 0.85rem;" data-i18n="sessoes.06-loja.obs_aviso">
@@ -41,13 +49,11 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-instalar-obs-studio"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-instalar-obs-studio">⏳ Iniciando...</span><span class="percentage" id="progress-percent-instalar-obs-studio">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-instalar-obs-studio"></div>
 
             <div class="progress-container" id="progress-obs-cam">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-obs-cam"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-obs-cam">⏳ Iniciando...</span><span class="percentage" id="progress-percent-obs-cam">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-obs-cam"></div>
         </div>
 
         <!-- EasyEffects -->
@@ -56,8 +62,14 @@
                 <h3 data-i18n="sessoes.06-loja.easyeffects_titulo">🎵 Melhoria de Áudio com EasyEffects</h3>
                 <p data-i18n="sessoes.06-loja.easyeffects_desc">Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
                 <div class="grupo-botoes">
-                    <button class="btn-executar" onclick="executarEasyEffects()" data-comando="instalar-easyeffects" id="btn-instalar-easyeffects" data-i18n="sessoes.06-loja.btn_instalar_easyeffects">Instalar EasyEffects (Flatpak)</button>
-                    <button class="btn-reverter" onclick="reverterEasyEffects()" id="btn-reverter-instalar-easyeffects" disabled data-i18n="sessoes.06-loja.btn_remover_easyeffects">↩️ Remover</button>
+                    <button class="btn-executar"
+                            onclick="executarEasyEffects()"
+                            data-comando="instalar-easyeffects"
+                            data-logbox="log-sessao-06-loja"
+                            id="btn-instalar-easyeffects"
+                            data-i18n="sessoes.06-loja.btn_instalar_easyeffects">
+                        Instalar EasyEffects (Flatpak)
+                    </button>
                 </div>
             </div>
 
@@ -65,71 +77,10 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-instalar-easyeffects"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-instalar-easyeffects">⏳ Iniciando...</span><span class="percentage" id="progress-percent-instalar-easyeffects">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-instalar-easyeffects"></div>
         </div>
 
-        <!-- Edição de Vídeo e Áudio -->
-        <div class="bloco-comando">
-            <div class="comando-info">
-                <h3 data-i18n="sessoes.06-loja.edicao_titulo">🎞️ Edição de Vídeo e Áudio</h3>
-                <p data-i18n="sessoes.06-loja.edicao_desc">Ferramentas completas para editar o que você grava ou produz: cortes, transições e mixagem de trilhas.</p>
-                <div class="grupo-botoes">
-                    <button class="btn-executar" onclick="executarKdenlive()" data-comando="instalar-kdenlive" id="btn-instalar-kdenlive" data-i18n="sessoes.06-loja.btn_instalar_kdenlive">🎞️ Instalar Kdenlive (Flatpak)</button>
-                    <button class="btn-reverter" onclick="reverterKdenlive()" id="btn-reverter-instalar-kdenlive" disabled data-i18n="sessoes.06-loja.btn_remover_kdenlive">↩️ Remover</button>
-
-                    <button class="btn-executar verde" onclick="executarAudacity()" data-comando="instalar-audacity" id="btn-instalar-audacity" data-i18n="sessoes.06-loja.btn_instalar_audacity">🎙️ Instalar Audacity (Flatpak)</button>
-                    <button class="btn-reverter" onclick="reverterAudacity()" id="btn-reverter-instalar-audacity" disabled data-i18n="sessoes.06-loja.btn_remover_audacity">↩️ Remover</button>
-                </div>
-            </div>
-
-            <div class="progress-container" id="progress-instalar-kdenlive">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-instalar-kdenlive"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-instalar-kdenlive">⏳ Iniciando...</span><span class="percentage" id="progress-percent-instalar-kdenlive">0%</span></div>
-            </div>
-            <div class="terminal-log" id="log-instalar-kdenlive"></div>
-
-            <div class="progress-container" id="progress-instalar-audacity">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-instalar-audacity"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-instalar-audacity">⏳ Iniciando...</span><span class="percentage" id="progress-percent-instalar-audacity">0%</span></div>
-            </div>
-            <div class="terminal-log" id="log-instalar-audacity"></div>
-        </div>
-
-        <!-- Suíte Affinity via Wine -->
-        <div class="bloco-comando">
-            <div class="comando-info">
-                <h3 data-i18n="sessoes.06-loja.affinity_titulo">🎨 Suíte Affinity (Photo, Designer, Publisher)</h3>
-                <p data-i18n-html="sessoes.06-loja.affinity_desc">
-                    A Affinity não tem versão nativa pra Linux. Este botão abre o instalador da
-                    <a href="https://github.com/ryzendew/Linux-Affinity-Installer" target="_blank" rel="noopener" onclick="event.preventDefault(); window.open('https://github.com/ryzendew/Linux-Affinity-Installer', '_blank', 'noopener,noreferrer');">AffinityOnLinux</a>,
-                    um projeto da comunidade (não afiliado à Serif/Canva) que prepara um ambiente Wine
-                    já configurado pra rodar a Affinity.
-                </p>
-
-                <div class="aviso-caixa" data-i18n-html="sessoes.06-loja.affinity_aviso">
-                    ⚠️ Você precisa ter <strong>comprado e baixado o instalador <code>.exe</code> da Affinity</strong>
-                    pelo site oficial da Serif/Canva antes de usar isto — o FOF só prepara o ambiente Wine e
-                    abre o instalador da comunidade; ele é quem vai pedir o arquivo <code>.exe</code> na hora certa.
-                    É um projeto de terceiros: se algo não funcionar no seu hardware, consulte a
-                    <a href="https://github.com/ryzendew/Linux-Affinity-Installer/blob/main/docs/Known-issues.md" target="_blank" rel="noopener" onclick="event.preventDefault(); window.open('https://github.com/ryzendew/Linux-Affinity-Installer/blob/main/docs/Known-issues.md', '_blank', 'noopener,noreferrer');">página de problemas conhecidos</a> deles.
-                </div>
-
-                <div class="aviso-caixa" style="border-color: #3c67e3; color: #60a5fa;" data-i18n-html="sessoes.06-loja.affinity_prereq">
-                    📦 <strong>Pré-requisito:</strong> PyQt6 é necessário para a interface do instalador. O FOF verifica e instala automaticamente se necessário.
-                </div>
-
-                <div class="botoes-flex" style="margin-top: 1rem;">
-                    <button class="btn-executar" onclick="abrirInstaladorAffinity()" data-i18n="sessoes.06-loja.btn_abrir_instalador">
-                        🎨 Abrir Instalador da Affinity
-                    </button>
-                    <button class="btn-executar" style="background-color: #4b5563;" onclick="abrirGitHubAffinity()" data-i18n="sessoes.06-loja.btn_github_projeto">
-                        🐙 GitHub do Projeto
-                    </button>
-                </div>
-            </div>
-
-            <div class="terminal-log" id="log-affinity-install"></div>
-        </div>
+        <!-- Log único da sessão -->
+        <div class="terminal-log sessao-compartilhado" id="log-sessao-06-loja"></div>
     </div>
 
     <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
@@ -138,7 +89,6 @@
         // SESSÃO 06: PRODUÇÃO MULTIMÍDIA
         // ============================================================
 
-        // i18n helpers locais
         function _t(chave, fallback) {
             return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
         }
@@ -149,21 +99,10 @@
             await executarComandoGenerico(idComando, comando, _t('sessoes.06-loja.btn_instalar_obs', '📹 Instalar OBS Studio'), mostrarBotaoDesinstalar);
         }
 
-        function reverterOBSStudio() {
-            desinstalarPacote('instalar-obs-studio', 'flatpak uninstall com.obsproject.Studio -y', 'OBS Studio');
-        }
-
         async function executarOBSCam() {
             const idComando = 'obs-cam';
             const comando = 'sudo dnf install akmod-v4l2loopback v4l-utils -y 2>/dev/null || sudo dnf install v4l2loopback v4l-utils -y';
             await executarComandoGenerico(idComando, comando, _t('sessoes.06-loja.btn_ativar_cam', '🎥 Ativar Câmera Virtual'), mostrarBotaoDesinstalar);
-        }
-
-        function reverterOBSCam() {
-            // CORREÇÃO #9: tenta remover cada pacote individualmente, ignorando
-            // os que não estão instalados (fallback akmod vs v4l2loopback).
-            const comando = 'for p in akmod-v4l2loopback v4l2loopback v4l-utils; do sudo dnf remove $p -y >/dev/null 2>&1 || true; done; sudo dnf clean all && sudo dnf autoremove -y';
-            desinstalarPacote('obs-cam', comando, 'Câmera Virtual');
         }
 
         async function executarEasyEffects() {
@@ -172,93 +111,11 @@
             await executarComandoGenerico(idComando, comando, _t('sessoes.06-loja.btn_instalar_easyeffects', 'Instalar EasyEffects (Flatpak)'), mostrarBotaoDesinstalar);
         }
 
-        function reverterEasyEffects() {
-            desinstalarPacote('instalar-easyeffects', 'flatpak uninstall com.github.wwmm.easyeffects -y', 'EasyEffects');
-        }
-
-        async function executarKdenlive() {
-            await executarComandoGenerico('instalar-kdenlive', 'flatpak install flathub org.kde.kdenlive -y', _t('sessoes.06-loja.btn_instalar_kdenlive', '🎞️ Instalar Kdenlive (Flatpak)'), mostrarBotaoDesinstalar);
-        }
-        function reverterKdenlive() {
-            desinstalarPacote('instalar-kdenlive', 'flatpak uninstall org.kde.kdenlive -y', 'Kdenlive');
-        }
-
-        async function executarAudacity() {
-            await executarComandoGenerico('instalar-audacity', 'flatpak install flathub org.audacityteam.Audacity -y', _t('sessoes.06-loja.btn_instalar_audacity', '🎙️ Instalar Audacity (Flatpak)'), mostrarBotaoDesinstalar);
-        }
-        function reverterAudacity() {
-            desinstalarPacote('instalar-audacity', 'flatpak uninstall org.audacityteam.Audacity -y', 'Audacity');
-        }
-
-        function abrirGitHubAffinity() {
-            window.open('https://github.com/ryzendew/Linux-Affinity-Installer', '_blank', 'noopener,noreferrer');
-        }
-
-        async function abrirInstaladorAffinity() {
-            const idComando = 'affinity-install';
-            const logBox = document.getElementById('log-' + idComando);
-            const btn = document.querySelector('.btn-executar[onclick="abrirInstaladorAffinity()"]');
-
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = _t('sessoes.06-loja.log_preparando', '⏳ Preparando...');
-                btn.style.opacity = '0.6';
-            }
-
-            const comando = 'mkdir -p /tmp/fof-affinity && ' +
-                'rpm -q python3-pyqt6 > /dev/null 2>&1 || sudo dnf install -y python3-pyqt6 && ' +
-                'curl -sSL https://raw.githubusercontent.com/ryzendew/Linux-Affinity-Installer/refs/heads/main/AffinityScripts/AffinityLinuxInstaller.py -o /tmp/fof-affinity/AffinityLinuxInstaller.py && ' +
-                'chmod +x /tmp/fof-affinity/AffinityLinuxInstaller.py && ' +
-                'nohup python3 /tmp/fof-affinity/AffinityLinuxInstaller.py > /tmp/fof-affinity/installer.log 2>&1 &';
-
-            try {
-                const response = await fetch(API_URL + '/executar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ comando: comando, idComando: idComando })
-                });
-
-                if (response.ok) {
-                    if (logBox) {
-                        logBox.innerHTML = '';
-                        logBox.style.display = 'block';
-                        const infoLine = document.createElement('div');
-                        infoLine.className = 'log-line success';
-                        infoLine.textContent = _t('sessoes.06-loja.log_instalador_iniciado', '🚀 Instalador da Affinity iniciado!');
-                        logBox.appendChild(infoLine);
-                        const infoLine2 = document.createElement('div');
-                        infoLine2.className = 'log-line info';
-                        infoLine2.textContent = _t('sessoes.06-loja.log_instalador_local', '📋 Log: /tmp/fof-affinity/installer.log');
-                        logBox.appendChild(infoLine2);
-                    }
-                }
-            } catch (e) {
-                if (logBox) {
-                    logBox.innerHTML = '';
-                    logBox.style.display = 'block';
-                    const errorLine = document.createElement('div');
-                    errorLine.className = 'log-line error';
-                    errorLine.textContent = '❌ Erro: ' + e.message;
-                    logBox.appendChild(errorLine);
-                }
-            } finally {
-                setTimeout(function() {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.textContent = _t('sessoes.06-loja.btn_abrir_instalador', '🎨 Abrir Instalador da Affinity');
-                        btn.style.opacity = '1';
-                    }
-                }, 3000);
-            }
-        }
-
         // ===== RESTAURAR ESTADO DA SESSÃO =====
         function restaurarEstadoSessao() {
-            const comandos = ['instalar-obs-studio', 'obs-cam', 'instalar-easyeffects', 'instalar-kdenlive', 'instalar-audacity'];
+            const comandos = ['instalar-obs-studio', 'obs-cam', 'instalar-easyeffects'];
 
             comandos.forEach(function(id) {
-                const btnReverter = document.getElementById('btn-reverter-' + id);
-
                 if (isExecutado(id)) {
                     const btn = document.getElementById('btn-' + id);
                     if (btn) {
@@ -268,12 +125,6 @@
                         btn.style.cursor = 'default';
                         btn.disabled = true;
                     }
-
-                    if (btnReverter) {
-                        btnReverter.disabled = false;
-                    }
-                } else if (btnReverter) {
-                    btnReverter.disabled = true;
                 }
             });
         }

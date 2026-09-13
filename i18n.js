@@ -1,6 +1,6 @@
 /**
  * Fedora Only Fans (FOF) - Módulo de Internacionalização (i18n)
- * Versão: 0.9.9-alpha
+ * Versão: 1.0.0-rc.1
  *
  * Suporta: pt-BR (padrão), en, es
  *

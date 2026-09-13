@@ -1,6 +1,6 @@
 /* ============================================
  *  Fedora Only Fans (FOF) - Estilos Compartilhados
- *  Versão: 0.9.9-alpha
+ *  Versão: 1.0.0-rc.1
  *  ============================================ */
 
 :root {
@@ -450,6 +450,18 @@ body {
     opacity: 1;
 }
 
+/* Log compartilhado de sessão (múltiplos botões): mais espaço vertical
+ * para acomodar várias execuções em sequência. */
+.terminal-log.sessao-compartilhado {
+    min-height: 200px;
+    max-height: 400px;
+}
+
+.terminal-log.sessao-compartilhado.expandido {
+    min-height: 200px;
+    max-height: 400px;
+}
+
 .terminal-log .log-line {
     display: block;
     padding: 1px 0;
@@ -482,6 +494,17 @@ body {
 .terminal-log .log-line.end {
     color: #6b7280;
     font-style: italic;
+}
+
+/* Separador entre execuções no log compartilhado de sessão:
+ * ────── Iniciando: <nome> ────── */
+.terminal-log .log-line.separator {
+    color: #6b7280;
+    font-style: italic;
+    margin-top: 0.6rem;
+    padding-top: 0.4rem;
+    border-top: 1px dashed var(--border);
+    animation: fadeIn 0.2s ease-in;
 }
 
 @keyframes fadeIn {

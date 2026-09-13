@@ -18,7 +18,14 @@
                 <h3 data-i18n="sessoes.07-manutencao.limpeza_titulo">Limpar Arquivos Temporários e Resíduos</h3>
                 <p data-i18n="sessoes.07-manutencao.limpeza_desc">Limpa o cache do DNF, dependências órfãs e runtimes de flatpak não utilizados.</p>
                 <div class="grupo-botoes">
-                    <button class="btn-executar" onclick="executarLimpeza()" data-comando="limpeza-sistema" id="btn-limpeza-sistema" data-i18n="sessoes.07-manutencao.btn_limpeza">Executar Limpeza</button>
+                    <button class="btn-executar"
+                            onclick="executarLimpeza()"
+                            data-comando="limpeza-sistema"
+                            data-logbox="log-sessao-07-manutencao"
+                            id="btn-limpeza-sistema"
+                            data-i18n="sessoes.07-manutencao.btn_limpeza">
+                        Executar Limpeza
+                    </button>
                 </div>
             </div>
 
@@ -26,7 +33,6 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-limpeza-sistema"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-limpeza-sistema">⏳ Iniciando...</span><span class="percentage" id="progress-percent-limpeza-sistema">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-limpeza-sistema"></div>
         </div>
 
         <!-- Kernels -->
@@ -37,14 +43,30 @@
                 <div class="aviso-caixa" data-i18n="sessoes.07-manutencao.kernel_aviso">⚠️ IMPORTANTE: Não é recomendado remover nenhuma versão anterior do kernel pois o Fedora mantém apenas os 3 últimos kernels.</div>
 
                 <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-                    <button class="btn-executar" onclick="listarKernels()" id="btn-listar-kernels" data-i18n="sessoes.07-manutencao.btn_verificar_kernels">📋 Verificar Kernels</button>
+                    <button class="btn-executar"
+                            onclick="listarKernels()"
+                            data-comando="listar-kernels"
+                            data-logbox="log-sessao-07-manutencao"
+                            id="btn-listar-kernels"
+                            data-i18n="sessoes.07-manutencao.btn_verificar_kernels">
+                        📋 Verificar Kernels
+                    </button>
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <label for="kernel-select" style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="sessoes.07-manutencao.kernel_label_selecionar">Selecionar:</label>
                         <select id="kernel-select" class="kernel-dropdown" disabled>
                             <option value="" data-i18n="sessoes.07-manutencao.kernel_option_nenhum">Nenhum kernel detectado</option>
                         </select>
                     </div>
-                    <button class="btn-executar" style="background-color: #ef4444;" onclick="removerKernel()" id="btn-remover-kernel" disabled data-i18n="sessoes.07-manutencao.btn_remover_kernel">🗑️ Remover</button>
+                    <button class="btn-executar"
+                            style="background-color: #ef4444;"
+                            onclick="removerKernel()"
+                            data-comando="remover-kernel"
+                            data-logbox="log-sessao-07-manutencao"
+                            id="btn-remover-kernel"
+                            disabled
+                            data-i18n="sessoes.07-manutencao.btn_remover_kernel">
+                        🗑️ Remover
+                    </button>
                 </div>
             </div>
 
@@ -52,7 +74,6 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-listar-kernels"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-listar-kernels">⏳ Iniciando...</span><span class="percentage" id="progress-percent-listar-kernels">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-listar-kernels"></div>
         </div>
 
         <!-- ===== GRUB ===== -->
@@ -66,13 +87,29 @@
                 </div>
 
                 <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; align-items: center;">
-                    <button class="btn-executar laranja" onclick="executarConfigGrubRecomendado()" data-comando="grub-aplicar-recomendado" id="btn-grub-aplicar-recomendado" data-i18n="sessoes.07-manutencao.btn_grub_recomendado">
+                    <button class="btn-executar laranja"
+                            onclick="executarConfigGrubRecomendado()"
+                            data-comando="grub-aplicar-recomendado"
+                            data-logbox="log-sessao-07-manutencao"
+                            id="btn-grub-aplicar-recomendado"
+                            data-i18n="sessoes.07-manutencao.btn_grub_recomendado">
                         ⚙️ Aplicar Configuração Recomendada
                     </button>
-                    <button class="btn-executar" style="background-color: #6b7280;" onclick="executarConfigGrubPadrao()" data-comando="grub-restaurar-padrao" id="btn-grub-restaurar-padrao" data-i18n="sessoes.07-manutencao.btn_grub_padrao">
+                    <button class="btn-executar"
+                            style="background-color: #6b7280;"
+                            onclick="executarConfigGrubPadrao()"
+                            data-comando="grub-restaurar-padrao"
+                            data-logbox="log-sessao-07-manutencao"
+                            id="btn-grub-restaurar-padrao"
+                            data-i18n="sessoes.07-manutencao.btn_grub_padrao">
                         ↩️ Restaurar Padrão do Sistema
                     </button>
-                    <button class="btn-executar cinza" id="btn-verificar-grub" onclick="verificarGrub()" data-comando="verificar-grub" data-i18n="sessoes.07-manutencao.btn_grub_verificar">
+                    <button class="btn-executar cinza"
+                            onclick="verificarGrub()"
+                            data-comando="verificar-grub"
+                            data-logbox="log-sessao-07-manutencao"
+                            id="btn-verificar-grub"
+                            data-i18n="sessoes.07-manutencao.btn_grub_verificar">
                         🔍 Verificar Configuração Atual
                     </button>
                 </div>
@@ -84,20 +121,20 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-grub-aplicar-recomendado"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-grub-aplicar-recomendado">⏳ Iniciando...</span><span class="percentage" id="progress-percent-grub-aplicar-recomendado">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-grub-aplicar-recomendado"></div>
 
             <div class="progress-container" id="progress-verificar-grub">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-verificar-grub"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-verificar-grub">⏳ Iniciando...</span><span class="percentage" id="progress-percent-verificar-grub">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-verificar-grub"></div>
 
             <div class="progress-container" id="progress-grub-restaurar-padrao">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-grub-restaurar-padrao"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-grub-restaurar-padrao">⏳ Iniciando...</span><span class="percentage" id="progress-percent-grub-restaurar-padrao">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-grub-restaurar-padrao"></div>
         </div>
+
+        <!-- Log único da sessão -->
+        <div class="terminal-log sessao-compartilhado" id="log-sessao-07-manutencao"></div>
     </div>
 
     <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
@@ -106,7 +143,6 @@
         // SESSÃO 07: MANUTENÇÃO E TAREFAS AVANÇADAS
         // ============================================================
 
-        // i18n helpers locais
         function _t(chave, fallback) {
             return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
         }
@@ -117,7 +153,7 @@
         async function executarLimpeza() {
             const idComando = 'limpeza-sistema';
             const comando = 'sudo dnf clean all && sudo dnf autoremove -y';
-            const logBox = document.getElementById('log-' + idComando);
+            const logBox = _getLogBox(idComando);
             const btn = document.getElementById('btn-' + idComando);
 
             if (!logBox) return;
@@ -125,8 +161,10 @@
 
             iniciarProgresso(idComando);
 
-            logBox.innerHTML = '';
             logBox.style.display = 'block';
+
+            const nomeAcao = _t('sessoes.07-manutencao.btn_limpeza', 'Executar Limpeza');
+            _separadorLog(logBox, nomeAcao);
 
             const header = document.createElement('div');
             header.className = 'log-line info';
@@ -138,9 +176,11 @@
 
             if (btn) {
                 btn.disabled = true;
-                btn.textContent = '⏳ ' + _t('sessoes.07-manutencao.btn_limpeza', 'Executar Limpeza') + '...';
+                btn.textContent = '⏳ ' + nomeAcao + '...';
                 btn.style.opacity = '0.6';
             }
+
+            _bloquearSessao(idComando);
 
             try {
                 const response = await fetch(API_URL + '/executar', {
@@ -159,7 +199,7 @@
 
                     if (btn) {
                         btn.disabled = false;
-                        btn.textContent = _t('sessoes.07-manutencao.btn_limpeza', 'Executar Limpeza');
+                        btn.textContent = nomeAcao;
                         btn.style.opacity = '1';
                     }
                 }
@@ -173,14 +213,14 @@
 
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = _t('sessoes.07-manutencao.btn_limpeza', 'Executar Limpeza');
+                    btn.textContent = nomeAcao;
                     btn.style.opacity = '1';
                 }
             } finally {
                 setTimeout(function() {
                     if (btn) {
                         btn.disabled = false;
-                        btn.textContent = _t('sessoes.07-manutencao.btn_limpeza', 'Executar Limpeza');
+                        btn.textContent = nomeAcao;
                         btn.style.opacity = '1';
                         btn.style.backgroundColor = 'var(--accent, #3c67e3)';
                     }
@@ -194,15 +234,17 @@
             const idComando = 'listar-kernels';
             const comando = 'rpm -q kernel-core --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n" 2>/dev/null';
 
-            const logBox = document.getElementById('log-' + idComando);
+            const logBox = _getLogBox(idComando);
             const btn = document.getElementById('btn-' + idComando);
 
             if (!logBox) return;
 
             iniciarProgresso(idComando);
 
-            logBox.innerHTML = '';
             logBox.style.display = 'block';
+
+            const nomeAcao = _t('sessoes.07-manutencao.btn_verificar_kernels', '📋 Verificar Kernels');
+            _separadorLog(logBox, nomeAcao);
 
             const header = document.createElement('div');
             header.className = 'log-line info';
@@ -214,9 +256,13 @@
 
             if (btn) {
                 btn.disabled = true;
-                btn.textContent = '⏳ ' + _t('sessoes.07-manutencao.btn_verificar_kernels', '📋 Verificar Kernels').replace(/^[^\s]+\s/, '') + '...';
+                btn.textContent = '⏳ ' + nomeAcao.replace(/^[^\s]+\s/, '') + '...';
                 btn.style.opacity = '0.6';
             }
+
+            _bloquearSessao(idComando);
+
+            const linhasAntes = logBox.querySelectorAll('.log-line.output').length;
 
             try {
                 const response = await fetch(API_URL + '/executar', {
@@ -229,9 +275,10 @@
                     throw new Error('Erro ao listar kernels');
                 }
 
-                const sucesso = await aguardarConclusaoReal(idComando, 30000);
+                await aguardarConclusaoReal(idComando, 30000);
 
-                const logLines = logBox.querySelectorAll('.log-line.output');
+                var todasLinhas = logBox.querySelectorAll('.log-line.output');
+                var logLines = Array.from(todasLinhas).slice(linhasAntes);
                 const kernels = [];
                 logLines.forEach(line => {
                     const text = line.textContent.trim();
@@ -263,7 +310,6 @@
 
                     const successLine = document.createElement('div');
                     successLine.className = 'log-line success';
-                    // i18n: pluralização por chave separada
                     if (kernels.length === 1) {
                         successLine.textContent = _tVars('sessoes.07-manutencao.kernel_singular_encontrado', '✅ ' + kernels.length + ' kernel encontrado', { n: kernels.length });
                     } else {
@@ -272,31 +318,34 @@
                     logBox.appendChild(successLine);
                     logBox.scrollTop = logBox.scrollHeight;
                 } else {
-                    await listarKernelsFallback();
+                    await listarKernelsFallback(logBox);
                 }
 
                 completarProgresso(idComando, true);
 
             } catch (e) {
                 console.error('Erro ao listar kernels:', e);
-                await listarKernelsFallback();
+                await listarKernelsFallback(logBox);
                 completarProgresso(idComando, true);
             } finally {
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = _t('sessoes.07-manutencao.btn_verificar_kernels', '📋 Verificar Kernels');
+                    btn.textContent = nomeAcao;
                     btn.style.opacity = '1';
                 }
             }
         }
 
-        async function listarKernelsFallback() {
-            const logBox = document.getElementById('log-listar-kernels');
+        async function listarKernelsFallback(logBox) {
             const idComando = 'uname-current';
             const comando = 'uname -r';
 
+            if (!logBox) return;
+
             try {
-                if (logBox) conectarSSE(idComando, logBox);
+                conectarSSE(idComando, logBox);
+
+                const linhasAntes = logBox.querySelectorAll('.log-line.output').length;
 
                 const response = await fetch(API_URL + '/executar', {
                     method: 'POST',
@@ -305,9 +354,10 @@
                 });
 
                 if (response.ok) {
-                    const sucesso = await aguardarConclusaoReal(idComando, 10000);
+                    await aguardarConclusaoReal(idComando, 10000);
 
-                    const logLines = logBox.querySelectorAll('.log-line.output');
+                    var todasLinhas = logBox.querySelectorAll('.log-line.output');
+                    var logLines = Array.from(todasLinhas).slice(linhasAntes);
                     let currentKernel = '';
                     logLines.forEach(line => {
                         const text = line.textContent.trim();
@@ -359,8 +409,13 @@
                 return;
             }
 
-            // Verifica se é o kernel atual
+            const logBox = _getLogBox('remover-kernel');
+
+            // Verifica se é o kernel atual (usa snapshot para ler só o output novo)
             try {
+                if (logBox) conectarSSE('check-current-kernel', logBox);
+                const linhasAntes = logBox ? logBox.querySelectorAll('.log-line.output').length : 0;
+
                 const response = await fetch(API_URL + '/executar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -368,23 +423,25 @@
                 });
 
                 if (response.ok) {
-                    const sucesso = await aguardarConclusaoReal('check-current-kernel', 5000);
+                    await aguardarConclusaoReal('check-current-kernel', 5000);
 
-                    const logBox = document.getElementById('log-listar-kernels');
-                    const logLines = logBox ? logBox.querySelectorAll('.log-line.output') : [];
-                    let currentKernel = '';
-                    logLines.forEach(line => {
-                        const text = line.textContent.trim();
-                        if (text && !text.includes('Comando aceito') && !text.includes('uname -r')) {
-                            currentKernel = text;
+                    if (logBox) {
+                        var todasLinhas = logBox.querySelectorAll('.log-line.output');
+                        var logLines = Array.from(todasLinhas).slice(linhasAntes);
+                        let currentKernel = '';
+                        logLines.forEach(line => {
+                            const text = line.textContent.trim();
+                            if (text && !text.includes('Comando aceito') && !text.includes('uname -r')) {
+                                currentKernel = text;
+                            }
+                        });
+
+                        if (currentKernel && kernel.includes(currentKernel)) {
+                            alert(_tVars('sessoes.07-manutencao.kernel_msg_atual_nao_removivel',
+                                '❌ Não é possível remover o kernel que você está usando atualmente (' + currentKernel + ').\n\nReinicie o computador com outro kernel antes de remover este.',
+                                { kernel: currentKernel }));
+                            return;
                         }
-                    });
-
-                    if (currentKernel && kernel.includes(currentKernel)) {
-                        alert(_tVars('sessoes.07-manutencao.kernel_msg_atual_nao_removivel',
-                            '❌ Não é possível remover o kernel que você está usando atualmente (' + currentKernel + ').\n\nReinicie o computador com outro kernel antes de remover este.',
-                            { kernel: currentKernel }));
-                        return;
                     }
                 }
             } catch (e) {
@@ -397,11 +454,15 @@
 
             if (!confirmacao) return;
 
-            const logBox = document.getElementById('log-listar-kernels');
             const btnRemover = document.getElementById('btn-remover-kernel');
             const selectKernel = document.getElementById('kernel-select');
 
+            iniciarProgresso('remover-kernel');
+
             if (logBox) {
+                logBox.style.display = 'block';
+                _separadorLog(logBox, '🗑️ Remover kernel ' + kernel);
+
                 const infoLine = document.createElement('div');
                 infoLine.className = 'log-line info';
                 infoLine.textContent = _tVars('sessoes.07-manutencao.kernel_log_removendo', '🗑️ Removendo kernel: ' + kernel + '...', { kernel: kernel });
@@ -417,6 +478,8 @@
             if (selectKernel) {
                 selectKernel.disabled = true;
             }
+
+            _bloquearSessao('remover-kernel');
 
             try {
                 const comando = 'sudo dnf remove kernel-core-' + kernel + ' -y';
@@ -476,6 +539,7 @@
                 if (selectKernel) {
                     selectKernel.disabled = false;
                 }
+                completarProgresso('remover-kernel', true);
             }
         }
 
@@ -485,7 +549,7 @@
 
         async function executarConfigGrubRecomendado() {
             const idComando = 'grub-aplicar-recomendado';
-            const logBox = document.getElementById('log-' + idComando);
+            const logBox = _getLogBox(idComando);
             const btn = document.getElementById('btn-' + idComando);
             const statusDiv = document.getElementById('grub-status');
 
@@ -494,16 +558,18 @@
             if (!confirm(_t('sessoes.07-manutencao.grub_confirmar_recomendado',
                 '⚠️ Deseja aplicar a configuração recomendada do GRUB?\n\n• GRUB sempre aparecerá ao ligar\n• Tempo de exibição: 10 segundos'))) return;
 
+            const nomeAcao = _t('sessoes.07-manutencao.btn_grub_recomendado', '⚙️ Aplicar Configuração Recomendada');
+
             if (btn) {
                 btn.disabled = true;
-                btn.textContent = '⏳ ' + _t('sessoes.07-manutencao.btn_grub_recomendado', '⚙️ Aplicar Configuração Recomendada').replace(/^[^\s]+\s/, '') + '...';
+                btn.textContent = '⏳ ' + nomeAcao.replace(/^[^\s]+\s/, '') + '...';
                 btn.style.opacity = '0.6';
             }
 
             iniciarProgresso(idComando);
 
-            logBox.innerHTML = '';
             logBox.style.display = 'block';
+            _separadorLog(logBox, nomeAcao);
 
             const header = document.createElement('div');
             header.className = 'log-line info';
@@ -521,6 +587,8 @@
                 statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_aplicando', '⏳ Aplicando configuração...');
             }
 
+            _bloquearSessao(idComando);
+
             try {
                 const comando = 'sudo sed -i "s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=10/" /etc/default/grub && sudo sed -i "/^GRUB_HIDDEN_TIMEOUT=/d" /etc/default/grub && sudo grub2-mkconfig -o /boot/grub2/grub.cfg';
 
@@ -530,9 +598,7 @@
                     body: JSON.stringify({ comando: comando, idComando: idComando })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Erro HTTP: ' + response.status);
-                }
+                if (!response.ok) throw new Error('Erro HTTP: ' + response.status);
 
                 const sucesso = await aguardarConclusaoReal(idComando, 30000);
 
@@ -567,7 +633,7 @@
             } finally {
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = _t('sessoes.07-manutencao.btn_grub_recomendado', '⚙️ Aplicar Configuração Recomendada');
+                    btn.textContent = nomeAcao;
                     btn.style.opacity = '1';
                 }
             }
@@ -575,14 +641,16 @@
 
         async function verificarGrub() {
             const idComando = 'verificar-grub';
-            const logBox = document.getElementById('log-' + idComando);
-            const btn = document.getElementById('btn-verificar-grub');
+            const logBox = _getLogBox(idComando);
+            const btn = document.getElementById('btn-' + idComando);
             const statusDiv = document.getElementById('grub-status');
 
             if (!logBox || !btn) return;
 
+            const nomeAcao = _t('sessoes.07-manutencao.btn_grub_verificar', '🔍 Verificar Configuração Atual');
+
             btn.disabled = true;
-            btn.textContent = '⏳ ' + _t('sessoes.07-manutencao.btn_grub_verificar', '🔍 Verificar Configuração Atual').replace(/^[^\s]+\s/, '') + '...';
+            btn.textContent = '⏳ ' + nomeAcao.replace(/^[^\s]+\s/, '') + '...';
             btn.style.opacity = '0.6';
 
             if (statusDiv) {
@@ -592,8 +660,8 @@
                 statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_verificando', '⏳ Verificando configuração do GRUB...');
             }
 
-            logBox.innerHTML = '';
             logBox.style.display = 'block';
+            _separadorLog(logBox, nomeAcao);
 
             const header = document.createElement('div');
             header.className = 'log-line info';
@@ -602,6 +670,10 @@
             logBox.scrollTop = logBox.scrollHeight;
 
             conectarSSE(idComando, logBox);
+
+            _bloquearSessao(idComando);
+
+            const linhasAntes = logBox.querySelectorAll('.log-line').length;
 
             try {
                 const comando = 'echo "FOF_MARKER_TIMEOUT=$(grep -oP "^GRUB_TIMEOUT=\\K.*" /etc/default/grub 2>/dev/null || echo "nao_definido")" && echo "FOF_MARKER_HIDDEN=$(grep -oP "^GRUB_HIDDEN_TIMEOUT=\\K.*" /etc/default/grub 2>/dev/null || echo "nao_definido")"';
@@ -612,9 +684,7 @@
                     body: JSON.stringify({ comando: comando, idComando: idComando })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Erro HTTP: ' + response.status);
-                }
+                if (!response.ok) throw new Error('Erro HTTP: ' + response.status);
 
                 const sucesso = await aguardarConclusaoReal(idComando, 15000);
 
@@ -630,23 +700,20 @@
                     return;
                 }
 
-                const allLogLines = logBox.querySelectorAll('.log-line');
+                var todasLinhas = logBox.querySelectorAll('.log-line');
+                var linhasNovas = Array.from(todasLinhas).slice(linhasAntes);
                 let timeout = 'não definido';
                 let hiddenTimeout = 'não definido';
 
-                allLogLines.forEach(line => {
+                linhasNovas.forEach(line => {
                     const text = line.textContent.trim();
                     if (text.startsWith('FOF_MARKER_TIMEOUT=')) {
                         const valor = text.substring('FOF_MARKER_TIMEOUT='.length).trim();
-                        if (valor && valor !== 'nao_definido') {
-                            timeout = valor;
-                        }
+                        if (valor && valor !== 'nao_definido') timeout = valor;
                     }
                     if (text.startsWith('FOF_MARKER_HIDDEN=')) {
                         const valor = text.substring('FOF_MARKER_HIDDEN='.length).trim();
-                        if (valor && valor !== 'nao_definido') {
-                            hiddenTimeout = valor;
-                        }
+                        if (valor && valor !== 'nao_definido') hiddenTimeout = valor;
                     }
                 });
 
@@ -681,14 +748,14 @@
                 }
             } finally {
                 btn.disabled = false;
-                btn.textContent = _t('sessoes.07-manutencao.btn_grub_verificar', '🔍 Verificar Configuração Atual');
+                btn.textContent = nomeAcao;
                 btn.style.opacity = '1';
             }
         }
 
         async function executarConfigGrubPadrao() {
             const idComando = 'grub-restaurar-padrao';
-            const logBox = document.getElementById('log-' + idComando);
+            const logBox = _getLogBox(idComando);
             const btn = document.getElementById('btn-' + idComando);
             const statusDiv = document.getElementById('grub-status');
 
@@ -697,16 +764,18 @@
             if (!confirm(_t('sessoes.07-manutencao.grub_confirmar_padrao',
                 'Deseja restaurar a configuração padrão do GRUB (timeout=5 segundos, oculto)?'))) return;
 
+            const nomeAcao = _t('sessoes.07-manutencao.btn_grub_padrao', '↩️ Restaurar Padrão do Sistema');
+
             if (btn) {
                 btn.disabled = true;
-                btn.textContent = '⏳ ' + _t('sessoes.07-manutencao.btn_grub_padrao', '↩️ Restaurar Padrão do Sistema').replace(/^[^\s]+\s/, '') + '...';
+                btn.textContent = '⏳ ' + nomeAcao.replace(/^[^\s]+\s/, '') + '...';
                 btn.style.opacity = '0.6';
             }
 
             iniciarProgresso(idComando);
 
-            logBox.innerHTML = '';
             logBox.style.display = 'block';
+            _separadorLog(logBox, nomeAcao);
 
             const header = document.createElement('div');
             header.className = 'log-line info';
@@ -724,8 +793,9 @@
                 statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_restaurando', '⏳ Restaurando configuração...');
             }
 
+            _bloquearSessao(idComando);
+
             try {
-                // CORREÇÃO #3: apaga GRUB_HIDDEN_TIMEOUT existente e adiciona =0 no final.
                 const comando = 'sudo sed -i "s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/" /etc/default/grub && sudo sed -i "/^GRUB_HIDDEN_TIMEOUT=/d" /etc/default/grub && echo "GRUB_HIDDEN_TIMEOUT=0" | sudo tee -a /etc/default/grub > /dev/null && sudo grub2-mkconfig -o /boot/grub2/grub.cfg';
 
                 const response = await fetch(API_URL + '/executar', {
@@ -734,9 +804,7 @@
                     body: JSON.stringify({ comando: comando, idComando: idComando })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Erro HTTP: ' + response.status);
-                }
+                if (!response.ok) throw new Error('Erro HTTP: ' + response.status);
 
                 const sucesso = await aguardarConclusaoReal(idComando, 30000);
 
@@ -771,7 +839,7 @@
             } finally {
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = _t('sessoes.07-manutencao.btn_grub_padrao', '↩️ Restaurar Padrão do Sistema');
+                    btn.textContent = nomeAcao;
                     btn.style.opacity = '1';
                 }
             }

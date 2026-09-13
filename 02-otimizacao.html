@@ -43,7 +43,12 @@
                 </div>
 
                 <div class="grupo-botoes">
-                    <button class="btn-executar" onclick="executarAjusteDNF()" data-comando="dnf-speed" id="btn-dnf-speed" data-i18n="sessoes.02-otimizacao.btn_aplicar_ajuste">
+                    <button class="btn-executar"
+                            onclick="executarAjusteDNF()"
+                            data-comando="dnf-speed"
+                            data-logbox="log-sessao-02-otimizacao"
+                            id="btn-dnf-speed"
+                            data-i18n="sessoes.02-otimizacao.btn_aplicar_ajuste">
                         Aplicar Ajuste
                     </button>
                 </div>
@@ -57,7 +62,6 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-dnf-speed"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-dnf-speed">⏳ Iniciando...</span><span class="percentage" id="progress-percent-dnf-speed">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-dnf-speed"></div>
         </div>
 
         <!-- Idioma -->
@@ -69,9 +73,30 @@
                 <div class="aviso-caixa" data-i18n="sessoes.02-otimizacao.idioma_aviso">⚠️ Aviso: Reinicie o computador após concluir o passo 3 para aplicar as alterações de idioma!</div>
 
                 <div class="botoes-flex">
-                    <button class="btn-executar" onclick="executarComandoGenerico('idioma-packs', 'sudo dnf -y install langpacks-pt_BR', 'Instalando pacotes de tradução')" data-comando="idioma-packs" id="btn-idioma-packs" data-i18n="sessoes.02-otimizacao.btn_idioma_packs">1. Instalar Tradução</button>
-                    <button class="btn-executar cinza" onclick="executarComandoGenerico('idioma-hunspell', 'sudo dnf install hunspell-br -y', 'Instalando corretor ortográfico')" data-comando="idioma-hunspell" id="btn-idioma-hunspell" data-i18n="sessoes.02-otimizacao.btn_idioma_hunspell">2. Corretor Ortográfico</button>
-                    <button class="btn-executar verde" onclick="executarComandoGenerico('idioma-localectl', 'sudo localectl set-locale LANG=pt_BR', 'Configurando localidade PT-BR')" data-comando="idioma-localectl" id="btn-idioma-localectl" data-i18n="sessoes.02-otimizacao.btn_idioma_localectl">3. Localidade PT-BR</button>
+                    <button class="btn-executar"
+                            onclick="executarComandoGenerico('idioma-packs', 'sudo dnf -y install langpacks-pt_BR', 'Instalando pacotes de tradução')"
+                            data-comando="idioma-packs"
+                            data-logbox="log-sessao-02-otimizacao"
+                            id="btn-idioma-packs"
+                            data-i18n="sessoes.02-otimizacao.btn_idioma_packs">
+                        1. Instalar Tradução
+                    </button>
+                    <button class="btn-executar cinza"
+                            onclick="executarComandoGenerico('idioma-hunspell', 'sudo dnf install hunspell-br -y', 'Instalando corretor ortográfico')"
+                            data-comando="idioma-hunspell"
+                            data-logbox="log-sessao-02-otimizacao"
+                            id="btn-idioma-hunspell"
+                            data-i18n="sessoes.02-otimizacao.btn_idioma_hunspell">
+                        2. Corretor Ortográfico
+                    </button>
+                    <button class="btn-executar verde"
+                            onclick="executarComandoGenerico('idioma-localectl', 'sudo localectl set-locale LANG=pt_BR', 'Configurando localidade PT-BR')"
+                            data-comando="idioma-localectl"
+                            data-logbox="log-sessao-02-otimizacao"
+                            id="btn-idioma-localectl"
+                            data-i18n="sessoes.02-otimizacao.btn_idioma_localectl">
+                        3. Localidade PT-BR
+                    </button>
                 </div>
             </div>
 
@@ -79,19 +104,16 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-idioma-packs"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-idioma-packs">⏳ Iniciando...</span><span class="percentage" id="progress-percent-idioma-packs">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-idioma-packs"></div>
 
             <div class="progress-container" id="progress-idioma-hunspell">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-idioma-hunspell"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-idioma-hunspell">⏳ Iniciando...</span><span class="percentage" id="progress-percent-idioma-hunspell">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-idioma-hunspell"></div>
 
             <div class="progress-container" id="progress-idioma-localectl">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-idioma-localectl"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-idioma-localectl">⏳ Iniciando...</span><span class="percentage" id="progress-percent-idioma-localectl">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-idioma-localectl"></div>
         </div>
 
         <!-- Dual-Boot -->
@@ -100,7 +122,14 @@
                 <h3 data-i18n="sessoes.02-otimizacao.dual_boot_titulo">Corrigir problemas de data/hora em Dual-Boot (Windows/Linux)</h3>
                 <p data-i18n="sessoes.02-otimizacao.dual_boot_desc">Configura o relógio do hardware para usar o padrão UTC, evitando bagunça nos horários ao alternar sistemas.</p>
                 <div class="grupo-botoes">
-                    <button class="btn-executar laranja" onclick="executarComandoGenerico('dual-boot-time', 'sudo timedatectl set-local-rtc 0', 'Corrigindo relógio para dual-boot')" data-comando="dual-boot-time" id="btn-dual-boot" data-i18n="sessoes.02-otimizacao.btn_dual_boot">Corrigir Relógio</button>
+                    <button class="btn-executar laranja"
+                            onclick="executarComandoGenerico('dual-boot-time', 'sudo timedatectl set-local-rtc 0', 'Corrigindo relógio para dual-boot')"
+                            data-comando="dual-boot-time"
+                            data-logbox="log-sessao-02-otimizacao"
+                            id="btn-dual-boot"
+                            data-i18n="sessoes.02-otimizacao.btn_dual_boot">
+                        Corrigir Relógio
+                    </button>
                 </div>
             </div>
 
@@ -108,8 +137,10 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill-dual-boot-time"></div></div>
                 <div class="progress-text"><span class="status" id="progress-status-dual-boot-time">⏳ Iniciando...</span><span class="percentage" id="progress-percent-dual-boot-time">0%</span></div>
             </div>
-            <div class="terminal-log" id="log-dual-boot-time"></div>
         </div>
+
+        <!-- Log único da sessão -->
+        <div class="terminal-log sessao-compartilhado" id="log-sessao-02-otimizacao"></div>
     </div>
 
     <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
@@ -118,7 +149,6 @@
         // SESSÃO 02: OTIMIZAÇÃO DO SISTEMA E IDIOMA
         // ============================================================
 
-        // i18n helpers locais
         function _t(chave, fallback) {
             return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
         }
@@ -130,23 +160,22 @@
             const conexoes = document.getElementById('select-downloads').value;
             const idComando = 'dnf-speed';
             const comando = 'sudo dnf config-manager setopt max_parallel_downloads=' + conexoes + ' && sudo dnf config-manager setopt fastestmirror=True';
-            const logBox = document.getElementById('log-dnf-speed');
+            const logBox = _getLogBox(idComando);
             const btn = document.getElementById('btn-dnf-speed');
 
             if (!logBox) return;
-
-            if (btn && btn.disabled) {
-                return;
-            }
+            if (btn && btn.disabled) return;
 
             iniciarProgresso(idComando);
 
-            logBox.innerHTML = '';
             logBox.style.display = 'block';
+
+            const nomeAcao = _tVars('sessoes.02-otimizacao.log_aplicando', 'Aplicando ajuste: ' + conexoes + ' conexões simultâneas', { n: conexoes });
+            _separadorLog(logBox, nomeAcao);
 
             const header = document.createElement('div');
             header.className = 'log-line info';
-            header.textContent = _tVars('sessoes.02-otimizacao.log_aplicando', '📦 Aplicando ajuste: ' + conexoes + ' conexões simultâneas...', { n: conexoes });
+            header.textContent = '📦 ' + nomeAcao + '... (' + new Date().toLocaleTimeString() + ')';
             logBox.appendChild(header);
             logBox.scrollTop = logBox.scrollHeight;
 
@@ -157,6 +186,8 @@
                 btn.textContent = '⏳ ' + _t('sessoes.02-otimizacao.btn_aplicar_ajuste', 'Aplicar Ajuste') + '...';
                 btn.style.opacity = '0.6';
             }
+
+            _bloquearSessao(idComando);
 
             try {
                 const response = await fetch(API_URL + '/executar', {
