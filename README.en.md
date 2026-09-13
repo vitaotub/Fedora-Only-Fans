@@ -3,11 +3,11 @@
 **🌐 Language:** [Português (BR)](README.md) | English | [Español](README.es.md)
 
 ![Author](https://img.shields.io/badge/Creator-Vit%C3%A3oTub-blue?style=flat-square)
-![Version](https://img.shields.io/badge/Version-v0.9.9--alpha-orange?style=flat-square)
+![Version](https://img.shields.io/badge/Version-v1.0.0--rc.1-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![License](https://img.shields.io/badge/License-GPL--3.0-green?style=flat-square)
 ![Languages](https://img.shields.io/badge/Languages-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
-![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Release%20Candidate-orange?style=flat-square)
 [![Install](https://img.shields.io/badge/🚀_Install_with_one_command-Fedora_Only_Fans-3c67e3?style=flat-square)](https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh)
 
 > Getting your Fedora ready to "play" visually, quickly and without complications.
@@ -100,7 +100,7 @@ Setup Sessions (in order)
         OBS Studio (Flatpak) installation, virtual camera activation and EasyEffects (audio processor for PipeWire)
         
     8	📦 Recommended Apps
-        Curated selection of useful everyday software, all via Flatpak: productivity (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entertainment (Haruna, VLC, MPV, Spotify, Plex, Stremio), graphics tools (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP and the Affinity Suite), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), video editing (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift), audio and 3D (Ardour, LMMS, Audacity, Blender) and cloud sync (Rclone, Rclone Manager)
+        Curated selection of useful everyday software, all via Flatpak: productivity (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entertainment (Haruna, VLC, MPV, Spotify, Plex, Stremio), graphics tools (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP and the Affinity Suite), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), video editing and 3D modeling (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift, Blender), audio editing and creation (Ardour, LMMS, Audacity) and cloud sync (Rclone, Rclone Manager)
 
 
 Maintenance Sessions (no order — separate page)
@@ -319,40 +319,36 @@ tail -f /tmp/fof-*.log
 ```
 
 🎯 Roadmap
-v0.9.9-alpha (Current) ✅
+v1.0.0-rc.1 (Current) 🚧
 
     ✅ Sequential setup in order (the session order matters for the result)
     ✅ Separate Maintenance page (kernels, cleanup, GRUB, FOF — no order dependency)
     ✅ Revert buttons only where the action is reversible
-    ✅ Persistence via localStorage/server (no completion report — only each button's state)
+    ✅ Persistence via localStorage/server
     ✅ Complete code audit (security, logic and duplication bugs fixed)
     ✅ Btrfs-Assistant installation via interface
     ✅ OBS Studio installation via Flatpak
     ✅ Stable channel sync (distro-sync)
     ✅ App Center fix (without authentication)
-    ✅ Launchers with toggle system (install/uninstall)
     ✅ Wine/Proton compatibility tools (Wine, Winetricks, Bottles, GameMode, MangoHud)
     ✅ Progress with safety timeout
     ✅ Compatibility Mode for older GPUs
-    ✅ "Update FOF" button always clickable (can be re-run)
-    ✅ Removal of unused /reverter endpoint
-    ✅ Removal of dead CSS classes (.etapa-card, .etapa-titulo)
-    ✅ WebKitGTK 4.1 as sole requirement (4.0 support removed)
-    ✅ Kernel removal timeout increased to 3 minutes
-    ✅ Global variables converted from const to var (avoids redeclaration error)
-    ✅ window.close() with message fallback
+    ✅ "Update FOF" button always clickable
+    ✅ WebKitGTK 4.1 as sole requirement
     ✅ Full internationalization (PT-BR, EN, ES)
     ✅ Container icon fixed on KDE (Wayland and X11)
-    ✅ New Session 8 "Recommended Apps" with curated software
+    ✅ Session 8 "Recommended Apps" with a curated list of ~40 softwares
     ✅ Single log per session (shared among multiple buttons)
     ✅ Session lock during execution (prevents simultaneous executions)
     ✅ Rclone Manager installed via official GitHub RPM (always the latest version)
     ✅ Drift added to the video editing session
+    ✅ Blender moved to "Video Editing and 3D Modeling"
+    ✅ HTML notices correctly rendered in EN/ES
 
 v1.0.0 (Future) 🔮
 
     □ EasyEffects profile with presets
-    □ Light/dark theme
+    □ ?
 
 
 ➕ How to add a new session
