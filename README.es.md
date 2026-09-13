@@ -3,11 +3,11 @@
 **🌐 Idioma:** [Português (BR)](README.md) | [English](README.en.md) | Español
 
 ![Autor](https://img.shields.io/badge/Creador-Vit%C3%A3oTub-blue?style=flat-square)
-![Versión](https://img.shields.io/badge/Versión-v0.9.9--alpha-orange?style=flat-square)
+![Versión](https://img.shields.io/badge/Versión-v1.0.0--rc.1-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![Licencia](https://img.shields.io/badge/Licencia-GPL--3.0-green?style=flat-square)
 ![Idiomas](https://img.shields.io/badge/Idiomas-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
-![Estado](https://img.shields.io/badge/Estado-En%20Desarrollo-yellow?style=flat-square)
+![Estado](https://img.shields.io/badge/Estado-Release%20Candidate-orange?style=flat-square)
 [![Instalar](https://img.shields.io/badge/🚀_Instalar_con_un_comando-Fedora_Only_Fans-3c67e3?style=flat-square)](https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh)
 
 > Dejando tu Fedora listo para el "play" de forma visual, rápida y sin complicaciones.
@@ -100,7 +100,7 @@ Sesiones de Configuración (en orden)
         Instalación de OBS Studio (Flatpak), activación de cámara virtual y EasyEffects (procesador de audio para PipeWire)
         
     8	📦 Aplicaciones Recomendadas
-        Selección curada de software útil para el día a día, todo vía Flatpak: productividad (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entretenimiento (Haruna, VLC, MPV, Spotify, Plex, Stremio), herramientas gráficas (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP y la Suite Affinity), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), edición de vídeo (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift), audio y 3D (Ardour, LMMS, Audacity, Blender) y sincronización en la nube (Rclone, Rclone Manager)
+        Selección curada de software útil para el día a día, todo vía Flatpak: productividad (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entretenimiento (Haruna, VLC, MPV, Spotify, Plex, Stremio), herramientas gráficas (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP y la Suite Affinity), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), edición de vídeo y modelado 3D (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift, Blender), edición y creación de audio (Ardour, LMMS, Audacity) y sincronización en la nube (Rclone, Rclone Manager)
 
 
 Sesiones de Mantenimiento (sin orden — página aparte)
@@ -319,40 +319,36 @@ tail -f /tmp/fof-*.log
 ```
 
 🎯 Roadmap
-v0.9.9-alpha (Actual) ✅
+v1.0.0-rc.1 (Actual) 🚧
 
     ✅ Configuración secuencial en orden (el orden de las sesiones importa para el resultado)
     ✅ Página de Mantenimiento separada (kernels, limpieza, GRUB, FOF — sin dependencia de orden)
     ✅ Botones de reversión solo donde la acción es reversible
-    ✅ Persistencia vía localStorage/servidor (sin informe de finalización — solo el estado de cada botón)
+    ✅ Persistencia vía localStorage/servidor
     ✅ Auditoría completa del código (errores de seguridad, lógica y duplicación corregidos)
     ✅ Instalación de Btrfs-Assistant vía interfaz
     ✅ Instalación de OBS Studio vía Flatpak
     ✅ Sincronización con canal estable (distro-sync)
     ✅ Corrección del Centro de Apps (sin autenticación)
-    ✅ Launchers con sistema de toggle (instalar/desinstalar)
     ✅ Herramientas de compatibilidad Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
     ✅ Progreso con timeout de seguridad
     ✅ Modo Compatibilidad para GPUs antiguas
-    ✅ Botón "Actualizar FOF" siempre clicable (se puede reejecutar)
-    ✅ Eliminación del endpoint /reverter no utilizado
-    ✅ Eliminación de clases CSS muertas (.etapa-card, .etapa-titulo)
-    ✅ WebKitGTK 4.1 como requisito único (soporte 4.0 eliminado)
-    ✅ Timeout de eliminación de kernel aumentado a 3 minutos
-    ✅ Variables globales convertidas de const a var (evita error de redeclaración)
-    ✅ window.close() con fallback de mensaje
+    ✅ Botón "Actualizar FOF" siempre clicable
+    ✅ WebKitGTK 4.1 como requisito único
     ✅ Internacionalización completa (PT-BR, EN, ES)
     ✅ Icono del contenedor corregido en KDE (Wayland y X11)
-    ✅ Nueva Sesión 8 "Aplicaciones Recomendadas" con selección de software
+    ✅ Sesión 8 "Aplicaciones Recomendadas" con una selección curada de ~40 softwares
     ✅ Registro único por sesión (compartido entre múltiples botones)
     ✅ Bloqueo de sesión durante la ejecución (evita ejecuciones simultáneas)
     ✅ Rclone Manager instalado vía RPM oficial de GitHub (siempre la última versión)
     ✅ Drift añadido a la sesión de edición de vídeo
+    ✅ Blender movido a "Edición de Vídeo y Modelado 3D"
+    ✅ Avisos HTML renderizados correctamente en EN/ES
 
 v1.0.0 (Futuro) 🔮
 
     □ Perfil EasyEffects con presets
-    □ Tema claro/oscuro
+    □ ?
 
 
 ➕ Cómo añadir una sesión nueva
