@@ -362,8 +362,6 @@
 
         /* ============================================================
          * i18n: ESTILO DO SELETOR DE IDIOMA
-         * Adicionado no Lote 3. Não afeta nada em PT-BR (só aparece
-         * quando o usuário tem o seletor no rodapé).
          * ============================================================ */
         .i18n-seletor-container {
             display: flex;
@@ -456,11 +454,6 @@
             }
         }
     </style>
-    <!--
-        i18n: carregado ANTES de script.js para que t()/tOr() estejam
-        disponíveis quando script.js for executado. Em pt-BR, i18n.js
-        não faz nada (HTML já está correto).
-    -->
     <script src="i18n.js"></script>
     <script src="script.js"></script>
 </head>
@@ -475,10 +468,10 @@
             </p>
 
             <div class="hero-buttons">
-                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans', '_blank', 'noopener,noreferrer');" class="badge" data-i18n="index.btn_github">
+                <a href="https://github.com/vitaotek/Fedora-Only-Fans" class="badge" data-i18n="index.btn_github">
                     🐙 GitHub
                 </a>
-                <a href="#" onclick="event.preventDefault(); window.open('https://www.vitaotub.com', '_blank', 'noopener,noreferrer');" class="badge" data-i18n-html="index.btn_criador">
+                <a href="https://www.vitaotub.com" class="badge" data-i18n-html="index.btn_criador">
                     👤 Criador: <strong>VitãoTub</strong>
                 </a>
             </div>
@@ -551,23 +544,18 @@
             </div>
         </div>
 
-        <!-- ============================================================
-             i18n: SELETOR DE IDIOMA
-             O container vazio é preenchido por criarSeletorIdioma()
-             em i18n.js. Em pt-BR funciona igual (o seletor mostra
-             "Português" selecionado, mas nada muda ao redor).
-             ============================================================ -->
+        <!-- i18n: SELETOR DE IDIOMA -->
         <div class="i18n-seletor-container" id="i18n-seletor"></div>
 
         <footer>
             <p>
-                <span data-i18n-html="index.footer_creditos">Fedora Only Fans — Feito com ❤️ por <a href="#" onclick="event.preventDefault(); window.open('https://www.vitaotub.com', '_blank', 'noopener,noreferrer');">VitãoTub</a></span>
+                <span data-i18n-html="index.footer_creditos">Fedora Only Fans — Feito com ❤️ por <a href="https://www.vitaotub.com">VitãoTub</a></span>
                 &bull;
-                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans', '_blank', 'noopener,noreferrer');" data-i18n="index.footer_link_github">GitHub</a>
+                <a href="https://github.com/vitaotek/Fedora-Only-Fans" data-i18n="index.footer_link_github">GitHub</a>
                 &bull;
-                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans/blob/main/README.md', '_blank', 'noopener,noreferrer');" data-i18n="index.footer_link_doc">Documentação</a>
+                <a href="https://github.com/vitaotek/Fedora-Only-Fans/blob/main/README.md" data-i18n="index.footer_link_doc">Documentação</a>
                 &bull;
-                <a href="#" onclick="event.preventDefault(); window.open('https://github.com/vitaotek/Fedora-Only-Fans/issues', '_blank', 'noopener,noreferrer');" data-i18n="index.footer_link_bug">Reportar Bug</a>
+                <a href="https://github.com/vitaotek/Fedora-Only-Fans/issues" data-i18n="index.footer_link_bug">Reportar Bug</a>
             </p>
             <p style="font-size: 0.8rem; color: #4b5563;" data-i18n="index.footer_legal">
                 Fedora é uma marca registrada da Red Hat, Inc. Este projeto não é afiliado à Red Hat.
