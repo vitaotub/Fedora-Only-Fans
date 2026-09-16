@@ -428,10 +428,10 @@
         }
 
         async function instalarLightworks() {
-            var comando = 'sudo dnf install -y https://cdn.lwks.com/releases/latest/lightworks_linux_rpm.rpm';
-            var nomeAcao = _t('sessoes.09-softwares-uteis.btn_lightworks', '🎞️ Lightworks');
-            await executarComandoGenerico('instalar-lightworks', comando, nomeAcao, mostrarBotaoDesinstalar);
-        }
+    var comando = 'sudo dnf install --setopt=localpkg_gpgcheck=0 -y https://cdn.lwks.com/releases/latest/lightworks_linux_rpm.rpm';
+    var nomeAcao = _t('sessoes.09-softwares-uteis.btn_lightworks', '🎞️ Lightworks');
+    await executarComandoGenerico('instalar-lightworks', comando, nomeAcao, mostrarBotaoDesinstalar);
+}
 
         async function instalarRclone() {
             var comando = 'sudo dnf install -y rclone';
@@ -442,18 +442,18 @@
         }
 
         async function instalarRcloneManager() {
-            var comando =
-                'RPM_URL=$(curl -s https://api.github.com/repos/Zarestia-Dev/rclone-manager/releases/latest ' +
-                '| grep -oP \'"browser_download_url":\\s*"\\K[^"]*\\.x86_64\\.rpm\' ' +
-                '| head -1) && ' +
-                'echo "URL do RPM: $RPM_URL" && ' +
-                'sudo dnf install -y "$RPM_URL"';
+    var comando =
+        'RPM_URL=$(curl -s https://api.github.com/repos/Zarestia-Dev/rclone-manager/releases/latest ' +
+        '| grep -oP \'"browser_download_url":\\s*"\\K[^"]*\\.x86_64\\.rpm\' ' +
+        '| head -1) && ' +
+        'echo "URL do RPM: $RPM_URL" && ' +
+        'sudo dnf install --setopt=localpkg_gpgcheck=0 -y "$RPM_URL"';
 
-            var nomeAcao = _t('sessoes.09-softwares-uteis.btn_rclone_manager', '🎛️ Instalar Rclone Manager');
-            await executarComandoGenerico('instalar-rclone-manager', comando, nomeAcao, function() {
-                atualizarBotaoAbrirRclone();
-            });
-        }
+    var nomeAcao = _t('sessoes.09-softwares-uteis.btn_rclone_manager', '🎛️ Instalar Rclone Manager');
+    await executarComandoGenerico('instalar-rclone-manager', comando, nomeAcao, function() {
+        atualizarBotaoAbrirRclone();
+    });
+}
 
         function abrirRcloneManager() {
             abrirFerramentaExterna('gtk-launch rclone-manager 2>/dev/null &', 'instalar-rclone-manager', 'RClone Manager');
