@@ -25,6 +25,10 @@
                         🔄 Atualizar Fedora
                     </button>
                 </div>
+
+                <div class="aviso-caixa" style="margin-top: 1rem;" data-i18n="sessoes.00-boas-vindas.aviso_reiniciar">
+                    💡 Recomenda-se reiniciar o computador após aplicar atualizações de sistema, seja diretamente pela interface do FOF ou pela notificação do próprio Fedora. Reiniciar garante que todas as alterações sejam aplicadas corretamente e evita eventuais inconsistências no funcionamento do sistema.
+                </div>
             </div>
             <div class="progress-container" id="progress-atualizacao-inicial">
                 <div class="progress-bar">
@@ -45,12 +49,9 @@
         // SESSÃO 00: BOAS-VINDAS E ATUALIZAÇÃO
         // ============================================================
 
-        // NOTA: usar 'var' (e não 'const'/'let') é proposital aqui.
-        // Este bloco é executado via eval() no escopo global.
         var ID_SESSAO = '00-boas-vindas';
         var ID_COMANDO = 'atualizacao-inicial';
 
-        // i18n helpers locais (fallback PT-BR se i18n.js não estiver pronto)
         function _t(chave, fallback) {
             return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
         }
@@ -136,7 +137,6 @@
             }
         }
 
-        // ===== RESTAURAR ESTADO DA SESSÃO =====
         function restaurarEstadoSessao() {
             const btn = document.getElementById('btn-atualizar-fedora');
             if (btn) {
@@ -147,7 +147,6 @@
             }
         }
 
-        // ===== INICIALIZAÇÃO =====
         document.addEventListener('DOMContentLoaded', function() {
             restaurarEstadoSessao();
             console.log('📦 Componente ' + ID_SESSAO + ' carregado!');
