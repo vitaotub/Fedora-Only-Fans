@@ -24,6 +24,7 @@ const COMANDOS_SEM_AUTENTICACAO = [
 'whoami',
 'test',
 'gtk-launch',
+'rclone-manager',
 'bash <(curl',
 'echo "s" | bash',
 'raw.githubusercontent.com/ryzendew/AffinityOnLinux'
