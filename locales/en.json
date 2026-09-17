@@ -99,7 +99,8 @@
       "atualizacao_titulo": "General Fedora Update",
       "atualizacao_desc": "Updates the repository index, synchronizes security keys and downloads the latest versions of all system components.",
       "btn_atualizar": "🔄 Update Fedora",
-      "log_iniciando": "🚀 Starting update..."
+      "log_iniciando": "🚀 Starting update...",
+      "aviso_reiniciar": "💡 It's recommended to restart your computer after applying system updates, whether directly through the FOF interface or via Fedora's own notification. Restarting ensures that all changes are applied correctly and prevents potential inconsistencies in the system's operation."
     },
     "01-restauracao": {
       "nome": "Restore",
