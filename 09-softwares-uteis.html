@@ -456,8 +456,11 @@
 }
 
         function abrirRcloneManager() {
-            abrirFerramentaExterna('gtk-launch rclone-manager 2>/dev/null &', 'instalar-rclone-manager', 'RClone Manager');
-        }
+    // Chama o binário `rclone-manager` diretamente (mesmo que o atalho do KDE).
+    // Não usa gtk-launch porque o nome do arquivo .desktop pode variar entre
+    // instalações, e o gtk-launch falha silenciosamente se o nome não bater.
+    abrirFerramentaExterna('rclone-manager > /dev/null 2>&1 &', 'instalar-rclone-manager', 'RClone Manager');
+}
 
         function atualizarBotaoAbrirRclone() {
             var btn = document.getElementById('btn-abrir-rclone-manager');
