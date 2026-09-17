@@ -12,6 +12,9 @@
  * LOG ÚNICO POR SESSÃO: sessões com múltiplos botões compartilham um único
  *       logBox. O botão carrega data-logbox="<id-do-log>" para indicar onde
  *       escrever. Sessões com 1 botão continuam usando log-<idComando>.
+ *
+ * LOG COMPLETO: sem filtros de ruído. Tudo o que o comando escreve no stdout
+ *       e stderr é exibido.
  */
 
 // ============================================================
@@ -214,20 +217,20 @@ var SESSOES = [
         'instalar-telegram': { textoConcluido: '✅ Telegram instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_telegram' },
         'instalar-signal': { textoConcluido: '✅ Signal instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_signal' },
 
-        // Bloco 5A — Edição de Vídeo
+        // Bloco 5A — Edição de Vídeo e Modelagem 3D
         'instalar-kdenlive': { textoConcluido: '✅ Kdenlive instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_kdenlive' },
         'instalar-shotcut': { textoConcluido: '✅ Shotcut instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_shotcut' },
         'instalar-pitivi': { textoConcluido: '✅ Pitivi instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_pitivi' },
         'instalar-openshot': { textoConcluido: '✅ OpenShot instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_openshot' },
         'instalar-avidemux': { textoConcluido: '✅ Avidemux instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_avidemux' },
-		'instalar-drift': { textoConcluido: '✅ Drift instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_drift' },
         'instalar-lightworks': { textoConcluido: '✅ Lightworks instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_lightworks' },
+        'instalar-drift': { textoConcluido: '✅ Drift instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_drift' },
+        'instalar-blender': { textoConcluido: '✅ Blender instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_blender' },
 
-        // Bloco 5B — Áudio e 3D
+        // Bloco 5B — Edição e Criação de Áudio
         'instalar-ardour': { textoConcluido: '✅ Ardour instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_ardour' },
         'instalar-lmms': { textoConcluido: '✅ LMMS instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_lmms' },
         'instalar-audacity': { textoConcluido: '✅ Audacity instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_audacity' },
-        'instalar-blender': { textoConcluido: '✅ Blender instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_blender' },
 
         // Bloco 6 — Sincronização em Nuvem
         'instalar-rclone': { textoConcluido: '✅ Rclone instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_rclone' },
@@ -285,25 +288,22 @@ function nomeDaSessao(sessaoId) {
  *   3. Fallback: `log-<idComando>` (log individual, sessões de 1 botão).
  */
 function _getLogBox(idComando) {
-    // 1. Botão com data-comando + data-logbox
     var btn1 = document.querySelector('[data-comando="' + idComando + '"][data-logbox]');
     if (btn1) {
         var el = document.getElementById(btn1.dataset.logbox);
         if (el) return el;
     }
-    // 2. Botão com id btn-<idComando> + data-logbox
     var btn2 = document.getElementById('btn-' + idComando);
     if (btn2 && btn2.dataset && btn2.dataset.logbox) {
         var el2 = document.getElementById(btn2.dataset.logbox);
         if (el2) return el2;
     }
-    // 3. Fallback (sessões de 1 botão)
     return document.getElementById('log-' + idComando);
 }
 
 /**
  * Insere um separador visual no log, antes de uma nova execução.
- * Só insere se o log já tiver conteúdo (evita separador "solto" na primeira execução).
+ * Só insere se o log já tiver conteúdo.
  */
 function _separadorLog(logBox, nomeAcao) {
     if (!logBox) return;
@@ -319,11 +319,6 @@ function _separadorLog(logBox, nomeAcao) {
 // BLOQUEIO DE SESSÃO DURANTE EXECUÇÃO
 // ============================================================
 
-/**
- * Bloqueia todos os outros botões `.btn-executar` do mesmo `.sessao-container`
- * do botão `btn-<idComando>`. Preserva o estado anterior (para que botões já
- * desabilitados por "já executado" não sejam acidentalmente reabilitados).
- */
 function _bloquearSessao(idComando) {
     var btn = document.getElementById('btn-' + idComando);
     if (!btn) return;
@@ -332,9 +327,8 @@ function _bloquearSessao(idComando) {
 
     var botoes = sessaoContainer.querySelectorAll('.btn-executar');
     botoes.forEach(function(b) {
-        if (b.id === 'btn-' + idComando) return; // não mexe no botão que está rodando
-        if (b.hasAttribute('data-sessao-bloqueado')) return; // já bloqueado
-        // Guarda estado anterior
+        if (b.id === 'btn-' + idComando) return;
+        if (b.hasAttribute('data-sessao-bloqueado')) return;
         b.setAttribute('data-was-disabled', b.disabled ? '1' : '0');
         b.setAttribute('data-sessao-bloqueado', '1');
         b.disabled = true;
@@ -343,10 +337,6 @@ function _bloquearSessao(idComando) {
     });
 }
 
-/**
- * Reabilita os botões que foram bloqueados por `_bloquearSessao`, restaurando
- * o estado `disabled` original.
- */
 function _liberarSessao(idComando) {
     var btn = document.getElementById('btn-' + idComando);
     if (!btn) return;
@@ -635,8 +625,6 @@ function completarProgresso(idComando, sucesso) {
         restaurarBotaoAposExecucao(idComando, sucesso);
         _notificarConclusaoReal(idComando, sucesso);
 
-        // Log único por sessão: libera os outros botões da mesma sessão
-        // assim que o comando termina (sucesso ou falha).
         _liberarSessao(idComando);
     };
 
@@ -740,18 +728,11 @@ function toggleTerminalLog(logBoxId) {
 
 /**
  * Cria o wrapper com toggle para um logBox, se ainda não existir.
- * Idempotente: se o logBox já está dentro de um `.terminal-log-wrapper`,
- * não faz nada. Isso permite que vários `idComando` compartilhem o mesmo
- * logBox sem recriar o toggle múltiplas vezes.
- *
- * @param {HTMLElement} logBox - o logBox em si (não o id).
- * @param {string} [labelKey] - chave i18n do texto do toggle. Padrão:
- *   'comum.log_execucao'. Para logs de sessão, passar 'comum.log_sessao'.
+ * Idempotente.
  */
 function criarToggleParaLog(logBox, labelKey) {
     if (!logBox) return;
 
-    // Já tem wrapper? Não recria.
     if (logBox.parentElement && logBox.parentElement.classList.contains('terminal-log-wrapper')) {
         return;
     }
@@ -784,8 +765,6 @@ function criarToggleParaLog(logBox, labelKey) {
 function conectarSSE(idComando, logBox) {
     if (!logBox) return;
 
-    // Se o logBox é de sessão (id começa com "log-sessao-"), usa o label
-    // "Log da Sessão". Senão, mantém o label padrão "Log de execução".
     var labelKey = (logBox.id && logBox.id.indexOf('log-sessao-') === 0)
         ? 'comum.log_sessao'
         : 'comum.log_execucao';
@@ -802,7 +781,10 @@ function conectarSSE(idComando, logBox) {
         sseConnections[idComando] = eventSource;
 
         let linhas = logBox.children.length;
-        const MAX_LINHAS = 500;
+
+        // Sem filtros de ruído. Limite generoso para caber a saída de
+        // comandos longos (dnf upgrade típico = 1500-3000 linhas).
+        const MAX_LINHAS = 10000;
 
         eventSource.onmessage = function(event) {
             try {
@@ -816,10 +798,18 @@ function conectarSSE(idComando, logBox) {
                     return;
                 }
 
+                // Limpeza mínima: remove apenas sequências de escape ANSI
+                // (códigos de controle de terminal) para que o texto não
+                // chegue poluído. Todo o CONTEÚDO real é preservado.
                 let mensagem = dados.mensagem
-                .replace(/\x1b\]3008;[^\x1b]*\x1b\\/g, '')
-                .replace(/\x1b\[[0-9;]*m/g, '')
-                .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+                    // OSC (Operating System Command): \x1b]...BEL ou \x1b]...\x1b\\
+                    .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
+                    // CSI (Control Sequence Introducer): \x1b[...letra
+                    .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
+                    // Escapes simples: \x1b + char único
+                    .replace(/\x1b[@-Z\\-_]/g, '')
+                    // Outros caracteres de controle (exceto \t \n \r)
+                    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
                 const lines = mensagem.split('\n');
 
@@ -827,12 +817,8 @@ function conectarSSE(idComando, logBox) {
                     const line = lines[i];
                     if (line.trim() === '') continue;
 
-                    if (line.includes('org.kde.plasma.libdiscover')) continue;
-                    if (line.includes('QML Shortcut')) continue;
-                    if (line.includes('qt.qpa.services')) continue;
-                    if (line.includes('WARNING **: Found icon of unknown type')) continue;
-                    if (line.includes('QIODevice::read')) continue;
-                    if (line.includes('adding empty sources model')) continue;
+                    // Sem filtros: TUDO o que o comando escreve aparece,
+                    // inclusive avisos de Qt/plasma que antes eram omitidos.
 
                     const lineElement = document.createElement('div');
                     lineElement.className = 'log-line ' + dados.tipo;
@@ -962,7 +948,6 @@ async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) 
         btn.style.opacity = '0.6';
     }
 
-    // Bloqueia os outros botões da sessão enquanto este roda
     _bloquearSessao(idComando);
 
     try {
