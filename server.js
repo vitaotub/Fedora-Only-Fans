@@ -13,8 +13,7 @@ const FOF_VERSION = '1.0.0-rc.1';
 const LANGS_SUPORTADOS = ['pt-BR', 'en', 'es'];
 const LOCALES_DIR = path.join(__dirname, 'locales');
 
-// CORREÇÃO #11: cada padrão agora é avaliado como PREFIXO de comando,
-// não como substring livre.
+// CORREÇÃO #11: padrões avaliados como PREFIXO de comando.
 const COMANDOS_SEM_AUTENTICACAO = [
     'rpm -q',
 'uname -r',
@@ -40,6 +39,31 @@ function _cmdSemAutenticacao(comando) {
             || trimmed.startsWith(cmd + ' ')
             || trimmed.startsWith(cmd + '\t');
     });
+}
+
+// ============================================================
+// FILTRO DE RUÍDO — remove avisos do portal KDE/Qt que aparecem
+// quando o kdesu é invocado sem sessão gráfica registrada.
+//
+// São 3 padrões específicos. Se algum dia quiser vê-los de volta
+// (para debugar o portal), basta comentar a chamada em enviarLog().
+// ============================================================
+function _filtrarLog(mensagem) {
+    if (!mensagem) return mensagem;
+    // Se não tem nenhum dos marcadores, retorna como está (fast path)
+    if (mensagem.indexOf('qt.qpa') === -1 &&
+        mensagem.indexOf('QDBusError') === -1 &&
+        mensagem.indexOf('portal') === -1) {
+        return mensagem;
+    }
+    const linhas = mensagem.split('\n');
+    const filtradas = linhas.filter(function(line) {
+        if (line.includes('qt.qpa.services: failed to register with host portal')) return false;
+        if (line.includes('QDBusError("org.freedesktop.portal.Error.Failed"')) return false;
+        if (line.includes('could not register app ID:')) return false;
+        return true;
+    });
+    return filtradas.join('\n');
 }
 
 // ============ VARIÁVEIS DE STREAM ============
@@ -112,8 +136,18 @@ function resetarProgresso() {
 // ============ FUNÇÕES DE STREAM SSE ============
 
 function enviarLog(idComando, mensagem, tipo = 'output', extra = {}) {
+    // Aplica o filtro antes de tudo. Se após o filtro a mensagem ficar
+    // vazia (só continha ruído), não envia nada.
+    const mensagemLimpa = _filtrarLog(mensagem);
+
+    if (!mensagemLimpa || mensagemLimpa.trim() === '') {
+        // Ainda precisamos enviar eventos de tipo 'end' mesmo com mensagem
+        // vazia — eles controlam o estado da barra de progresso.
+        if (tipo !== 'end') return;
+    }
+
     const clients = sseClients.get(idComando) || [];
-    const dados = JSON.stringify({ tipo, mensagem, ...extra });
+    const dados = JSON.stringify({ tipo, mensagem: mensagemLimpa, ...extra });
 
     clients.forEach(client => {
         client.write(`data: ${dados}\n\n`);
@@ -425,15 +459,23 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(7);
         const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
+        const outputTemp = `/tmp/fof-out-${timestamp}-${random}.log`;
 
         const homeDir = process.env.HOME || '/home/' + (process.env.USER || 'user');
+
+        // CORREÇÃO: o script agora redireciona TUDO o que o comando
+        // escreve (stdout + stderr) para um arquivo temporário. O kdesu
+        // não repassa o output do processo filho, então sem isso a saída
+        // se perde. O servidor lê o arquivo continuamente via SSE.
         const scriptContent = `#!/bin/bash
 # Fedora Only Fans - ${descricao}
 # Executado em: $(date '+%d/%m/%Y %H:%M:%S')
 export DISPLAY=${process.env.DISPLAY || ':0'}
 export XAUTHORITY=${process.env.XAUTHORITY || homeDir + '/.Xauthority'}
 export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
+{
 ${comandoSemSudo}
+} > ${outputTemp} 2>&1
 `;
 
         try {
@@ -444,16 +486,58 @@ ${comandoSemSudo}
             return callback(err, "", "");
         }
 
-        // LOG COMPLETO: sem o 2>/dev/null que descartava o stderr do kdesu.
+        // Sem o 2>/dev/null — o stderr do kdesu é útil. O filtro de ruído
+        // em _filtrarLog() remove os avisos do portal.
         const comandoFinal = `kdesu -c "${scriptTemp}" && rm -f ${scriptTemp}`;
+
+        // Lê o arquivo de saída continuamente enquanto o kdesu roda.
+        // A cada 500ms, envia o conteúdo novo via SSE e limpa o arquivo.
+        let bytesLidos = 0;
+
+        const readerInterval = setInterval(() => {
+            if (!fs.existsSync(outputTemp)) return;
+            try {
+                const conteudo = fs.readFileSync(outputTemp);
+                if (conteudo.length > bytesLidos) {
+                    const novoConteudo = conteudo.slice(bytesLidos).toString('utf8');
+                    bytesLidos = conteudo.length;
+                    if (novoConteudo) {
+                        enviarLog(idComando, novoConteudo, 'output');
+                    }
+                }
+            } catch (e) { /* ignora erros de leitura */ }
+        }, 500);
+
+        const cleanupReader = () => {
+            clearInterval(readerInterval);
+            // Última leitura para capturar o que chegou entre o último tick
+            // do interval e o fim do processo.
+            if (fs.existsSync(outputTemp)) {
+                try {
+                    const conteudo = fs.readFileSync(outputTemp);
+                    if (conteudo.length > bytesLidos) {
+                        const resto = conteudo.slice(bytesLidos).toString('utf8');
+                        if (resto) enviarLog(idComando, resto, 'output');
+                    }
+                } catch (e) {}
+                try { fs.unlinkSync(outputTemp); } catch (e) {}
+            }
+        };
 
         setTimeout(() => {
             if (fs.existsSync(scriptTemp)) {
                 try { fs.unlinkSync(scriptTemp); } catch (e) {}
             }
+            if (fs.existsSync(outputTemp)) {
+                try { fs.unlinkSync(outputTemp); } catch (e) {}
+            }
         }, 60000);
 
-        executarComandoComStream(comandoFinal, idComando, isReversao, callback);
+        executarComandoComStream(comandoFinal, idComando, isReversao, (err, stdout, stderr) => {
+            cleanupReader();
+            callback(err, stdout, stderr);
+        });
+
         return;
     }
 
