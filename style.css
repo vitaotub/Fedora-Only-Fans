@@ -18,6 +18,12 @@
     --danger: #ef4444;
     --danger-hover: #dc2626;
     --success: #34d399;
+
+    /* Matrix theme */
+    --matrix-green: #00ff41;
+    --matrix-green-dim: #00cc33;
+    --matrix-green-glow: rgba(0, 255, 65, 0.6);
+    --matrix-bg: #000000;
 }
 
 * {
@@ -140,9 +146,6 @@ body {
     margin-top: 0.5rem;
 }
 
-/* i18n: reforço para EN/ES — textos longos podem estourar botões.
- *  min-width: 0 permite que o botão encolha em flex/grid.
- *  O padding é mantido; o texto pode quebrar em 2 linhas se necessário. */
 .btn-executar,
 .btn-reverter {
     min-width: 0;
@@ -279,7 +282,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    min-width: 0; /* i18n: permite encolher */
+    min-width: 0;
 }
 
 .grid-launchers .launcher-item .btn-reverter {
@@ -373,7 +376,7 @@ body {
 }
 
 /* ============================================================
- *  TERMINAL LOG - COMPACTADO COM TOGGLE MELHORADO
+ *  TERMINAL LOG — MATRIX THEME
  *  ============================================================ */
 
 .terminal-log-wrapper {
@@ -398,14 +401,14 @@ body {
 }
 
 .terminal-log-toggle:hover {
-    background-color: rgba(60, 103, 227, 0.1);
-    color: var(--text-main);
+    background-color: rgba(0, 255, 65, 0.05);
+    color: var(--matrix-green);
 }
 
 .terminal-log-toggle .toggle-arrow {
     transition: transform 0.3s ease;
     font-size: 0.7rem;
-    color: var(--accent);
+    color: var(--matrix-green);
 }
 
 .terminal-log-toggle.expandido .toggle-arrow {
@@ -421,8 +424,8 @@ body {
 }
 
 .terminal-log {
-    background-color: #050811;
-    border: 1px solid var(--border);
+    background-color: var(--matrix-bg);
+    border: 1px solid rgba(0, 255, 65, 0.3);
     border-radius: 6px;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 0.85rem;
@@ -438,6 +441,7 @@ body {
     line-height: 1.4;
     transition: all 0.3s ease;
     opacity: 0;
+    box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.08);
 }
 
 .terminal-log.expandido {
@@ -450,8 +454,6 @@ body {
     opacity: 1;
 }
 
-/* Log compartilhado de sessão (múltiplos botões): mais espaço vertical
- * para acomodar várias execuções em sequência. */
 .terminal-log.sessao-compartilhado {
     min-height: 200px;
     max-height: 400px;
@@ -468,43 +470,60 @@ body {
     white-space: pre-wrap;
     word-wrap: break-word;
     animation: fadeIn 0.15s ease-in;
+    color: var(--matrix-green);
+    text-shadow:
+        0 0 3px var(--matrix-green-glow),
+        0 0 6px rgba(0, 255, 65, 0.3);
 }
 
+/* Todos os tipos de linha ficam verdes, com o tom variando apenas o
+ * suficiente pra preservar legibilidade. O emoji no início da linha
+ * (❌ / ✅ / ⚠️ / ℹ️ / 🚀) já diferencia visualmente o tipo de mensagem. */
+
 .terminal-log .log-line.output {
-    color: #34d399;
+    color: var(--matrix-green);
 }
 
 .terminal-log .log-line.error {
-    color: #ef4444;
+    color: #4dff4d;
+    text-shadow:
+        0 0 4px rgba(77, 255, 77, 0.7),
+        0 0 8px rgba(0, 255, 65, 0.5);
 }
 
 .terminal-log .log-line.success {
-    color: #34d399;
-    font-weight: bold;
+    color: #66ff66;
+    font-weight: 500;
+    text-shadow:
+        0 0 4px rgba(102, 255, 102, 0.8),
+        0 0 8px rgba(0, 255, 65, 0.5);
 }
 
 .terminal-log .log-line.info {
-    color: #60a5fa;
+    color: var(--matrix-green-dim);
+    text-shadow: 0 0 3px rgba(0, 204, 51, 0.5);
 }
 
 .terminal-log .log-line.warning {
-    color: #f59e0b;
+    color: #99ff99;
+    text-shadow:
+        0 0 3px rgba(153, 255, 153, 0.6),
+        0 0 6px rgba(0, 255, 65, 0.3);
 }
 
 .terminal-log .log-line.end {
-    color: #6b7280;
+    color: #00aa22;
     font-style: italic;
 }
 
-/* Separador entre execuções no log compartilhado de sessão:
- * ────── Iniciando: <nome> ────── */
 .terminal-log .log-line.separator {
-    color: #6b7280;
+    color: #00aa22;
     font-style: italic;
     margin-top: 0.6rem;
     padding-top: 0.4rem;
-    border-top: 1px dashed var(--border);
+    border-top: 1px dashed rgba(0, 255, 65, 0.3);
     animation: fadeIn 0.2s ease-in;
+    text-shadow: 0 0 3px rgba(0, 170, 34, 0.5);
 }
 
 @keyframes fadeIn {
@@ -517,17 +536,17 @@ body {
 }
 
 .terminal-log::-webkit-scrollbar-track {
-    background: #0a0e1a;
+    background: #000000;
     border-radius: 4px;
 }
 
 .terminal-log::-webkit-scrollbar-thumb {
-    background: #24334d;
+    background: rgba(0, 255, 65, 0.4);
     border-radius: 4px;
 }
 
 .terminal-log::-webkit-scrollbar-thumb:hover {
-    background: #3c67e3;
+    background: rgba(0, 255, 65, 0.7);
 }
 
 /* ============================================================
@@ -615,7 +634,7 @@ body {
 }
 
 /* ============================================================
- *  KERNEL DROPDOWN - CORREÇÃO FUNDO BRANCO
+ *  KERNEL DROPDOWN
  *  ============================================================ */
 
 .kernel-dropdown {
@@ -655,7 +674,7 @@ body {
 }
 
 /* ============================================================
- *  SESSÕES (container e título)
+ *  SESSÕES
  *  ============================================================ */
 
 .sessao-wrapper {
@@ -721,7 +740,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    min-width: 0; /* i18n: permite encolher */
+    min-width: 0;
 }
 
 .header-guide .titulo h1,
@@ -769,7 +788,7 @@ body {
 }
 
 /* ============================================================
- *  HEADER-DIREITA (agrupa seletor i18n + botão voltar)
+ *  HEADER-DIREITA
  *  ============================================================ */
 
 .header-direita {
@@ -830,7 +849,6 @@ body {
     color: #ffffff;
 }
 
-/* i18n: em telas pequenas, o seletor ocupa a linha inteira */
 @media (max-width: 768px) {
     .i18n-seletor-container {
         width: 100%;
@@ -963,7 +981,7 @@ body {
 }
 
 /* ============================================================
- *  INDICADORES DE SESSÃO (BOLINHAS COLORIDAS FIXAS)
+ *  INDICADORES DE SESSÃO
  *  ============================================================ */
 
 .sessao-indicador {
@@ -1088,7 +1106,6 @@ body {
         font-size: 1.2rem;
     }
 
-    /* i18n: em telas pequenas, o header-direita empilha */
     .header-direita {
         width: 100%;
         justify-content: space-between;
