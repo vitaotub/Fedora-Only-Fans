@@ -99,7 +99,8 @@
       "atualizacao_titulo": "Atualização Geral do Fedora",
       "atualizacao_desc": "Atualiza o índice de repositórios, sincroniza as chaves de segurança e baixa as versões mais recentes de todos os componentes do sistema.",
       "btn_atualizar": "🔄 Atualizar Fedora",
-      "log_iniciando": "🚀 Iniciando atualização..."
+      "log_iniciando": "🚀 Iniciando atualização...",
+      "aviso_reiniciar": "💡 Recomenda-se reiniciar o computador após aplicar atualizações de sistema, seja diretamente pela interface do FOF ou pela notificação do próprio Fedora. Reiniciar garante que todas as alterações sejam aplicadas corretamente e evita eventuais inconsistências no funcionamento do sistema."
     },
     "01-restauracao": {
       "nome": "Restauração",
