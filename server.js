@@ -9,17 +9,12 @@ const FOF_VERSION = '1.0.0-rc.1';
 
 // ============================================================
 // i18n: whitelist de idiomas suportados
-// CORREÇÃO #i18n-1: a rota /locales/:lang só serve arquivos cujo
-// nome está nesta lista. Sem isso, um pedido como
-// `/locales/..%2F..%2Fetc%2Fpasswd.json` poderia virar path
-// traversal. A whitelist elimina esse vetor completamente.
 // ============================================================
 const LANGS_SUPORTADOS = ['pt-BR', 'en', 'es'];
 const LOCALES_DIR = path.join(__dirname, 'locales');
 
 // CORREÇÃO #11: cada padrão agora é avaliado como PREFIXO de comando,
-// não como substring livre. Fecha o vetor de "esconder um
-// `bash <(curl ...)` no meio de um comando composto".
+// não como substring livre.
 const COMANDOS_SEM_AUTENTICACAO = [
     'rpm -q',
 'uname -r',
@@ -35,8 +30,6 @@ const COMANDOS_SEM_AUTENTICACAO = [
 'raw.githubusercontent.com/ryzendew/AffinityOnLinux'
 ];
 
-// CORREÇÃO #11: helper compartilhado — qualquer mudança na regra de
-// "sem auth" agora vive num único lugar.
 function _cmdSemAutenticacao(comando) {
     const trimmed = (comando || '').trim();
     return COMANDOS_SEM_AUTENTICACAO.some(function(cmd) {
@@ -44,8 +37,8 @@ function _cmdSemAutenticacao(comando) {
             return trimmed.includes(cmd);
         }
         return trimmed === cmd
-        || trimmed.startsWith(cmd + ' ')
-        || trimmed.startsWith(cmd + '\t');
+            || trimmed.startsWith(cmd + ' ')
+            || trimmed.startsWith(cmd + '\t');
     });
 }
 
@@ -204,10 +197,6 @@ function obterMetodoAutenticacao() {
     };
 }
 
-// ============================================================
-// FUNÇÃO AUXILIAR: Verifica se um comando existe
-// ============================================================
-
 function commandExists(cmd) {
     try {
         const result = require('child_process').execSync(`which ${cmd}`, { encoding: 'utf8', timeout: 1000 });
@@ -220,7 +209,6 @@ function commandExists(cmd) {
 // ============ EXECUÇÃO COM STREAM ============
 
 function executarComandoComStream(comandoFinal, idComando, isReversao, callback) {
-    // CORREÇÃO #11: usa o helper centralizado em vez do includes() solto.
     const precisaAutenticacao = !_cmdSemAutenticacao(comandoFinal);
 
     if (!precisaAutenticacao) {
@@ -440,13 +428,13 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
         const homeDir = process.env.HOME || '/home/' + (process.env.USER || 'user');
         const scriptContent = `#!/bin/bash
-        # Fedora Only Fans - ${descricao}
-        # Executado em: $(date '+%d/%m/%Y %H:%M:%S')
-        export DISPLAY=${process.env.DISPLAY || ':0'}
-        export XAUTHORITY=${process.env.XAUTHORITY || homeDir + '/.Xauthority'}
-        export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
-        ${comandoSemSudo}
-        `;
+# Fedora Only Fans - ${descricao}
+# Executado em: $(date '+%d/%m/%Y %H:%M:%S')
+export DISPLAY=${process.env.DISPLAY || ':0'}
+export XAUTHORITY=${process.env.XAUTHORITY || homeDir + '/.Xauthority'}
+export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
+${comandoSemSudo}
+`;
 
         try {
             fs.writeFileSync(scriptTemp, scriptContent, { mode: 0o755 });
@@ -456,7 +444,8 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
             return callback(err, "", "");
         }
 
-        const comandoFinal = `kdesu -c "${scriptTemp}" 2>/dev/null && rm -f ${scriptTemp}`;
+        // LOG COMPLETO: sem o 2>/dev/null que descartava o stderr do kdesu.
+        const comandoFinal = `kdesu -c "${scriptTemp}" && rm -f ${scriptTemp}`;
 
         setTimeout(() => {
             if (fs.existsSync(scriptTemp)) {
@@ -477,12 +466,12 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
         const homeDir = process.env.HOME || '/home/' + (process.env.USER || 'user');
         const scriptContent = `#!/bin/bash
-        # Fedora Only Fans - ${descricao}
-        export DISPLAY=${process.env.DISPLAY || ':0'}
-        export XAUTHORITY=${process.env.XAUTHORITY || homeDir + '/.Xauthority'}
-        export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
-        ${comandoSemSudo}
-        `;
+# Fedora Only Fans - ${descricao}
+export DISPLAY=${process.env.DISPLAY || ':0'}
+export XAUTHORITY=${process.env.XAUTHORITY || homeDir + '/.Xauthority'}
+export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
+${comandoSemSudo}
+`;
 
         try {
             fs.writeFileSync(scriptTemp, scriptContent, { mode: 0o755 });
@@ -547,7 +536,6 @@ function procederComExecucao(comando, idComando, isReversao, res) {
     }));
 
     setImmediate(() => {
-        // CORREÇÃO #11: usa o helper centralizado em vez do includes() solto.
         const isSemAutenticacao = _cmdSemAutenticacao(comando) && !comando.includes('dnf');
         const precisaAutenticacao = !isSemAutenticacao;
 
@@ -600,24 +588,16 @@ function servirArquivoEstatico(req, res, filePath) {
 
 // ============================================================
 // i18n: SERVIDOR DE LOCALES
-// CORREÇÃO #i18n-1: função dedicada para servir arquivos de idioma.
-// A whitelist elimina path traversal. Sempre retorna JSON com
-// charset=utf-8 (acentos e caracteres especiais).
 // ============================================================
 function servirLocale(req, res, lang) {
-    // 1. Validação: só aceita idiomas na whitelist
     if (LANGS_SUPORTADOS.indexOf(lang) === -1) {
         res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ error: 'Idioma não suportado: ' + lang }));
         return;
     }
 
-    // 2. Caminho seguro: como lang está na whitelist, o nome do arquivo
-    //    é determinístico e nunca sai de LOCALES_DIR.
     const arquivo = path.join(LOCALES_DIR, lang + '.json');
 
-    // 3. Dupla checagem: o arquivo resolvido precisa continuar dentro
-    //    de LOCALES_DIR (defesa em profundidade, mesmo com whitelist).
     if (path.resolve(arquivo).indexOf(path.resolve(LOCALES_DIR)) !== 0) {
         res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ error: 'Acesso negado' }));
@@ -630,9 +610,6 @@ function servirLocale(req, res, lang) {
         return;
     }
 
-    // 4. Serve o arquivo. `no-cache` garante que atualizações no JSON
-    //    apareçam sem o navegador usar versão antiga. É um arquivo
-    //    pequeno, o custo é desprezível.
     res.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': 'no-cache'
@@ -655,7 +632,6 @@ const server = http.createServer((req, res) => {
 
     const url = req.url;
 
-    // ===== SSE STREAM =====
     if (req.method === 'GET' && url.startsWith('/stream')) {
         const urlParams = new URL(url, `http://${req.headers.host}`);
         const idComando = urlParams.searchParams.get('id');
@@ -689,11 +665,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ===== i18n: ROTA DE LOCALES =====
-    // CORREÇÃO #i18n-1: /locales/<lang>.json, com whitelist.
-    // Aceita também /locales/<lang> (sem .json) por conveniência.
     if (req.method === 'GET' && url.startsWith('/locales/')) {
-        // Remove prefixo e (opcional) sufixo .json; ignora query string.
         let resto = url.substring('/locales/'.length);
         const interroga = resto.indexOf('?');
         if (interroga !== -1) resto = resto.substring(0, interroga);
@@ -702,9 +674,6 @@ const server = http.createServer((req, res) => {
             resto = resto.substring(0, resto.length - '.json'.length);
         }
 
-        // Decodifica percent-encoding (ex.: pt-BR não precisa, mas
-        // previne surpresas com %2D etc.). try/catch protege contra
-        // sequências malformadas.
         let lang;
         try {
             lang = decodeURIComponent(resto);
@@ -718,7 +687,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ===== PROGRESSO - GET =====
     if (req.method === 'GET' && url === '/progress') {
         const progresso = lerProgresso();
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -729,7 +697,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ===== PROGRESSO - POST =====
     if (req.method === 'POST' && url === '/progress') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -752,7 +719,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ===== PROGRESSO - DELETE =====
     if (req.method === 'DELETE' && url === '/progress') {
         const ok = resetarProgresso();
         if (ok) {
@@ -764,8 +730,6 @@ const server = http.createServer((req, res) => {
         }
         return;
     }
-
-    // ===== PÁGINAS HTML =====
 
     if (req.method === 'GET' && (url === '/' || url === '/index.html')) {
         servirArquivoEstatico(req, res, 'index.html');
@@ -782,7 +746,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Aceita qualquer prefixo de 2 dígitos para sessões
     if (req.method === 'GET' && url.match(/^\/(\d{2}-[a-z-]+\.html)$/)) {
         const match = url.match(/^\/(\d{2}-[a-z-]+\.html)$/);
         if (match) {
@@ -801,7 +764,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // i18n.js — servido como arquivo estático
     if (req.method === 'GET' && url === '/i18n.js') {
         servirArquivoEstatico(req, res, 'i18n.js');
         return;
@@ -811,8 +773,6 @@ const server = http.createServer((req, res) => {
         servirArquivoEstatico(req, res, 'icone_app.png');
         return;
     }
-
-    // ===== API =====
 
     if (req.method === 'GET' && url === '/status') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -830,8 +790,6 @@ const server = http.createServer((req, res) => {
             nodeVersion: process.version,
             platform: process.platform,
             version: FOF_VERSION,
-            // i18n: informa os idiomas disponíveis para clientes que queiram
-            // montar o seletor dinamicamente (opcional).
             langsSuportados: LANGS_SUPORTADOS
         }));
         return;
@@ -871,8 +829,6 @@ const server = http.createServer((req, res) => {
     res.end('Página não encontrada');
 });
 
-// ============ TRATAMENTO DE ERROS ============
-
 server.on('error', (e) => {
     if (e.code === 'EADDRINUSE') {
         console.error(`[ERRO]: A porta ${PORT} já está em uso.`);
@@ -881,8 +837,6 @@ server.on('error', (e) => {
         console.error('[Erro do servidor]:', e.message);
     }
 });
-
-// ============ SHUTDOWN GRACEFUL ============
 
 process.on('SIGINT', () => {
     console.log('\n🛑 Encerrando servidor...');
@@ -899,8 +853,6 @@ process.on('SIGINT', () => {
     });
 });
 
-// ============ INÍCIO ============
-
 const HOST = '127.0.0.1';
 
 server.listen(PORT, HOST, () => {
@@ -914,7 +866,7 @@ server.listen(PORT, HOST, () => {
     console.log(` 📡 SSE: Ativo (logs em tempo real)`);
     console.log(` 📁 Arquivos estáticos: Ativo (HTML, CSS, JS, ícone)`);
     console.log(` 🌐 i18n: Ativo (locales em /locales/<lang>.json)`);
-    console.log(` 📄 Páginas: index.html, guiado.html, manutencao.html, 00-*.html a 08-*.html`);
+    console.log(` 📄 Páginas: index.html, guiado.html, manutencao.html, 00-*.html a 09-*.html`);
     console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, bash <(curl), etc`);
     console.log(` 📊 Progresso: .progresso.json (persistente no servidor)`);
     console.log(`====================================================`);
