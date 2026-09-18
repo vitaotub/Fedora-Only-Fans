@@ -1,305 +1,259 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOF - Launchers</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOF - Launchers</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="sessao-container" id="sessao-05-launchers">
-        <div class="sessao-titulo">
-            <span class="sessao-label">Sessão 6</span>
-            <span data-i18n="sessoes.05-launchers.titulo">🎮 Launchers e Pacotes Essenciais</span>
-        </div>
+<div class="sessao-container" id="sessao-05-launchers">
+<div class="sessao-titulo">
+<span class="sessao-label">Sessão</span>
+<span data-i18n="sessoes.05-launchers.titulo">🎮 Launchers e Pacotes Essenciais</span>
+</div>
 
-        <!-- Vulkan -->
-        <div class="bloco-comando">
-            <div class="comando-info">
-                <h3 data-i18n="sessoes.05-launchers.vulkan_titulo">Drivers Vulkan Completos (Para GPUs AMD)</h3>
-                <p data-i18n="sessoes.05-launchers.vulkan_desc">Instala as ferramentas e bibliotecas Vulkan em versões de 32 e 64 bits para suporte nativo ao Proton.</p>
-                <div class="grupo-botoes">
-                    <button class="btn-executar"
-                            onclick="executarVulkan()"
-                            data-comando="vulkan-amd"
-                            data-logbox="log-sessao-05-launchers"
-                            id="btn-vulkan-amd"
-                            data-i18n="sessoes.05-launchers.btn_instalar_vulkan">
-                        🚀 Instalar Drivers Vulkan
-                    </button>
-                </div>
-            </div>
+<!-- Launchers -->
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.05-launchers.launchers_titulo">Instalar Launchers e Pacotes Essenciais</h3>
+<p data-i18n="sessoes.05-launchers.launchers_desc">Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
+<p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;" data-i18n="sessoes.05-launchers.launchers_info">
+ℹ️ Todos os launchers são instalados via Flatpak.
+</p>
 
-            <div class="progress-container" id="progress-vulkan-amd">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-vulkan-amd"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-vulkan-amd">⏳ Iniciando...</span><span class="percentage" id="progress-percent-vulkan-amd">0%</span></div>
-            </div>
-        </div>
+<div class="grid-launchers">
+<div class="launcher-item">
+<button class="btn-executar"
+onclick="executarSteam()"
+data-comando="steam-install"
+data-logbox="log-sessao-05-launchers"
+id="btn-steam-install"
+data-i18n="sessoes.05-launchers.btn_steam">
+🎮 Steam
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar verde"
+onclick="executarHeroic()"
+data-comando="heroic-install"
+data-logbox="log-sessao-05-launchers"
+id="btn-heroic-install"
+data-i18n="sessoes.05-launchers.btn_heroic">
+⚡ Heroic Games
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar roxo"
+onclick="executarLutris()"
+data-comando="lutris-install"
+data-logbox="log-sessao-05-launchers"
+id="btn-lutris-install"
+data-i18n="sessoes.05-launchers.btn_lutris">
+🎯 Lutris
+</button>
+</div>
+</div>
+</div>
 
-        <!-- Launchers -->
-        <div class="bloco-comando">
-            <div class="comando-info">
-                <h3 data-i18n="sessoes.05-launchers.launchers_titulo">Instalar Launchers e Pacotes Essenciais</h3>
-                <p data-i18n="sessoes.05-launchers.launchers_desc">Instale os principais launchers de jogos e pacotes essenciais para o Fedora.</p>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;" data-i18n="sessoes.05-launchers.launchers_info">
-                    ℹ️ Todos os launchers são instalados via Flatpak.
-                </p>
+<div class="progress-container" id="progress-steam-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-steam-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-steam-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-steam-install">0%</span></div>
+</div>
 
-                <div class="grid-launchers">
-                    <div class="launcher-item">
-                        <button class="btn-executar"
-                                onclick="executarSteam()"
-                                data-comando="steam-install"
-                                data-logbox="log-sessao-05-launchers"
-                                id="btn-steam-install"
-                                data-i18n="sessoes.05-launchers.btn_steam">
-                            🎮 Steam
-                        </button>
-                    </div>
-                    <div class="launcher-item">
-                        <button class="btn-executar verde"
-                                onclick="executarHeroic()"
-                                data-comando="heroic-install"
-                                data-logbox="log-sessao-05-launchers"
-                                id="btn-heroic-install"
-                                data-i18n="sessoes.05-launchers.btn_heroic">
-                            ⚡ Heroic Games
-                        </button>
-                    </div>
-                    <div class="launcher-item">
-                        <button class="btn-executar roxo"
-                                onclick="executarLutris()"
-                                data-comando="lutris-install"
-                                data-logbox="log-sessao-05-launchers"
-                                id="btn-lutris-install"
-                                data-i18n="sessoes.05-launchers.btn_lutris">
-                            🎯 Lutris
-                        </button>
-                    </div>
-                    <div class="launcher-item">
-                        <button class="btn-executar laranja"
-                                onclick="executarProtonUp()"
-                                data-comando="protonup-install"
-                                data-logbox="log-sessao-05-launchers"
-                                id="btn-protonup-install"
-                                data-i18n="sessoes.05-launchers.btn_protonup">
-                            🔄 ProtonUp-Qt
-                        </button>
-                    </div>
-                </div>
-            </div>
+<div class="progress-container" id="progress-heroic-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-heroic-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-heroic-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-heroic-install">0%</span></div>
+</div>
 
-            <div class="progress-container" id="progress-steam-install">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-steam-install"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-steam-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-steam-install">0%</span></div>
-            </div>
+<div class="progress-container" id="progress-lutris-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-lutris-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-lutris-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-lutris-install">0%</span></div>
+</div>
+</div>
 
-            <div class="progress-container" id="progress-heroic-install">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-heroic-install"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-heroic-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-heroic-install">0%</span></div>
-            </div>
+<!-- Wine/Proton e Performance -->
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.05-launchers.compat_titulo">🍷 Compatibilidade (Wine/Proton) e Performance</h3>
+<p data-i18n="sessoes.05-launchers.compat_desc">Ferramentas pra rodar jogos e programas do Windows fora da Steam, e recursos que ajudam no desempenho durante o jogo.</p>
 
-            <div class="progress-container" id="progress-lutris-install">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-lutris-install"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-lutris-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-lutris-install">0%</span></div>
-            </div>
+<div class="grid-launchers">
+<div class="launcher-item">
+<button class="btn-executar"
+onclick="executarWine()"
+data-comando="wine-install"
+data-logbox="log-sessao-05-launchers"
+id="btn-wine-install"
+data-i18n="sessoes.05-launchers.btn_wine">
+🍷 Wine
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar verde"
+onclick="executarWinetricks()"
+data-comando="winetricks-install"
+data-logbox="log-sessao-05-launchers"
+id="btn-winetricks-install"
+data-i18n="sessoes.05-launchers.btn_winetricks">
+🔧 Winetricks
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar roxo"
+onclick="executarBottles()"
+data-comando="bottles-install"
+data-logbox="log-sessao-05-launchers"
+id="btn-bottles-install"
+data-i18n="sessoes.05-launchers.btn_bottles">
+🍾 Bottles
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar laranja"
+onclick="executarGameMode()"
+data-comando="gamemode-install"
+data-logbox="log-sessao-05-launchers"
+id="btn-gamemode-install"
+data-i18n="sessoes.05-launchers.btn_gamemode">
+⚙️ GameMode
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar azul-claro"
+onclick="executarMangoHud()"
+data-comando="mangohud-install"
+data-logbox="log-sessao-05-launchers"
+id="btn-mangohud-install"
+data-i18n="sessoes.05-launchers.btn_mangohud">
+📊 MangoHud
+</button>
+</div>
+</div>
 
-            <div class="progress-container" id="progress-protonup-install">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-protonup-install"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-protonup-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-protonup-install">0%</span></div>
-            </div>
-        </div>
+<div class="info-extra" style="margin-top: 1rem;" data-i18n-html="sessoes.05-launchers.compat_info_extra">
+ℹ️ <strong>Winetricks</strong> instala componentes extras (fontes, bibliotecas) dentro de um prefixo Wine.
+<strong>Bottles</strong> é uma alternativa moderna ao Wine puro, com gerenciamento visual de "garrafas" (prefixos) e suporte a runners Proton-GE.
+<strong>GameMode</strong> ajusta a CPU/GPU pra prioridade máxima enquanto um jogo roda.
+<strong>MangoHud</strong> mostra um overlay de FPS/uso de CPU e GPU dentro do jogo.
+</div>
+</div>
 
-        <!-- Wine/Proton e Performance -->
-        <div class="bloco-comando">
-            <div class="comando-info">
-                <h3 data-i18n="sessoes.05-launchers.compat_titulo">🍷 Compatibilidade (Wine/Proton) e Performance</h3>
-                <p data-i18n="sessoes.05-launchers.compat_desc">Ferramentas pra rodar jogos e programas do Windows fora da Steam, e recursos que ajudam no desempenho durante o jogo.</p>
+<div class="progress-container" id="progress-wine-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-wine-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-wine-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-wine-install">0%</span></div>
+</div>
 
-                <div class="grid-launchers">
-                    <div class="launcher-item">
-                        <button class="btn-executar"
-                                onclick="executarWine()"
-                                data-comando="wine-install"
-                                data-logbox="log-sessao-05-launchers"
-                                id="btn-wine-install"
-                                data-i18n="sessoes.05-launchers.btn_wine">
-                            🍷 Wine
-                        </button>
-                    </div>
-                    <div class="launcher-item">
-                        <button class="btn-executar verde"
-                                onclick="executarWinetricks()"
-                                data-comando="winetricks-install"
-                                data-logbox="log-sessao-05-launchers"
-                                id="btn-winetricks-install"
-                                data-i18n="sessoes.05-launchers.btn_winetricks">
-                            🔧 Winetricks
-                        </button>
-                    </div>
-                    <div class="launcher-item">
-                        <button class="btn-executar roxo"
-                                onclick="executarBottles()"
-                                data-comando="bottles-install"
-                                data-logbox="log-sessao-05-launchers"
-                                id="btn-bottles-install"
-                                data-i18n="sessoes.05-launchers.btn_bottles">
-                            🍾 Bottles
-                        </button>
-                    </div>
-                    <div class="launcher-item">
-                        <button class="btn-executar laranja"
-                                onclick="executarGameMode()"
-                                data-comando="gamemode-install"
-                                data-logbox="log-sessao-05-launchers"
-                                id="btn-gamemode-install"
-                                data-i18n="sessoes.05-launchers.btn_gamemode">
-                            ⚙️ GameMode
-                        </button>
-                    </div>
-                    <div class="launcher-item">
-                        <button class="btn-executar azul-claro"
-                                onclick="executarMangoHud()"
-                                data-comando="mangohud-install"
-                                data-logbox="log-sessao-05-launchers"
-                                id="btn-mangohud-install"
-                                data-i18n="sessoes.05-launchers.btn_mangohud">
-                            📊 MangoHud
-                        </button>
-                    </div>
-                </div>
+<div class="progress-container" id="progress-winetricks-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-winetricks-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-winetricks-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-winetricks-install">0%</span></div>
+</div>
 
-                <div class="info-extra" style="margin-top: 1rem;" data-i18n-html="sessoes.05-launchers.compat_info_extra">
-                    ℹ️ <strong>Winetricks</strong> instala componentes extras (fontes, bibliotecas) dentro de um prefixo Wine.
-                    <strong>Bottles</strong> é uma alternativa moderna ao Wine puro, com gerenciamento visual de "garrafas" (prefixos) e suporte a runners Proton-GE.
-                    <strong>GameMode</strong> ajusta a CPU/GPU pra prioridade máxima enquanto um jogo roda.
-                    <strong>MangoHud</strong> mostra um overlay de FPS/uso de CPU e GPU dentro do jogo.
-                </div>
-            </div>
+<div class="progress-container" id="progress-bottles-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-bottles-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-bottles-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-bottles-install">0%</span></div>
+</div>
 
-            <div class="progress-container" id="progress-wine-install">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-wine-install"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-wine-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-wine-install">0%</span></div>
-            </div>
+<div class="progress-container" id="progress-gamemode-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-gamemode-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-gamemode-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-gamemode-install">0%</span></div>
+</div>
 
-            <div class="progress-container" id="progress-winetricks-install">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-winetricks-install"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-winetricks-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-winetricks-install">0%</span></div>
-            </div>
+<div class="progress-container" id="progress-mangohud-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-mangohud-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-mangohud-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-mangohud-install">0%</span></div>
+</div>
+</div>
 
-            <div class="progress-container" id="progress-bottles-install">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-bottles-install"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-bottles-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-bottles-install">0%</span></div>
-            </div>
+<!-- Log único da sessão -->
+<div class="terminal-log sessao-compartilhado" id="log-sessao-05-launchers"></div>
+</div>
 
-            <div class="progress-container" id="progress-gamemode-install">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-gamemode-install"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-gamemode-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-gamemode-install">0%</span></div>
-            </div>
+<!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
+<script>
+// ============================================================
+// SESSÃO 05: LAUNCHERS E PACOTES ESSENCIAIS
+// ============================================================
+//
+// 1.0.0-rc.2: Vulkan e ProtonUp-Qt foram removidos desta sessão.
+// - Vulkan (vulkan-amd) → foi para 10-hardware (Hardware AMD).
+// - ProtonUp-Qt (protonup-install) → removido do FOF.
 
-            <div class="progress-container" id="progress-mangohud-install">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill-mangohud-install"></div></div>
-                <div class="progress-text"><span class="status" id="progress-status-mangohud-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-mangohud-install">0%</span></div>
-            </div>
-        </div>
+function _t(chave, fallback) {
+return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+}
 
-        <!-- Log único da sessão -->
-        <div class="terminal-log sessao-compartilhado" id="log-sessao-05-launchers"></div>
-    </div>
+async function executarSteam() {
+const idComando = 'steam-install';
+const comando = 'flatpak install flathub com.valvesoftware.Steam -y && (sudo dnf install -y steam-devices 2>/dev/null || true)';
+await executarComandoGenerico(idComando, comando, _t('sessoes.05-launchers.btn_steam', '🎮 Steam'), mostrarBotaoDesinstalar);
+}
 
-    <!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
-    <script>
-        // ============================================================
-        // SESSÃO 05: LAUNCHERS E PACOTES ESSENCIAIS
-        // ============================================================
+async function executarHeroic() {
+const idComando = 'heroic-install';
+const comando = 'flatpak install flathub com.heroicgameslauncher.hgl -y';
+await executarComandoGenerico(idComando, comando, _t('sessoes.05-launchers.btn_heroic', '⚡ Heroic Games'), mostrarBotaoDesinstalar);
+}
 
-        function _t(chave, fallback) {
-            return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
-        }
+async function executarLutris() {
+const idComando = 'lutris-install';
+const comando = 'flatpak install flathub net.lutris.Lutris -y';
+await executarComandoGenerico(idComando, comando, _t('sessoes.05-launchers.btn_lutris', '🎯 Lutris'), mostrarBotaoDesinstalar);
+}
 
-        async function executarVulkan() {
-            const idComando = 'vulkan-amd';
-            const comando = 'sudo dnf install vulkan-tools mesa-vulkan-drivers mesa-vulkan-drivers.i686 libva.i686 mesa-dri-drivers.i686 -y';
-            await executarComandoGenerico(idComando, comando, _t('sessoes.05-launchers.btn_instalar_vulkan', '🚀 Instalar Drivers Vulkan'));
-        }
+async function executarWine() {
+await executarComandoGenerico('wine-install', 'sudo dnf install wine -y', _t('sessoes.05-launchers.btn_wine', '🍷 Wine'), mostrarBotaoDesinstalar);
+}
 
-        async function executarSteam() {
-            const idComando = 'steam-install';
-            const comando = 'flatpak install flathub com.valvesoftware.Steam -y && (sudo dnf install -y steam-devices 2>/dev/null || true)';
-            await executarComandoGenerico(idComando, comando, _t('sessoes.05-launchers.btn_steam', '🎮 Steam'), mostrarBotaoDesinstalar);
-        }
+async function executarWinetricks() {
+await executarComandoGenerico('winetricks-install', 'sudo dnf install winetricks -y', _t('sessoes.05-launchers.btn_winetricks', '🔧 Winetricks'), mostrarBotaoDesinstalar);
+}
 
-        async function executarHeroic() {
-            const idComando = 'heroic-install';
-            const comando = 'flatpak install flathub com.heroicgameslauncher.hgl -y';
-            await executarComandoGenerico(idComando, comando, _t('sessoes.05-launchers.btn_heroic', '⚡ Heroic Games'), mostrarBotaoDesinstalar);
-        }
+async function executarBottles() {
+await executarComandoGenerico('bottles-install', 'flatpak install flathub com.usebottles.bottles -y', _t('sessoes.05-launchers.btn_bottles', '🍾 Bottles'), mostrarBotaoDesinstalar);
+}
 
-        async function executarLutris() {
-            const idComando = 'lutris-install';
-            const comando = 'flatpak install flathub net.lutris.Lutris -y';
-            await executarComandoGenerico(idComando, comando, _t('sessoes.05-launchers.btn_lutris', '🎯 Lutris'), mostrarBotaoDesinstalar);
-        }
+async function executarGameMode() {
+await executarComandoGenerico('gamemode-install', 'sudo dnf install gamemode -y', _t('sessoes.05-launchers.btn_gamemode', '⚙️ GameMode'), mostrarBotaoDesinstalar);
+}
 
-        async function executarProtonUp() {
-            const idComando = 'protonup-install';
-            const comando = 'flatpak install flathub net.davidotek.pupgui2 -y';
-            await executarComandoGenerico(idComando, comando, _t('sessoes.05-launchers.btn_protonup', '🔄 ProtonUp-Qt'), mostrarBotaoDesinstalar);
-        }
+async function executarMangoHud() {
+await executarComandoGenerico('mangohud-install', 'sudo dnf install mangohud -y', _t('sessoes.05-launchers.btn_mangohud', '📊 MangoHud'), mostrarBotaoDesinstalar);
+}
 
-        async function executarWine() {
-            await executarComandoGenerico('wine-install', 'sudo dnf install wine -y', _t('sessoes.05-launchers.btn_wine', '🍷 Wine'), mostrarBotaoDesinstalar);
-        }
+// ===== RESTAURAR ESTADO DA SESSÃO =====
+function restaurarEstadoSessao() {
+const comandos = [
+'steam-install', 'heroic-install', 'lutris-install',
+'wine-install', 'winetricks-install', 'bottles-install', 'gamemode-install', 'mangohud-install'
+];
 
-        async function executarWinetricks() {
-            await executarComandoGenerico('winetricks-install', 'sudo dnf install winetricks -y', _t('sessoes.05-launchers.btn_winetricks', '🔧 Winetricks'), mostrarBotaoDesinstalar);
-        }
+comandos.forEach(function(id) {
+if (isExecutado(id)) {
+const btn = document.getElementById('btn-' + id);
+if (btn) {
+const textoFinal = getTextoAposExecucao(id);
+btn.textContent = textoFinal;
+btn.style.backgroundColor = '#4b5563';
+btn.style.cursor = 'default';
+btn.disabled = true;
+}
+}
+});
+}
 
-        async function executarBottles() {
-            await executarComandoGenerico('bottles-install', 'flatpak install flathub com.usebottles.bottles -y', _t('sessoes.05-launchers.btn_bottles', '🍾 Bottles'), mostrarBotaoDesinstalar);
-        }
+// ===== INICIALIZAÇÃO =====
+document.addEventListener('DOMContentLoaded', function() {
+restaurarEstadoSessao();
 
-        async function executarGameMode() {
-            await executarComandoGenerico('gamemode-install', 'sudo dnf install gamemode -y', _t('sessoes.05-launchers.btn_gamemode', '⚙️ GameMode'), mostrarBotaoDesinstalar);
-        }
+document.querySelectorAll('.btn-executar').forEach(function(btn) {
+if (!btn.hasAttribute('data-texto-original')) {
+btn.setAttribute('data-texto-original', btn.textContent);
+}
+});
 
-        async function executarMangoHud() {
-            await executarComandoGenerico('mangohud-install', 'sudo dnf install mangohud -y', _t('sessoes.05-launchers.btn_mangohud', '📊 MangoHud'), mostrarBotaoDesinstalar);
-        }
-
-        // ===== RESTAURAR ESTADO DA SESSÃO =====
-        function restaurarEstadoSessao() {
-            const comandos = [
-                'vulkan-amd', 'steam-install', 'heroic-install', 'lutris-install', 'protonup-install',
-                'wine-install', 'winetricks-install', 'bottles-install', 'gamemode-install', 'mangohud-install'
-            ];
-
-            comandos.forEach(function(id) {
-                if (isExecutado(id)) {
-                    const btn = document.getElementById('btn-' + id);
-                    if (btn) {
-                        const textoFinal = getTextoAposExecucao(id);
-                        btn.textContent = textoFinal;
-                        btn.style.backgroundColor = '#4b5563';
-                        btn.style.cursor = 'default';
-                        btn.disabled = true;
-                    }
-                }
-            });
-        }
-
-        // ===== INICIALIZAÇÃO =====
-        document.addEventListener('DOMContentLoaded', function() {
-            restaurarEstadoSessao();
-
-            document.querySelectorAll('.btn-executar').forEach(function(btn) {
-                if (!btn.hasAttribute('data-texto-original')) {
-                    btn.setAttribute('data-texto-original', btn.textContent);
-                }
-            });
-
-            console.log('📦 Componente 05-launchers carregado!');
-        });
-    </script>
+console.log('📦 Componente 05-launchers carregado!');
+});
+</script>
 </body>
 </html>

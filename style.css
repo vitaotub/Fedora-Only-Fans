@@ -1,7 +1,7 @@
 /* ============================================
- *  Fedora Only Fans (FOF) - Estilos Compartilhados
- *  Versão: 1.0.0-rc.1
- *  ============================================ */
+ * Fedora Only Fans (FOF) - Estilos Compartilhados
+ * Versão: 1.0.0-rc.2
+ * ============================================ */
 
 :root {
     --bg-primary: #0b111e;
@@ -19,11 +19,54 @@
     --danger-hover: #dc2626;
     --success: #34d399;
 
+    /* Auxiliares (tema escuro) */
+    --bg-secondary: #1a2236;
+    --bg-tertiary: #0a0e1a;
+    --bg-comando: rgba(0, 0, 0, 0.2);
+    --bg-input: #1a2236;
+
     /* Matrix theme */
     --matrix-green: #00ff41;
     --matrix-green-dim: #00cc33;
     --matrix-green-glow: rgba(0, 255, 65, 0.6);
     --matrix-bg: #000000;
+}
+
+/* ============================================================
+ * TEMA CLARO
+ * ============================================================
+ * Sobrescreve o conjunto de variáveis do :root. O atributo data-tema
+ * é colocado no <html> por script.js (IIFE anti-FOUC + alternarTema).
+ * O tema Matrix (terminal) permanece escuro nos dois temas, para
+ * preservar contraste e legibilidade.
+ */
+
+[data-tema="claro"] {
+    --bg-primary: #f3f4f6;
+    --bg-card: #ffffff;
+    --accent: #3c67e3;
+    --accent-hover: #527bee;
+    --text-main: #1f2937;
+    --text-muted: #4b5563;
+    --border: #d1d5db;
+    --warning-bg: rgba(245, 158, 11, 0.15);
+    --warning-border: #d97706;
+    --success-bg: rgba(5, 150, 105, 0.15);
+    --success-border: #059669;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --success: #059669;
+
+    --bg-secondary: #e5e7eb;
+    --bg-tertiary: #f9fafb;
+    --bg-comando: rgba(0, 0, 0, 0.03);
+    --bg-input: #ffffff;
+
+    /* Terminal: permanece escuro por design */
+    --matrix-green: #00ff41;
+    --matrix-green-dim: #00cc33;
+    --matrix-green-glow: rgba(0, 255, 65, 0.6);
+    --matrix-bg: #0a0a0a;
 }
 
 * {
@@ -50,11 +93,11 @@ body {
 }
 
 /* ============================================================
- *  BLOCO COMANDO
- *  ============================================================ */
+ * BLOCO COMANDO
+ * ============================================================ */
 
 .bloco-comando {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--bg-comando);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 1.25rem;
@@ -83,8 +126,8 @@ body {
 }
 
 /* ============================================================
- *  AVISOS E INFO EXTRA
- *  ============================================================ */
+ * AVISOS E INFO EXTRA
+ * ============================================================ */
 
 .aviso-caixa {
     background-color: var(--warning-bg);
@@ -95,6 +138,10 @@ body {
     color: #fbd38d;
     font-size: 0.9rem;
     font-weight: 500;
+}
+
+[data-tema="claro"] .aviso-caixa {
+    color: #92400e;
 }
 
 .aviso-sucesso {
@@ -128,8 +175,8 @@ body {
 }
 
 /* ============================================================
- *  BOTÕES
- *  ============================================================ */
+ * BOTÕES
+ * ============================================================ */
 
 .grupo-botoes {
     display: inline-flex;
@@ -264,8 +311,8 @@ body {
 }
 
 /* ============================================================
- *  GRID LAUNCHERS
- *  ============================================================ */
+ * GRID LAUNCHERS
+ * ============================================================ */
 
 .grid-launchers {
     display: grid;
@@ -298,14 +345,79 @@ body {
 }
 
 /* ============================================================
- *  PROGRESSO
- *  ============================================================ */
+ * ACORDEÃO (para sessões com muitos blocos — Sessões 8 e 9)
+ * ============================================================
+ * Usa <details>/<summary> nativos. Zero JS adicional. O WebKitGTK
+ * suporta há anos. O visual respeita o tema via variáveis.
+ */
+
+.acordeao {
+    background-color: var(--bg-comando);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.acordeao[open] {
+    border-color: var(--accent);
+}
+
+.acordeao summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 1rem 1.25rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.acordeao summary::-webkit-details-marker {
+    display: none;
+}
+
+.acordeao summary::after {
+    content: '▼';
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.acordeao[open] summary::after {
+    transform: rotate(180deg);
+}
+
+.acordeao summary:hover {
+    background-color: var(--bg-secondary);
+}
+
+.acordeao .acordeao-conteudo {
+    padding: 0 1.25rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+}
+
+.acordeao .acordeao-conteudo .bloco-comando:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================================
+ * PROGRESSO
+ * ============================================================ */
 
 .progress-container {
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
     display: none;
-    background-color: #0a0e1a;
+    background-color: var(--bg-tertiary);
     border-radius: 8px;
     padding: 0.4rem 0.7rem;
     border: 1px solid var(--border);
@@ -314,7 +426,7 @@ body {
 .progress-bar {
     width: 100%;
     height: 6px;
-    background-color: #1a2236;
+    background-color: var(--bg-secondary);
     border-radius: 4px;
     overflow: hidden;
     position: relative;
@@ -376,8 +488,8 @@ body {
 }
 
 /* ============================================================
- *  TERMINAL LOG — MATRIX THEME
- *  ============================================================ */
+ * TERMINAL LOG — MATRIX THEME
+ * ============================================================ */
 
 .terminal-log-wrapper {
     position: relative;
@@ -472,13 +584,9 @@ body {
     animation: fadeIn 0.15s ease-in;
     color: var(--matrix-green);
     text-shadow:
-        0 0 3px var(--matrix-green-glow),
-        0 0 6px rgba(0, 255, 65, 0.3);
+    0 0 3px var(--matrix-green-glow),
+    0 0 6px rgba(0, 255, 65, 0.3);
 }
-
-/* Todos os tipos de linha ficam verdes, com o tom variando apenas o
- * suficiente pra preservar legibilidade. O emoji no início da linha
- * (❌ / ✅ / ⚠️ / ℹ️ / 🚀) já diferencia visualmente o tipo de mensagem. */
 
 .terminal-log .log-line.output {
     color: var(--matrix-green);
@@ -487,16 +595,16 @@ body {
 .terminal-log .log-line.error {
     color: #4dff4d;
     text-shadow:
-        0 0 4px rgba(77, 255, 77, 0.7),
-        0 0 8px rgba(0, 255, 65, 0.5);
+    0 0 4px rgba(77, 255, 77, 0.7),
+    0 0 8px rgba(0, 255, 65, 0.5);
 }
 
 .terminal-log .log-line.success {
     color: #66ff66;
     font-weight: 500;
     text-shadow:
-        0 0 4px rgba(102, 255, 102, 0.8),
-        0 0 8px rgba(0, 255, 65, 0.5);
+    0 0 4px rgba(102, 255, 102, 0.8),
+    0 0 8px rgba(0, 255, 65, 0.5);
 }
 
 .terminal-log .log-line.info {
@@ -507,8 +615,8 @@ body {
 .terminal-log .log-line.warning {
     color: #99ff99;
     text-shadow:
-        0 0 3px rgba(153, 255, 153, 0.6),
-        0 0 6px rgba(0, 255, 65, 0.3);
+    0 0 3px rgba(153, 255, 153, 0.6),
+    0 0 6px rgba(0, 255, 65, 0.3);
 }
 
 .terminal-log .log-line.end {
@@ -550,8 +658,8 @@ body {
 }
 
 /* ============================================================
- *  SELECTS PERSONALIZADOS
- *  ============================================================ */
+ * SELECTS PERSONALIZADOS
+ * ============================================================ */
 
 .custom-select {
     position: relative;
@@ -562,8 +670,8 @@ body {
 }
 
 .custom-select-trigger {
-    background-color: #1a2236;
-    color: #ffffff;
+    background-color: var(--bg-input);
+    color: var(--text-main);
     border: 1px solid #3c67e3;
     border-radius: 6px;
     padding: 0.4rem 0.8rem;
@@ -599,7 +707,7 @@ body {
     left: 0;
     right: 0;
     margin-top: 4px;
-    background-color: #0b111e;
+    background-color: var(--bg-primary);
     border: 1px solid #3c67e3;
     border-radius: 6px;
     padding: 0.2rem 0;
@@ -617,29 +725,29 @@ body {
 
 .custom-select-options li {
     padding: 0.4rem 0.8rem;
-    color: #9ca3af;
+    color: var(--text-muted);
     cursor: pointer;
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .custom-select-options li:hover {
-    background-color: #1a2236;
-    color: #ffffff;
+    background-color: var(--bg-secondary);
+    color: var(--text-main);
 }
 
 .custom-select-options li.selected {
-    background-color: #1a2236;
-    color: #ffffff;
+    background-color: var(--bg-secondary);
+    color: var(--text-main);
     font-weight: 500;
 }
 
 /* ============================================================
- *  KERNEL DROPDOWN
- *  ============================================================ */
+ * KERNEL DROPDOWN
+ * ============================================================ */
 
 .kernel-dropdown {
-    background-color: #1a2236 !important;
-    color: #ffffff !important;
+    background-color: var(--bg-input) !important;
+    color: var(--text-main) !important;
     border: 1px solid #3c67e3 !important;
     border-radius: 6px;
     padding: 0.4rem 0.8rem;
@@ -663,8 +771,8 @@ body {
 }
 
 .kernel-dropdown option {
-    background-color: #0b111e !important;
-    color: #ffffff !important;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-main) !important;
     padding: 0.4rem;
 }
 
@@ -674,8 +782,8 @@ body {
 }
 
 /* ============================================================
- *  SESSÕES
- *  ============================================================ */
+ * SESSÕES
+ * ============================================================ */
 
 .sessao-wrapper {
     margin-bottom: 2rem;
@@ -694,7 +802,7 @@ body {
     font-weight: 600;
     margin-top: 0;
     margin-bottom: 1.5rem;
-    color: #fff;
+    color: var(--text-main);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -706,7 +814,7 @@ body {
     font-size: 0.7rem;
     padding: 0.15rem 0.6rem;
     border-radius: 10px;
-    background-color: #1a2236;
+    background-color: var(--bg-secondary);
     color: var(--text-muted, #9ca3af);
     margin-right: 0.5rem;
     vertical-align: middle;
@@ -720,8 +828,8 @@ body {
 }
 
 /* ============================================================
- *  HEADER DOS MODOS
- *  ============================================================ */
+ * HEADER DOS MODOS
+ * ============================================================ */
 
 .header-guide,
 .header-avancado {
@@ -746,7 +854,7 @@ body {
 .header-guide .titulo h1,
 .header-avancado .titulo h1 {
     font-size: 1.5rem;
-    color: #fff;
+    color: var(--text-main);
     margin: 0;
 }
 
@@ -784,12 +892,12 @@ body {
 
 .header-guide .voltar:hover,
 .header-avancado .voltar:hover {
-    color: #fff;
+    color: var(--text-main);
 }
 
 /* ============================================================
- *  HEADER-DIREITA
- *  ============================================================ */
+ * HEADER-DIREITA
+ * ============================================================ */
 
 .header-direita {
     display: flex;
@@ -799,8 +907,19 @@ body {
 }
 
 /* ============================================================
- *  i18n: SELETOR DE IDIOMA
- *  ============================================================ */
+ * HEADER-CONTROLES (wrapper do seletor i18n + botão de tema)
+ * ============================================================ */
+
+.header-controles {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* ============================================================
+ * i18n: SELETOR DE IDIOMA
+ * ============================================================ */
 
 .i18n-seletor-container {
     display: inline-flex;
@@ -816,8 +935,8 @@ body {
 }
 
 .i18n-seletor-container select.i18n-seletor {
-    background-color: #1a2236;
-    color: #ffffff;
+    background-color: var(--bg-input);
+    color: var(--text-main);
     border: 1px solid var(--accent);
     border-radius: 6px;
     padding: 0.4rem 0.8rem;
@@ -845,8 +964,8 @@ body {
 }
 
 .i18n-seletor-container select.i18n-seletor option {
-    background-color: #0b111e;
-    color: #ffffff;
+    background-color: var(--bg-primary);
+    color: var(--text-main);
 }
 
 @media (max-width: 768px) {
@@ -861,11 +980,48 @@ body {
 }
 
 /* ============================================================
- *  BARRA DE PROGRESSO GUIADA
- *  ============================================================ */
+ * TEMA: BOTÃO DE ALTERNÂNCIA
+ * ============================================================ */
+
+.tema-toggle-container {
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-tema {
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+.btn-tema:hover {
+    border-color: var(--accent-hover);
+    background-color: var(--bg-secondary);
+    transform: translateY(-1px);
+}
+
+.btn-tema:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
+}
+
+/* ============================================================
+ * BARRA DE PROGRESSO GUIADA
+ * ============================================================ */
 
 .progress-guide {
-    background-color: #0a0e1a;
+    background-color: var(--bg-tertiary);
     border-radius: 8px;
     padding: 1rem 1.5rem;
     margin-bottom: 2rem;
@@ -875,7 +1031,7 @@ body {
 .progress-guide .barra {
     width: 100%;
     height: 8px;
-    background-color: #1a2236;
+    background-color: var(--bg-secondary);
     border-radius: 4px;
     overflow: hidden;
 }
@@ -904,8 +1060,8 @@ body {
 }
 
 /* ============================================================
- *  NAVEGAÇÃO GUIADA
- *  ============================================================ */
+ * NAVEGAÇÃO GUIADA
+ * ============================================================ */
 
 .nav-guide {
     display: flex;
@@ -981,8 +1137,8 @@ body {
 }
 
 /* ============================================================
- *  INDICADORES DE SESSÃO
- *  ============================================================ */
+ * INDICADORES DE SESSÃO
+ * ============================================================ */
 
 .sessao-indicador {
     display: flex;
@@ -1006,15 +1162,24 @@ body {
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
+[data-tema="claro"] .sessao-indicador .dot:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
 .sessao-indicador .dot.ativa {
     transform: scale(1.3);
     box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
     border-color: #ffffff;
 }
 
+[data-tema="claro"] .sessao-indicador .dot.ativa {
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+    border-color: #1f2937;
+}
+
 /* ============================================================
- *  BOTÃO VOLTAR AO TOPO
- *  ============================================================ */
+ * BOTÃO VOLTAR AO TOPO
+ * ============================================================ */
 
 .btn-topo {
     position: fixed;
@@ -1046,8 +1211,8 @@ body {
 }
 
 /* ============================================================
- *  LOADING
- *  ============================================================ */
+ * LOADING
+ * ============================================================ */
 
 .loading-sessao {
     text-align: center;
@@ -1076,8 +1241,8 @@ body {
 }
 
 /* ============================================================
- *  RESPONSIVIDADE
- *  ============================================================ */
+ * RESPONSIVIDADE
+ * ============================================================ */
 
 @media (max-width: 768px) {
     body {

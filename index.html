@@ -1,579 +1,653 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fedora Only Fans (FOF) - Escolha o Modo</title>
-    <style>
-        :root {
-            --bg-primary: #0b111e;
-            --bg-card: #151f32;
-            --accent: #3c67e3;
-            --accent-hover: #527bee;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border: #24334d;
-            --success: #34d399;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fedora Only Fans (FOF) - Escolha o Modo</title>
+<script>
+// Aplica o tema antes do CSS pintar (evita flash do tema errado).
+// Roda antes do link do CSS e do script.js serem processados.
+(function() {
+try {
+var t = localStorage.getItem('fof_tema') || 'escuro';
+document.documentElement.setAttribute('data-tema', t === 'claro' ? 'claro' : 'escuro');
+} catch (e) {
+document.documentElement.setAttribute('data-tema', 'escuro');
+}
+})();
+</script>
+<style>
+:root {
+--bg-primary: #0b111e;
+--bg-card: #151f32;
+--accent: #3c67e3;
+--accent-hover: #527bee;
+--text-main: #f3f4f6;
+--text-muted: #9ca3af;
+--border: #24334d;
+--success: #34d399;
+}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+[data-tema="claro"] {
+--bg-primary: #f3f4f6;
+--bg-card: #ffffff;
+--accent: #3c67e3;
+--accent-hover: #527bee;
+--text-main: #1f2937;
+--text-muted: #4b5563;
+--border: #d1d5db;
+--success: #059669;
+}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 2rem 1rem;
-            margin: 0;
-        }
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
 
-        .container {
-            max-width: 900px;
-            width: 100%;
-            margin: 0 auto;
-        }
+body {
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+background-color: var(--bg-primary);
+color: var(--text-main);
+min-height: 100vh;
+display: flex;
+justify-content: center;
+align-items: flex-start;
+padding: 2rem 1rem;
+margin: 0;
+transition: background-color 0.3s ease, color 0.3s ease;
+}
 
-        .hero {
-            text-align: center;
-            padding: 1rem 0 0.5rem 0;
-            width: 100%;
-        }
+.container {
+max-width: 900px;
+width: 100%;
+margin: 0 auto;
+}
 
-        .hero .logo {
-            width: 150px;
-            height: 150px;
-            object-fit: contain;
-            border-radius: 50%;
-            box-shadow: 0 4px 30px rgba(60, 103, 227, 0.3);
-            margin: 0 auto 1.5rem auto;
-            display: block;
-            transition: transform 0.3s ease;
-        }
+.hero {
+text-align: center;
+padding: 1rem 0 0.5rem 0;
+width: 100%;
+}
 
-        .hero .logo:hover {
-            transform: scale(1.05) rotate(-2deg);
-        }
+.hero .logo {
+width: 150px;
+height: 150px;
+object-fit: contain;
+border-radius: 50%;
+box-shadow: 0 4px 30px rgba(60, 103, 227, 0.3);
+margin: 0 auto 1.5rem auto;
+display: block;
+transition: transform 0.3s ease;
+}
 
-        .hero .version-badge {
-            display: inline-block;
-            background-color: rgba(60, 103, 227, 0.15);
-            border: 1px solid var(--accent);
-            border-radius: 20px;
-            padding: 0.4rem 1.5rem;
-            font-size: 1rem;
-            color: var(--accent);
-            margin-bottom: 0.5rem;
-        }
+.hero .logo:hover {
+transform: scale(1.05) rotate(-2deg);
+}
 
-        .hero h1 {
-            font-size: 2.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #60a5fa, #3c67e3, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin: 0 0 0.5rem 0;
-            text-align: center;
-        }
+.hero .version-badge {
+display: inline-block;
+background-color: rgba(60, 103, 227, 0.15);
+border: 1px solid var(--accent);
+border-radius: 20px;
+padding: 0.4rem 1.5rem;
+font-size: 1rem;
+color: var(--accent);
+margin-bottom: 0.5rem;
+}
 
-        .hero .subtitle {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto 1rem;
-            line-height: 1.6;
-            text-align: center;
-        }
+.hero h1 {
+font-size: 2.8rem;
+font-weight: 700;
+background: linear-gradient(135deg, #60a5fa, #3c67e3, #8b5cf6);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+margin: 0 0 0.5rem 0;
+text-align: center;
+}
 
-        .hero-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-            margin: 0.5rem auto 0;
-        }
+.hero .subtitle {
+font-size: 1.2rem;
+color: var(--text-muted);
+max-width: 600px;
+margin: 0 auto 1rem;
+line-height: 1.6;
+text-align: center;
+}
 
-        .hero-buttons .badge {
-            text-decoration: none;
-            padding: 0.4rem 1rem;
-            font-size: 0.95rem;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4rem;
-            transition: background-color 0.2s ease;
-            width: 200px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            background-color: var(--border);
-            color: var(--text-main);
-            white-space: nowrap;
-        }
+.hero-buttons {
+display: flex;
+justify-content: center;
+gap: 0.75rem;
+flex-wrap: wrap;
+margin: 0.5rem auto 0;
+}
 
-        .hero-buttons .badge:hover {
-            background-color: var(--accent);
-        }
+.hero-buttons .badge {
+text-decoration: none;
+padding: 0.4rem 1rem;
+font-size: 0.95rem;
+border-radius: 6px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 0.4rem;
+transition: background-color 0.2s ease;
+width: 200px;
+border: 1px solid rgba(255, 255, 255, 0.05);
+background-color: var(--border);
+color: var(--text-main);
+white-space: nowrap;
+}
 
-        .modos-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin: 2rem 0 3rem;
-            width: 100%;
-        }
+.hero-buttons .badge:hover {
+background-color: var(--accent);
+color: #fff;
+}
 
-        @media (max-width: 700px) {
-            .modos-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+.modos-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 2rem;
+margin: 2rem 0 3rem;
+width: 100%;
+}
 
-        .modo-card {
-            background-color: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            padding: 2.5rem 2rem 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            min-height: 420px;
-        }
+@media (max-width: 700px) {
+.modos-grid {
+grid-template-columns: 1fr;
+}
+}
 
-        .modo-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 50% 0%, rgba(60, 103, 227, 0.05), transparent 70%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+.modo-card {
+background-color: var(--bg-card);
+border: 2px solid var(--border);
+border-radius: 16px;
+padding: 2.5rem 2rem 2rem;
+text-align: center;
+cursor: pointer;
+transition: all 0.3s ease;
+text-decoration: none;
+color: inherit;
+display: flex;
+flex-direction: column;
+position: relative;
+overflow: hidden;
+min-height: 420px;
+}
 
-        .modo-card:hover::before {
-            opacity: 1;
-        }
+.modo-card::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: radial-gradient(circle at 50% 0%, rgba(60, 103, 227, 0.05), transparent 70%);
+opacity: 0;
+transition: opacity 0.3s ease;
+}
 
-        .modo-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-6px);
-            box-shadow: 0 12px 40px rgba(60, 103, 227, 0.15);
-        }
+.modo-card:hover::before {
+opacity: 1;
+}
 
-        .modo-card .icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
+.modo-card:hover {
+border-color: var(--accent);
+transform: translateY(-6px);
+box-shadow: 0 12px 40px rgba(60, 103, 227, 0.15);
+}
 
-        .modo-card h2 {
-            font-size: 1.8rem;
-            color: #fff;
-            margin-bottom: 0.5rem;
-            position: relative;
-        }
+.modo-card .icon {
+font-size: 4rem;
+margin-bottom: 1rem;
+display: block;
+}
 
-        .modo-card p {
-            color: var(--text-muted);
-            font-size: 1rem;
-            line-height: 1.6;
-            position: relative;
-            flex: 1;
-        }
+.modo-card h2 {
+font-size: 1.8rem;
+color: var(--text-main);
+margin-bottom: 0.5rem;
+position: relative;
+}
 
-        .modo-card .features {
-            list-style: none;
-            padding: 0;
-            margin: 1rem 0 1.5rem;
-            text-align: left;
-            position: relative;
-        }
+.modo-card p {
+color: var(--text-muted);
+font-size: 1rem;
+line-height: 1.6;
+position: relative;
+flex: 1;
+}
 
-        .modo-card .features li {
-            padding: 0.4rem 0;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+.modo-card .features {
+list-style: none;
+padding: 0;
+margin: 1rem 0 1.5rem;
+text-align: left;
+position: relative;
+}
 
-        .modo-card .features li::before {
-            content: "✓";
-            color: var(--success);
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
+.modo-card .features li {
+padding: 0.4rem 0;
+color: var(--text-muted);
+font-size: 0.95rem;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
 
-        .modo-card .badge-modo {
-            display: inline-block;
-            padding: 0.6rem 2rem;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            position: relative;
-            margin-top: auto;
-            transition: all 0.3s ease;
-            text-align: center;
-            width: 100%;
-            max-width: 250px;
-            margin-left: auto;
-            margin-right: auto;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+.modo-card .features li::before {
+content: "✓";
+color: var(--success);
+font-weight: bold;
+font-size: 1.1rem;
+}
 
-        .modo-card:hover .badge-modo {
-            transform: scale(1.02);
-        }
+.modo-card .badge-modo {
+display: inline-block;
+padding: 0.6rem 2rem;
+border-radius: 30px;
+font-size: 1.1rem;
+font-weight: 600;
+position: relative;
+margin-top: auto;
+transition: all 0.3s ease;
+text-align: center;
+width: 100%;
+max-width: 250px;
+margin-left: auto;
+margin-right: auto;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
 
-        .badge-guided {
-            background-color: rgba(60, 103, 227, 0.2);
-            color: var(--accent);
-            border: 2px solid var(--accent);
-        }
+.modo-card:hover .badge-modo {
+transform: scale(1.02);
+}
 
-        .badge-guided:hover {
-            background-color: var(--accent);
-            color: #fff;
-        }
+.badge-guided {
+background-color: rgba(60, 103, 227, 0.2);
+color: var(--accent);
+border: 2px solid var(--accent);
+}
 
-        .badge-advanced {
-            background-color: rgba(245, 158, 11, 0.2);
-            color: #f59e0b;
-            border: 2px solid #f59e0b;
-        }
+.badge-guided:hover {
+background-color: var(--accent);
+color: #fff;
+}
 
-        .badge-advanced:hover {
-            background-color: #f59e0b;
-            color: #0b111e;
-        }
+.badge-advanced {
+background-color: rgba(245, 158, 11, 0.2);
+color: #f59e0b;
+border: 2px solid #f59e0b;
+}
 
-        .modo-card .recomendado {
-            display: inline-block;
-            background-color: var(--accent);
-            color: #fff;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 0.3rem 1rem;
-            border-radius: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.75rem;
-            position: absolute;
-            top: 12px;
-            right: 12px;
-        }
+.badge-advanced:hover {
+background-color: #f59e0b;
+color: #0b111e;
+}
 
-        .info-extra {
-            background-color: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem 2rem;
-            margin-bottom: 2rem;
-            width: 100%;
-        }
+.modo-card .recomendado {
+display: inline-block;
+background-color: var(--accent);
+color: #fff;
+font-size: 0.7rem;
+font-weight: 700;
+padding: 0.3rem 1rem;
+border-radius: 12px;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+margin-bottom: 0.75rem;
+position: absolute;
+top: 12px;
+right: 12px;
+}
 
-        .info-extra h3 {
-            color: #fff;
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-            text-align: center;
-        }
+.info-extra {
+background-color: rgba(0, 0, 0, 0.2);
+border: 1px solid var(--border);
+border-radius: 12px;
+padding: 1.5rem 2rem;
+margin-bottom: 2rem;
+width: 100%;
+}
 
-        .info-extra p {
-            color: var(--text-muted);
-            font-size: 1rem;
-            line-height: 1.6;
-            margin: 0.5rem 0 0 0;
-            text-align: left;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+[data-tema="claro"] .info-extra {
+background-color: rgba(0, 0, 0, 0.03);
+}
 
-        .info-extra .dicas {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 0.75rem;
-            text-align: left;
-        }
+.info-extra h3 {
+color: var(--text-main);
+margin-bottom: 0.5rem;
+font-size: 1.1rem;
+text-align: center;
+}
 
-        @media (max-width: 600px) {
-            .info-extra .dicas {
-                grid-template-columns: 1fr;
-            }
-        }
+.info-extra p {
+color: var(--text-muted);
+font-size: 1rem;
+line-height: 1.6;
+margin: 0.5rem 0 0 0;
+text-align: left;
+max-width: 700px;
+margin-left: auto;
+margin-right: auto;
+}
 
-        .info-extra .dica {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
+.info-extra .dicas {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 1rem;
+margin-top: 0.75rem;
+text-align: left;
+}
 
-        .info-extra .dica .emoji {
-            font-size: 1.3rem;
-        }
+@media (max-width: 600px) {
+.info-extra .dicas {
+grid-template-columns: 1fr;
+}
+}
 
-        footer {
-            text-align: center;
-            padding: 2rem 0 0;
-            border-top: 1px solid var(--border);
-            margin-top: 1rem;
-            width: 100%;
-        }
+.info-extra .dica {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+color: var(--text-muted);
+font-size: 0.95rem;
+}
 
-        footer p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin: 0;
-        }
+.info-extra .dica .emoji {
+font-size: 1.3rem;
+}
 
-        footer p:first-of-type {
-            margin-bottom: 1rem;
-        }
+footer {
+text-align: center;
+padding: 2rem 0 0;
+border-top: 1px solid var(--border);
+margin-top: 1rem;
+width: 100%;
+}
 
-        footer a {
-            color: var(--accent);
-            text-decoration: none;
-        }
+footer p {
+color: var(--text-muted);
+font-size: 0.9rem;
+margin: 0;
+}
 
-        footer a:hover {
-            text-decoration: underline;
-        }
+footer p:first-of-type {
+margin-bottom: 1rem;
+}
 
-        /* ============================================================
-         * i18n: ESTILO DO SELETOR DE IDIOMA
-         * ============================================================ */
-        .i18n-seletor-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            margin: 1rem 0;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
+footer a {
+color: var(--accent);
+text-decoration: none;
+}
 
-        .i18n-seletor-container .i18n-seletor-label {
-            font-size: 1rem;
-        }
+footer a:hover {
+text-decoration: underline;
+}
 
-        .i18n-seletor-container select.i18n-seletor {
-            background-color: #1a2236;
-            color: #ffffff;
-            border: 1px solid var(--accent);
-            border-radius: 6px;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.9rem;
-            cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            padding-right: 2rem;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 0.6rem center;
-            background-size: 1em;
-        }
+/* ============================================================
+* i18n: ESTILO DO SELETOR DE IDIOMA
+* ============================================================ */
+.i18n-seletor-container {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.5rem;
+margin: 1rem 0;
+font-size: 0.9rem;
+color: var(--text-muted);
+}
 
-        .i18n-seletor-container select.i18n-seletor:focus {
-            outline: none;
-            border-color: var(--accent-hover);
-            box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
-        }
+.i18n-seletor-container .i18n-seletor-label {
+font-size: 1rem;
+}
 
-        .i18n-seletor-container select.i18n-seletor option {
-            background-color: #0b111e;
-            color: #ffffff;
-        }
+.i18n-seletor-container select.i18n-seletor {
+background-color: var(--bg-card);
+color: var(--text-main);
+border: 1px solid var(--accent);
+border-radius: 6px;
+padding: 0.4rem 0.8rem;
+font-size: 0.9rem;
+cursor: pointer;
+appearance: none;
+-webkit-appearance: none;
+-moz-appearance: none;
+padding-right: 2rem;
+background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+background-repeat: no-repeat;
+background-position: right 0.6rem center;
+background-size: 1em;
+}
 
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
-        }
+.i18n-seletor-container select.i18n-seletor:focus {
+outline: none;
+border-color: var(--accent-hover);
+box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
+}
 
-        @media (max-width: 480px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
+.i18n-seletor-container select.i18n-seletor option {
+background-color: var(--bg-primary);
+color: var(--text-main);
+}
 
-            .hero .subtitle {
-                font-size: 1rem;
-            }
+/* ============================================================
+* TEMA: BOTÃO DE ALTERNÂNCIA (index)
+* ============================================================ */
+.header-controles {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.75rem;
+margin: 1rem 0;
+flex-wrap: wrap;
+}
 
-            .modo-card {
-                min-height: 380px;
-                padding: 1.5rem;
-            }
+.tema-toggle-container {
+display: inline-flex;
+align-items: center;
+}
 
-            .modo-card h2 {
-                font-size: 1.4rem;
-            }
+.btn-tema {
+background-color: var(--bg-card);
+color: var(--text-main);
+border: 1px solid var(--accent);
+border-radius: 6px;
+width: 38px;
+height: 38px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+font-size: 1.1rem;
+cursor: pointer;
+transition: all 0.2s ease;
+padding: 0;
+line-height: 1;
+}
 
-            .modo-card .badge-modo {
-                font-size: 1rem;
-                padding: 0.5rem 1.5rem;
-                max-width: 200px;
-            }
+.btn-tema:hover {
+border-color: var(--accent-hover);
+transform: translateY(-1px);
+}
 
-            .hero-buttons .badge {
-                width: 160px;
-                font-size: 0.85rem;
-            }
-        }
+.btn-tema:focus {
+outline: none;
+box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
+}
 
-        @media (max-width: 380px) {
-            .hero-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
+@media (max-width: 768px) {
+body {
+padding: 1rem;
+}
+}
 
-            .hero-buttons .badge {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
-    <script src="i18n.js"></script>
-    <script src="script.js"></script>
+@media (max-width: 480px) {
+.hero h1 {
+font-size: 2rem;
+}
+
+.hero .subtitle {
+font-size: 1rem;
+}
+
+.modo-card {
+min-height: 380px;
+padding: 1.5rem;
+}
+
+.modo-card h2 {
+font-size: 1.4rem;
+}
+
+.modo-card .badge-modo {
+font-size: 1rem;
+padding: 0.5rem 1.5rem;
+max-width: 200px;
+}
+
+.hero-buttons .badge {
+width: 160px;
+font-size: 0.85rem;
+}
+}
+
+@media (max-width: 380px) {
+.hero-buttons {
+flex-direction: column;
+align-items: center;
+}
+
+.hero-buttons .badge {
+width: 100%;
+justify-content: center;
+}
+}
+</style>
+<script src="i18n.js"></script>
+<script src="script.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="hero">
-            <img src="icone_app.png" alt="Fedora Only Fans" class="logo" onerror="this.style.display='none'">
-            <div class="version-badge" data-i18n-html="index.badge_versao">🚀 v<span class="fof-version"></span></div>
-            <h1 data-i18n="index.titulo">Fedora Only Fans</h1>
-            <p class="subtitle" data-i18n="index.subtitulo">
-                Painel de automação para configurar, otimizar e personalizar seu Fedora Linux de forma rápida e segura.
-            </p>
+<div class="container">
+<div class="hero">
+<img src="icone_app.png" alt="Fedora Only Fans" class="logo" onerror="this.style.display='none'">
+<div class="version-badge" data-i18n-html="index.badge_versao">🚀 v<span class="fof-version"></span></div>
+<h1 data-i18n="index.titulo">Fedora Only Fans</h1>
+<p class="subtitle" data-i18n="index.subtitulo">
+Painel de automação para configurar, otimizar e personalizar seu Fedora Linux de forma rápida e segura.
+</p>
 
-            <div class="hero-buttons">
-                <a href="https://github.com/vitaotek/Fedora-Only-Fans" class="badge" data-i18n="index.btn_github">
-                    🐙 GitHub
-                </a>
-                <a href="https://www.vitaotub.com" class="badge" data-i18n-html="index.btn_criador">
-                    👤 Criador: <strong>VitãoTub</strong>
-                </a>
-            </div>
-        </div>
+<div class="hero-buttons">
+<a href="https://github.com/vitaotek/Fedora-Only-Fans" class="badge" data-i18n="index.btn_github">
+🐙 GitHub
+</a>
+<a href="https://www.vitaotub.com" class="badge" data-i18n-html="index.btn_criador">
+👤 Criador: <strong>VitãoTub</strong>
+</a>
+</div>
+</div>
 
-        <div class="modos-grid">
-            <a href="guiado.html" class="modo-card" id="modo-guiado">
-                <span class="recomendado" data-i18n="index.badge_recomendado">⭐ Comece por aqui</span>
-                <span class="icon">🧭</span>
-                <h2 data-i18n="index.card_guiado_titulo">Iniciar Configuração</h2>
-                <p data-i18n="index.card_guiado_desc">
-                    Siga passo a passo pelas sessões de configuração do Fedora, na ordem certa — a ordem importa pro
-                    resultado final, então esta é a única forma de percorrê-las.
-                </p>
-                <ul class="features">
-                    <li data-i18n="index.card_guiado_feat1">Sessões organizadas em ordem lógica</li>
-                    <li data-i18n="index.card_guiado_feat2">Navegação com botões Anterior/Próximo</li>
-                    <li data-i18n="index.card_guiado_feat3">Ideal para a configuração inicial do sistema</li>
-                </ul>
-                <span class="badge-modo badge-guided" data-i18n="index.card_guiado_badge">🧭 Passo a passo</span>
-            </a>
+<div class="modos-grid">
+<a href="guiado.html" class="modo-card" id="modo-guiado">
+<span class="recomendado" data-i18n="index.badge_recomendado">⭐ Comece por aqui</span>
+<span class="icon">🧭</span>
+<h2 data-i18n="index.card_guiado_titulo">Iniciar Configuração</h2>
+<p data-i18n="index.card_guiado_desc">
+Siga passo a passo pelas sessões de configuração do Fedora, na ordem certa — a ordem importa pro resultado final, então esta é a única forma de percorrê-las.
+</p>
+<ul class="features">
+<li data-i18n="index.card_guiado_feat1">Sessões organizadas em ordem lógica</li>
+<li data-i18n="index.card_guiado_feat2">Navegação com botões Anterior/Próximo</li>
+<li data-i18n="index.card_guiado_feat3">Ideal para a configuração inicial do sistema</li>
+</ul>
+<span class="badge-modo badge-guided" data-i18n="index.card_guiado_badge">🧭 Passo a passo</span>
+</a>
 
-            <a href="manutencao.html" class="modo-card" id="modo-manutencao">
-                <span class="icon">🛠️</span>
-                <h2 data-i18n="index.card_manut_titulo">Manutenção</h2>
-                <p data-i18n="index.card_manut_desc">
-                    Tarefas do dia a dia que não dependem de ordem: gerenciar kernels, limpar arquivos temporários,
-                    ajustar o GRUB, atualizar ou desinstalar o FOF.
-                </p>
-                <ul class="features">
-                    <li data-i18n="index.card_manut_feat1">Gerenciamento de kernels instalados</li>
-                    <li data-i18n="index.card_manut_feat2">Limpeza de arquivos temporários</li>
-                    <li data-i18n="index.card_manut_feat3">Configuração do GRUB</li>
-                    <li data-i18n="index.card_manut_feat4">Atualizar ou desinstalar o FOF</li>
-                </ul>
-                <span class="badge-modo badge-advanced" data-i18n="index.card_manut_badge">🛠️ Manutenção</span>
-            </a>
-        </div>
+<a href="manutencao.html" class="modo-card" id="modo-manutencao">
+<span class="icon">🛠️</span>
+<h2 data-i18n="index.card_manut_titulo">Manutenção</h2>
+<p data-i18n="index.card_manut_desc">
+Tarefas do dia a dia que não dependem de ordem: gerenciar kernels, limpar arquivos temporários, ajustar o GRUB, atualizar ou desinstalar o FOF.
+</p>
+<ul class="features">
+<li data-i18n="index.card_manut_feat1">Gerenciamento de kernels instalados</li>
+<li data-i18n="index.card_manut_feat2">Limpeza de arquivos temporários</li>
+<li data-i18n="index.card_manut_feat3">Configuração do GRUB</li>
+<li data-i18n="index.card_manut_feat4">Atualizar ou desinstalar o FOF</li>
+</ul>
+<span class="badge-modo badge-advanced" data-i18n="index.card_manut_badge">🛠️ Manutenção</span>
+</a>
+</div>
 
-        <div class="info-extra">
-            <h3 data-i18n="index.sobre_titulo">📋 Sobre o Fedora Only Fans</h3>
-            <p data-i18n="index.sobre_texto">
-                O FOF é uma ferramenta open-source que automatiza as principais tarefas de configuração do Fedora Linux, desde a instalação de codecs e repositórios até a otimização do sistema e gerenciamento de kernels.
-            </p>
-            <div class="dicas">
-                <div class="dica">
-                    <span class="emoji">💾</span>
-                    <span data-i18n="index.dica1">Progresso de cada ação salvo automaticamente no servidor local</span>
-                </div>
-                <div class="dica">
-                    <span class="emoji">🔄</span>
-                    <span data-i18n="index.dica2">Botões de reversão para desfazer alterações</span>
-                </div>
-                <div class="dica">
-                    <span class="emoji">📡</span>
-                    <span data-i18n="index.dica3">Logs em tempo real via Server-Sent Events</span>
-                </div>
-                <div class="dica">
-                    <span class="emoji">📊</span>
-                    <span data-i18n="index.dica4">Barras de progresso para acompanhar a execução</span>
-                </div>
-                <div class="dica">
-                    <span class="emoji">🛡️</span>
-                    <span data-i18n="index.dica5">Comandos validados e testados para o Fedora</span>
-                </div>
-                <div class="dica">
-                    <span class="emoji">🐧</span>
-                    <span data-i18n="index.dica6">Suporte para GNOME, KDE, XFCE e outros</span>
-                </div>
-            </div>
-        </div>
+<div class="info-extra">
+<h3 data-i18n="index.sobre_titulo">📋 Sobre o Fedora Only Fans</h3>
+<p data-i18n="index.sobre_texto">
+O FOF é uma ferramenta open-source que automatiza as principais tarefas de configuração do Fedora Linux, desde a instalação de codecs e repositórios até a otimização do sistema e gerenciamento de kernels.
+</p>
+<div class="dicas">
+<div class="dica">
+<span class="emoji">💾</span>
+<span data-i18n="index.dica1">Progresso de cada ação salvo automaticamente no servidor local</span>
+</div>
+<div class="dica">
+<span class="emoji">🔄</span>
+<span data-i18n="index.dica2">Estado de cada ação salvo automaticamente, sem depender de relatórios</span>
+</div>
+<div class="dica">
+<span class="emoji">📡</span>
+<span data-i18n="index.dica3">Logs em tempo real via Server-Sent Events</span>
+</div>
+<div class="dica">
+<span class="emoji">📊</span>
+<span data-i18n="index.dica4">Barras de progresso para acompanhar a execução</span>
+</div>
+<div class="dica">
+<span class="emoji">🛡️</span>
+<span data-i18n="index.dica5">Comandos validados e testados para o Fedora</span>
+</div>
+<div class="dica">
+<span class="emoji">🐧</span>
+<span data-i18n="index.dica6">Suporte para GNOME, KDE, XFCE e outros</span>
+</div>
+</div>
+</div>
 
-        <!-- i18n: SELETOR DE IDIOMA -->
-        <div class="i18n-seletor-container" id="i18n-seletor"></div>
+<!-- i18n + tema -->
+<div class="header-controles">
+<div class="i18n-seletor-container" id="i18n-seletor"></div>
+<div class="tema-toggle-container"></div>
+</div>
 
-        <footer>
-            <p>
-                <span data-i18n-html="index.footer_creditos">Fedora Only Fans — Feito com ❤️ por <a href="https://www.vitaotub.com">VitãoTub</a></span>
-                &bull;
-                <a href="https://github.com/vitaotek/Fedora-Only-Fans" data-i18n="index.footer_link_github">GitHub</a>
-                &bull;
-                <a href="https://github.com/vitaotek/Fedora-Only-Fans/blob/main/README.md" data-i18n="index.footer_link_doc">Documentação</a>
-                &bull;
-                <a href="https://github.com/vitaotek/Fedora-Only-Fans/issues" data-i18n="index.footer_link_bug">Reportar Bug</a>
-            </p>
-            <p style="font-size: 0.8rem; color: #4b5563;" data-i18n="index.footer_legal">
-                Fedora é uma marca registrada da Red Hat, Inc. Este projeto não é afiliado à Red Hat.
-            </p>
-        </footer>
-    </div>
+<footer>
+<p>
+<span data-i18n-html="index.footer_creditos">Fedora Only Fans — Feito com ❤️ por <a href="https://www.vitaotub.com">VitãoTub</a></span>
+&bull;
+<a href="https://github.com/vitaotek/Fedora-Only-Fans" data-i18n="index.footer_link_github">GitHub</a>
+&bull;
+<a href="https://github.com/vitaotek/Fedora-Only-Fans/blob/main/README.md" data-i18n="index.footer_link_doc">Documentação</a>
+&bull;
+<a href="https://github.com/vitaotek/Fedora-Only-Fans/issues" data-i18n="index.footer_link_bug">Reportar Bug</a>
+</p>
+<p style="font-size: 0.8rem; color: #4b5563;" data-i18n="index.footer_legal">
+Fedora é uma marca registrada da Red Hat, Inc. Este projeto não é afiliado à Red Hat.
+</p>
+</footer>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.modo-card').forEach(function(card) {
-                card.addEventListener('mouseenter', function() {
-                    this.style.borderColor = 'var(--accent)';
-                });
-                card.addEventListener('mouseleave', function() {
-                    this.style.borderColor = 'var(--border)';
-                });
-            });
-        });
-    </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+document.querySelectorAll('.modo-card').forEach(function(card) {
+card.addEventListener('mouseenter', function() {
+this.style.borderColor = 'var(--accent)';
+});
+card.addEventListener('mouseleave', function() {
+this.style.borderColor = 'var(--border)';
+});
+});
+});
+</script>
 </body>
 </html>

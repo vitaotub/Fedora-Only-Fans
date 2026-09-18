@@ -3,7 +3,7 @@
 **🌐 Language:** [Português (BR)](README.md) | English | [Español](README.es.md)
 
 ![Author](https://img.shields.io/badge/Creator-Vit%C3%A3oTub-blue?style=flat-square)
-![Version](https://img.shields.io/badge/Version-v1.0.0--rc.1-orange?style=flat-square)
+![Version](https://img.shields.io/badge/Version-v1.0.0--rc.2-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![License](https://img.shields.io/badge/License-GPL--3.0-green?style=flat-square)
 ![Languages](https://img.shields.io/badge/Languages-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
@@ -27,7 +27,7 @@ That's it! The script handles everything else. 🎉
 The installer will:
 
     ✅ Check that you're on Fedora
-    ✅ Install dependencies (Node.js, npm, git, curl)
+    ✅ Install dependencies (Node.js 18+, npm, git, curl)
     ✅ Download the project from GitHub
     ✅ Install Node.js dependencies
     ✅ Create the fof command in the terminal
@@ -66,11 +66,11 @@ The goal is to transform a clean Fedora installation into a complete operating s
 
 FOF has two entry points, with different purposes:
 
-🧭 Start Setup	Step by step, one session at a time, with intuitive navigation (Previous/Next/Skip). The order matters for the final result, so this is the only way to go through the Fedora configuration sessions — there is no "advanced mode" that skips the order.
+🧭 Start Setup: step by step, one session at a time, with intuitive navigation (Previous/Next). The order matters for the final result, so this is the only way to go through the Fedora configuration sessions.
 
-🛠️ Maintenance: Kernels, temporary file cleanup, GRUB, updating/uninstalling FOF — tasks that don't depend on order between themselves or with the rest of the configuration, so they live on a separate page, accessible at any time.
+🛠️ Maintenance: kernels, temporary file cleanup, GRUB, updating/uninstalling FOF — tasks that don't depend on order between themselves or with the rest of the configuration, so they live on a separate page, accessible at any time.
 
-FOF doesn't generate any completion report — each button remembers its own state (executed, skipped, or pending), so closing and reopening FOF (or restarting the computer) always shows exactly where you stopped.
+Each button remembers its own state (executed or pending), so closing and reopening FOF (or restarting the computer) always shows exactly where you stopped.
 
 ---
 
@@ -88,18 +88,24 @@ Setup Sessions (in order)
         DNF download speed tuning, PT-BR language, spell checker and dual-boot fix
         
     4	📦 Repositories
-        RPM Fusion activation, Flatpak/Flathub setup, multimedia codecs, tainted extras and VA-API graphics acceleration
+        RPM Fusion activation, Flatpak/Flathub setup, multimedia codecs and tainted extras
         
     5	🔤 Fonts
         Microsoft fonts installation for compatibility (Arial, Times, Calibri, etc.)
         
     6	🎮 Launchers
-        Installation of Steam, Heroic Games, Lutris, ProtonUp-Qt, Vulkan drivers for AMD, and Wine/Proton compatibility tools (Wine, Winetricks, Bottles, GameMode, MangoHud)
+        Installation of Steam, Heroic Games, Lutris, and Wine/Proton compatibility tools (Wine, Winetricks, Bottles, GameMode, MangoHud)
         
     7	🎬 Media Production
         OBS Studio (Flatpak) installation, virtual camera activation and EasyEffects (audio processor for PipeWire)
         
-    8	📦 Recommended Apps
+    8	🖥️ Hardware
+        GPU-specific drivers and tools (AMD and NVIDIA), fan control (CoreCtrl, LACT, CoolerControl) and controller support (input group). Includes full Vulkan, Mesa 3D/RADV and VA-API/VDPAU for AMD, proprietary driver + NVENC/NVDEC + modesetting for NVIDIA, and overclocking adjustment (amdgpu.ppfeaturemask)
+        
+    9	📱 Waydroid
+        Waydroid installation (Android on Linux) via COPR yanqiyu/waydroid, with GApps (Google Play Store), ARM translation (libndk/libhoudini), Magisk, Widevine DRM, Logitech SmartDock and waydroid-helper. Requires AMD or Intel GPU — does not work with NVIDIA
+        
+    10	📦 Recommended Apps
         Curated selection of useful everyday software, all via Flatpak: productivity (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entertainment (Haruna, VLC, MPV, Spotify, Plex, Stremio), graphics tools (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP and the Affinity Suite), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), video editing and 3D modeling (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift, Blender), audio editing and creation (Ardour, LMMS, Audacity) and cloud sync (Rclone, Rclone Manager)
 
 
@@ -115,6 +121,7 @@ Maintenance Sessions (no order — separate page)
 🎨 Technical Features
 
     🖥️ Dark and modern interface - Design focused on visual comfort
+    🎨 Light/dark theme - Real-time switching, with saved preference
     🌐 Multilingual - Interface in Portuguese (BR), English and Spanish, with real-time switching
     📡 Real-time logs - Follow execution via Server-Sent Events (SSE)
     📋 Single log per session - Each session shares a unified log, in chronological order, with separators between executions
@@ -126,6 +133,7 @@ Maintenance Sessions (no order — separate page)
     🖱️ 100% visual - Never need to open the terminal
     💾 Persistence - State of each action saved automatically (local server + browser), without relying on any aggregate report
     📦 Native container - Application runs in WebKitGTK (no browser needed)
+    🗂️ Native accordions - Uses <details>/<summary> to organize large blocks without cluttering the interface
 
 
 🖥️ Supported Desktops
@@ -191,7 +199,7 @@ chmod +x iniciar_fof.sh
 The script will:
 
     ✅ Check that all files are present
-    ✅ Install Node.js (if needed)
+    ✅ Install Node.js 18+ (if needed)
     ✅ Install project dependencies
     ✅ Compile the native WebKitGTK container (if possible)
     ✅ Start the server on port 3000
@@ -272,9 +280,11 @@ Fedora-Only-Fans/
 ├── 📄 04-fontes.html          # Session 5 (HTML + session-specific JS)
 ├── 📄 05-launchers.html       # Session 6 (HTML + session-specific JS)
 ├── 📄 06-loja.html            # Session 7 (HTML + session-specific JS)
+├── 📄 10-hardware.html        # Session 8 — Hardware (AMD, NVIDIA and Controllers)
+├── 📄 11-waydroid.html        # Session 9 — Waydroid
+├── 📄 09-softwares-uteis.html # Session 10 — Recommended Apps
 ├── 📄 07-manutencao.html      # Maintenance — kernels, cleanup, GRUB (no order)
 ├── 📄 08-fof-manutencao.html  # FOF Maintenance — update/uninstall (no order)
-├── 📄 09-softwares-uteis.html # Session 8 — Recommended Apps
 ├── 📄 template-sessao.html    # Template for creating a new session
 ├── 📄 iniciar_fof.sh          # Startup script
 ├── 📄 iniciar_fof_compat.sh   # Compatibility mode (older GPUs)
@@ -289,8 +299,6 @@ Fedora-Only-Fans/
 ├── 📄 .gitignore              # Files ignored by Git
 ├── 📄 Makefile                # Native container build
 ├── 📄 build-container.sh      # Container compilation script
-├── 📂 test/                   # Server smoke test (npm test)
-│   └── 📄 smoke-test.js
 └── 📂 src/                    # Container source code
     └── 📄 fof-container.c     # WebKitGTK container (C + GTK3)
 ```
@@ -319,31 +327,24 @@ tail -f /tmp/fof-*.log
 ```
 
 🎯 Roadmap
-v1.0.0-rc.1 (Current) 🚧
 
-    ✅ Sequential setup in order (the session order matters for the result)
-    ✅ Separate Maintenance page (kernels, cleanup, GRUB, FOF — no order dependency)
+v1.0.0-rc.2 (Current) 🚧
+
+    ✅ New Session 8 — Hardware (AMD, NVIDIA and Controllers)
+    ✅ New Session 9 — Waydroid (Android on Linux)
+    ✅ Reordering: Recommended Apps is now the last session (Session 10)
+    ✅ Vulkan moved from Session 6 (Launchers) to Session 8 (Hardware)
+    ✅ VA-API/VDPAU moved from Session 4 (Repositories) to Session 8 (Hardware)
+    ✅ ProtonUp-Qt removed from FOF (Proton GE installation should be done via Steam)
+    ✅ Native accordions (<details>) to organize blocks with many items
+    ✅ Light theme with real-time switching
+    ✅ Node.js version check (18+) during installation
+    ✅ Fixed "Project GitHub" button (Affinity)
+    ✅ Fixed "Open Rclone Manager" button
     ✅ Revert buttons only where the action is reversible
-    ✅ Persistence via localStorage/server
-    ✅ Complete code audit (security, logic and duplication bugs fixed)
-    ✅ Btrfs-Assistant installation via interface
-    ✅ OBS Studio installation via Flatpak
-    ✅ Stable channel sync (distro-sync)
-    ✅ App Center fix (without authentication)
-    ✅ Wine/Proton compatibility tools (Wine, Winetricks, Bottles, GameMode, MangoHud)
-    ✅ Progress with safety timeout
-    ✅ Compatibility Mode for older GPUs
-    ✅ "Update FOF" button always clickable
-    ✅ WebKitGTK 4.1 as sole requirement
-    ✅ Full internationalization (PT-BR, EN, ES)
-    ✅ Container icon fixed on KDE (Wayland and X11)
-    ✅ Session 8 "Recommended Apps" with a curated list of ~40 softwares
-    ✅ Single log per session (shared among multiple buttons)
-    ✅ Session lock during execution (prevents simultaneous executions)
-    ✅ Rclone Manager installed via official GitHub RPM (always the latest version)
-    ✅ Drift added to the video editing session
-    ✅ Blender moved to "Video Editing and 3D Modeling"
     ✅ HTML notices correctly rendered in EN/ES
+    ✅ Orphan localization keys removed
+    ✅ Authentication-free command list sanitized
 
 v1.0.0 (Future) 🔮
 
@@ -361,7 +362,7 @@ FOF has a central session registry (SESSOES, at the top of script.js) — it's t
 
 Done — no need to edit guiado.html, manutencao.html, index.html or server.js. The position of your entry in the SESSOES array already defines the display order and the "Session N" number (calculated automatically) of the main sessions, and the server route accepts any session named in that pattern.
 
-The template-sessao.html has comments pointing to existing sessions that serve as examples for more specific patterns (always-clickable button, multiple side-by-side buttons, dropdown, double confirmation flow, etc.). Important: a sempreClicavel: true command must never have an associated revert/remove button — if the action has a meaningful "undo", model it as a second independent button, also always clickable (see grub-aplicar-recomendado/grub-restaurar-padrao in 07-manutencao.html).
+The template-sessao.html has comments pointing to existing sessions that serve as examples for more specific patterns (always-clickable button, multiple side-by-side buttons, dropdown, double confirmation flow, etc.). Important: FOF has no generic "undo" buttons — if an action has a meaningful "undo", model it as a second independent button, also always clickable (see grub-aplicar-recomendado/grub-restaurar-padrao in 07-manutencao.html and the amdgpu-overclock pair in 10-hardware.html).
 
 🌐 How to add a new language
 

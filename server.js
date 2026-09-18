@@ -5,15 +5,11 @@ const path = require('path');
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const ARQUIVO_PROGRESSO = path.join(__dirname, '.progresso.json');
-const FOF_VERSION = '1.0.0-rc.1';
+const FOF_VERSION = '1.0.0-rc.2';
 
-// ============================================================
-// i18n: whitelist de idiomas suportados
-// ============================================================
 const LANGS_SUPORTADOS = ['pt-BR', 'en', 'es'];
 const LOCALES_DIR = path.join(__dirname, 'locales');
 
-// CORREÇÃO #11: padrões avaliados como PREFIXO de comando.
 const COMANDOS_SEM_AUTENTICACAO = [
     'rpm -q',
 'uname -r',
@@ -25,39 +21,38 @@ const COMANDOS_SEM_AUTENTICACAO = [
 'test',
 'gtk-launch',
 'rclone-manager',
+'corectrl',
+'lact',
+'waydroid',
 'bash <(curl',
-'echo "s" | bash',
-'raw.githubusercontent.com/ryzendew/AffinityOnLinux'
+'echo "s" | bash'
 ];
 
 function _cmdSemAutenticacao(comando) {
     const trimmed = (comando || '').trim();
     return COMANDOS_SEM_AUTENTICACAO.some(function(cmd) {
-        if (cmd.includes('://') || cmd.includes('raw.githubusercontent.com')) {
-            return trimmed.includes(cmd);
-        }
         return trimmed === cmd
-            || trimmed.startsWith(cmd + ' ')
-            || trimmed.startsWith(cmd + '\t');
+        || trimmed.startsWith(cmd + ' ')
+        || trimmed.startsWith(cmd + '\t');
     });
 }
 
-// ============================================================
-// FILTRO DE RUÍDO — remove avisos do portal KDE/Qt que aparecem
-// quando o kdesu é invocado sem sessão gráfica registrada.
-//
-// São 3 padrões específicos. Se algum dia quiser vê-los de volta
-// (para debugar o portal), basta comentar a chamada em enviarLog().
-// ============================================================
 function _filtrarLog(mensagem) {
     if (!mensagem) return mensagem;
-    // Se não tem nenhum dos marcadores, retorna como está (fast path)
+
+    // Normalização de \r: quando o comando roda sob um PTY (via
+    // `script`), cada linha vem com \r\n e barras de progresso usam
+    // \r sozinho. O WebKit não reescreve linha, então convertemos
+    // tudo pra \n — cada atualização vira uma linha nova.
+    mensagem = mensagem.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+    // Filtro de ruído do portal KDE/Qt (kdesu sem sessão gráfica)
     if (mensagem.indexOf('qt.qpa') === -1 &&
         mensagem.indexOf('QDBusError') === -1 &&
         mensagem.indexOf('portal') === -1) {
         return mensagem;
-    }
-    const linhas = mensagem.split('\n');
+        }
+        const linhas = mensagem.split('\n');
     const filtradas = linhas.filter(function(line) {
         if (line.includes('qt.qpa.services: failed to register with host portal')) return false;
         if (line.includes('QDBusError("org.freedesktop.portal.Error.Failed"')) return false;
@@ -67,11 +62,32 @@ function _filtrarLog(mensagem) {
     return filtradas.join('\n');
 }
 
-// ============ VARIÁVEIS DE STREAM ============
+const HOME_DIR_USUARIO = process.env.HOME || ('/home/' + (process.env.USER || 'user'));
+const USUARIO_REAL = process.env.USER || process.env.LOGNAME || 'user';
+
+function _substituirCaminhosUsuario(comando) {
+    if (!comando) return comando;
+    return comando
+    .replace(/~\//g, HOME_DIR_USUARIO + '/')
+    .replace(/\$HOME\b/g, HOME_DIR_USUARIO)
+    .replace(/\$SUDO_USER\b/g, USUARIO_REAL)
+    .replace(/\$USER\b/g, USUARIO_REAL);
+}
 
 const sseClients = new Map();
 
-// ============ FUNÇÕES DE PROGRESSO ============
+// ============================================================
+// BUFFER DE REPLAY DO SSE
+// ============================================================
+//
+// O cliente abre o EventSource e dispara /executar quase juntos.
+// Como o SSE demora alguns ms pra estabelecer, as primeiras
+// mensagens que o servidor envia se perdem. Solução: manter um
+// buffer por idComando e, quando um SSE novo conecta, reenviar
+// todo o buffer de replay.
+const sseBuffers = new Map();
+const SSE_BUFFER_MAX = 500;
+const SSE_BUFFER_TTL_MS = 10000;
 
 function lerProgresso() {
     try {
@@ -134,28 +150,44 @@ function resetarProgresso() {
     }
 }
 
-// ============ FUNÇÕES DE STREAM SSE ============
-
 function enviarLog(idComando, mensagem, tipo = 'output', extra = {}) {
-    // Aplica o filtro antes de tudo. Se após o filtro a mensagem ficar
-    // vazia (só continha ruído), não envia nada.
     const mensagemLimpa = _filtrarLog(mensagem);
 
     if (!mensagemLimpa || mensagemLimpa.trim() === '') {
-        // Ainda precisamos enviar eventos de tipo 'end' mesmo com mensagem
-        // vazia — eles controlam o estado da barra de progresso.
         if (tipo !== 'end') return;
     }
 
-    const clients = sseClients.get(idComando) || [];
-    const dados = JSON.stringify({ tipo, mensagem: mensagemLimpa, ...extra });
+    const dados = { tipo, mensagem: mensagemLimpa, ...extra };
 
+    // Guarda no buffer de replay
+    if (!sseBuffers.has(idComando)) sseBuffers.set(idComando, []);
+    const buffer = sseBuffers.get(idComando);
+    buffer.push(dados);
+    if (buffer.length > SSE_BUFFER_MAX) buffer.shift();
+
+    // Envia para os clientes conectados agora
+    const clients = sseClients.get(idComando) || [];
+    const json = JSON.stringify(dados);
     clients.forEach(client => {
-        client.write(`data: ${dados}\n\n`);
+        client.write(`data: ${json}\n\n`);
     });
+
+    // Limpa o buffer algum tempo depois do 'end', dando tempo do
+    // cliente reenviar/relogar se precisar.
+    if (tipo === 'end') {
+        setTimeout(function() {
+            sseBuffers.delete(idComando);
+        }, SSE_BUFFER_TTL_MS);
+    }
 }
 
 function adicionarClienteSSE(idComando, res) {
+    // Replay: envia tudo que já foi acumulado antes do SSE conectar.
+    const buffer = sseBuffers.get(idComando) || [];
+    buffer.forEach(function(dados) {
+        res.write(`data: ${JSON.stringify(dados)}\n\n`);
+    });
+
     if (!sseClients.has(idComando)) {
         sseClients.set(idComando, []);
     }
@@ -172,8 +204,6 @@ function adicionarClienteSSE(idComando, res) {
         }
     });
 }
-
-// ============ DETECÇÃO DE DESKTOP ============
 
 function detectarDesktop() {
     const desktop = (process.env.XDG_CURRENT_DESKTOP || '').toUpperCase();
@@ -203,8 +233,6 @@ function detectarDesktop() {
 
     return 'UNKNOWN';
 }
-
-// ============ AUTENTICAÇÃO ============
 
 function obterMetodoAutenticacao() {
     const desktop = detectarDesktop();
@@ -240,8 +268,6 @@ function commandExists(cmd) {
         return false;
     }
 }
-
-// ============ EXECUÇÃO COM STREAM ============
 
 function executarComandoComStream(comandoFinal, idComando, isReversao, callback) {
     const precisaAutenticacao = !_cmdSemAutenticacao(comandoFinal);
@@ -303,9 +329,6 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
         return;
     }
 
-    // ============================================================
-    // Comandos que precisam de autenticação
-    // ============================================================
     enviarLog(idComando, `$ ${comandoFinal}\n`, 'info');
     enviarLog(idComando, '─'.repeat(50) + '\n', 'info');
 
@@ -407,8 +430,6 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
     });
 }
 
-// ============ EXECUÇÃO COM AUTENTICAÇÃO SEGURA ============
-
 function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, callback) {
     const desktop = detectarDesktop();
 
@@ -420,19 +441,24 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         'dnf clean': 'Limpar cache do sistema',
         'dnf config-manager': 'Configurar gerenciador de pacotes DNF',
         'dnf distro-sync': 'Sincronizar pacotes com o canal estável',
-        'dnf system-upgrade': 'Atualizar versão do Fedora',
         'dnf swap': 'Substituir pacotes',
         'dnf groupinstall': 'Instalar grupo de pacotes',
+        'dnf copr': 'Habilitar repositório COPR',
         'localectl': 'Alterar configurações de localidade',
         'timedatectl': 'Alterar data e hora do sistema',
         'rm -rf /usr/share/fonts/microsoft': 'Remover fontes Microsoft',
         'btrfs': 'Gerenciar snapshots Btrfs',
         'grub2-mkconfig': 'Reconfigurar GRUB',
+        'grubby': 'Configurar parâmetros do kernel',
         'sed -i': 'Modificar arquivo de configuração',
         'flatpak install': 'Instalar aplicativo Flatpak',
         'flatpak uninstall': 'Remover aplicativo Flatpak',
         'flatpak update': 'Atualizar aplicativos Flatpak',
-        'flatpak remote-add': 'Adicionar repositório Flatpak'
+        'flatpak remote-add': 'Adicionar repositório Flatpak',
+        'usermod': 'Modificar grupos do usuário',
+        'gpasswd': 'Modificar grupos do usuário',
+        'systemctl': 'Gerenciar serviços do sistema',
+        'waydroid init': 'Inicializar container Android (Waydroid)'
     };
 
     let descricao = 'Executar comando administrativo';
@@ -446,6 +472,7 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
     enviarLog(idComando, `🔐 Autenticando para: ${descricao}\n`, 'info');
 
     const comandoSemSudo = comandoOriginal.replace(/sudo\s+/g, '');
+    const comandoCorrigido = _substituirCaminhosUsuario(comandoSemSudo);
 
     const hasPkexec = commandExists('pkexec');
     const hasKdesu = commandExists('kdesu');
@@ -453,31 +480,64 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
     const hasKdialog = commandExists('kdialog');
 
     console.log(`[AUTH] Desktop: ${desktop}, pkexec: ${hasPkexec}, kdesu: ${hasKdesu}`);
+    console.log(`[AUTH] HOME do usuário: ${HOME_DIR_USUARIO}, usuário: ${USUARIO_REAL}`);
+
+    // ============================================================
+    // Helper comum: constrói os scripts EXTERNO e INTERNO
+    // ============================================================
+    //
+    // O script externo configura o ambiente gráfico e roda o script
+    // interno sob um PTY (`script -e -q -c`). O PTY força as
+    // ferramentas (waydroid, git, pip, dnf) a mostrarem barras de
+    // progresso, mesmo sem terminal real.
+    //
+    // - `script -e` propaga o código de saída real.
+    // - `touch outputTemp && chmod 666` antes de rodar: o servidor
+    // (usuário comum) consegue ler em tempo real.
+    // - `chmod 644` após: permissão segura.
+    // - `exit $EXIT_CODE` no fim: kdesu/pkexec propagam.
+    function _construirScripts(timestamp, random, comandoCorrigido, descricao, outputTemp) {
+        const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
+        const innerTemp = `/tmp/fof-inner-${timestamp}-${random}.sh`;
+        const homeDir = HOME_DIR_USUARIO;
+        const marker = 'FOF_INNER_' + random.toUpperCase();
+
+        // Força line endings LF no comando (evita CRLF vindo do editor)
+        const comandoLimpo = (comandoCorrigido || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        const scriptContent = `#!/bin/bash
+        # Fedora Only Fans - ${descricao}
+        # Executado em: $(date '+%d/%m/%Y %H:%M:%S')
+        export DISPLAY=${process.env.DISPLAY || ':0'}
+        export XAUTHORITY=${process.env.XAUTHORITY || homeDir + '/.Xauthority'}
+        export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
+        cat > ${innerTemp} <<'${marker}'
+        ${comandoLimpo}
+        ${marker}
+        chmod +x ${innerTemp}
+        touch ${outputTemp}
+        chmod 666 ${outputTemp}
+        {
+            script -e -q -c "bash ${innerTemp}" /dev/null 2>&1
+        } >> ${outputTemp}
+        EXIT_CODE=$?
+        echo "" >> ${outputTemp}
+        echo "FOF_EXIT_CODE=$EXIT_CODE" >> ${outputTemp}
+        chmod 644 ${outputTemp}
+        rm -f ${innerTemp}
+        exit $EXIT_CODE
+        `.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        return { scriptTemp, innerTemp, scriptContent };
+    }
 
     if (desktop === 'KDE' && hasKdesu) {
         enviarLog(idComando, '🪟 Usando kdesu (KDE) com interface gráfica...\n', 'info');
 
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(7);
-        const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
         const outputTemp = `/tmp/fof-out-${timestamp}-${random}.log`;
-
-        const homeDir = process.env.HOME || '/home/' + (process.env.USER || 'user');
-
-        // CORREÇÃO: o script agora redireciona TUDO o que o comando
-        // escreve (stdout + stderr) para um arquivo temporário. O kdesu
-        // não repassa o output do processo filho, então sem isso a saída
-        // se perde. O servidor lê o arquivo continuamente via SSE.
-        const scriptContent = `#!/bin/bash
-# Fedora Only Fans - ${descricao}
-# Executado em: $(date '+%d/%m/%Y %H:%M:%S')
-export DISPLAY=${process.env.DISPLAY || ':0'}
-export XAUTHORITY=${process.env.XAUTHORITY || homeDir + '/.Xauthority'}
-export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
-{
-${comandoSemSudo}
-} > ${outputTemp} 2>&1
-`;
+        const { scriptTemp, innerTemp, scriptContent } = _construirScripts(timestamp, random, comandoCorrigido, descricao, outputTemp);
 
         try {
             fs.writeFileSync(scriptTemp, scriptContent, { mode: 0o755 });
@@ -487,12 +547,8 @@ ${comandoSemSudo}
             return callback(err, "", "");
         }
 
-        // Sem o 2>/dev/null — o stderr do kdesu é útil. O filtro de ruído
-        // em _filtrarLog() remove os avisos do portal.
         const comandoFinal = `kdesu -c "${scriptTemp}" && rm -f ${scriptTemp}`;
 
-        // Lê o arquivo de saída continuamente enquanto o kdesu roda.
-        // A cada 500ms, envia o conteúdo novo via SSE e limpa o arquivo.
         let bytesLidos = 0;
 
         const readerInterval = setInterval(() => {
@@ -506,13 +562,13 @@ ${comandoSemSudo}
                         enviarLog(idComando, novoConteudo, 'output');
                     }
                 }
-            } catch (e) { /* ignora erros de leitura */ }
+            } catch (e) {
+                // ignora erros de leitura (EACCES momentâneo / arquivo em escrita)
+            }
         }, 500);
 
         const cleanupReader = () => {
             clearInterval(readerInterval);
-            // Última leitura para capturar o que chegou entre o último tick
-            // do interval e o fim do processo.
             if (fs.existsSync(outputTemp)) {
                 try {
                     const conteudo = fs.readFileSync(outputTemp);
@@ -523,11 +579,15 @@ ${comandoSemSudo}
                 } catch (e) {}
                 try { fs.unlinkSync(outputTemp); } catch (e) {}
             }
+            try { fs.unlinkSync(innerTemp); } catch (e) {}
         };
 
         setTimeout(() => {
             if (fs.existsSync(scriptTemp)) {
                 try { fs.unlinkSync(scriptTemp); } catch (e) {}
+            }
+            if (fs.existsSync(innerTemp)) {
+                try { fs.unlinkSync(innerTemp); } catch (e) {}
             }
             if (fs.existsSync(outputTemp)) {
                 try { fs.unlinkSync(outputTemp); } catch (e) {}
@@ -547,16 +607,8 @@ ${comandoSemSudo}
 
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(7);
-        const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
-
-        const homeDir = process.env.HOME || '/home/' + (process.env.USER || 'user');
-        const scriptContent = `#!/bin/bash
-# Fedora Only Fans - ${descricao}
-export DISPLAY=${process.env.DISPLAY || ':0'}
-export XAUTHORITY=${process.env.XAUTHORITY || homeDir + '/.Xauthority'}
-export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
-${comandoSemSudo}
-`;
+        const outputTemp = `/tmp/fof-out-${timestamp}-${random}.log`;
+        const { scriptTemp, innerTemp, scriptContent } = _construirScripts(timestamp, random, comandoCorrigido, descricao, outputTemp);
 
         try {
             fs.writeFileSync(scriptTemp, scriptContent, { mode: 0o755 });
@@ -566,15 +618,58 @@ ${comandoSemSudo}
             return callback(err, "", "");
         }
 
-        const comandoFinal = `pkexec --disable-internal-agent ${scriptTemp} && rm -f ${scriptTemp}`;
+        const comandoFinal = `pkexec --disable-internal-agent ${scriptTemp}; rm -f ${scriptTemp}`;
+
+        let bytesLidos = 0;
+
+        const readerInterval = setInterval(() => {
+            if (!fs.existsSync(outputTemp)) return;
+            try {
+                const conteudo = fs.readFileSync(outputTemp);
+                if (conteudo.length > bytesLidos) {
+                    const novoConteudo = conteudo.slice(bytesLidos).toString('utf8');
+                    bytesLidos = conteudo.length;
+                    if (novoConteudo) {
+                        enviarLog(idComando, novoConteudo, 'output');
+                    }
+                }
+            } catch (e) {
+                // ignora
+            }
+        }, 500);
+
+        const cleanupReader = () => {
+            clearInterval(readerInterval);
+            if (fs.existsSync(outputTemp)) {
+                try {
+                    const conteudo = fs.readFileSync(outputTemp);
+                    if (conteudo.length > bytesLidos) {
+                        const resto = conteudo.slice(bytesLidos).toString('utf8');
+                        if (resto) enviarLog(idComando, resto, 'output');
+                    }
+                } catch (e) {}
+                try { fs.unlinkSync(outputTemp); } catch (e) {}
+            }
+            try { fs.unlinkSync(innerTemp); } catch (e) {}
+        };
 
         setTimeout(() => {
             if (fs.existsSync(scriptTemp)) {
                 try { fs.unlinkSync(scriptTemp); } catch (e) {}
             }
+            if (fs.existsSync(innerTemp)) {
+                try { fs.unlinkSync(innerTemp); } catch (e) {}
+            }
+            if (fs.existsSync(outputTemp)) {
+                try { fs.unlinkSync(outputTemp); } catch (e) {}
+            }
         }, 60000);
 
-        executarComandoComStream(comandoFinal, idComando, isReversao, callback);
+        executarComandoComStream(comandoFinal, idComando, isReversao, (err, stdout, stderr) => {
+            cleanupReader();
+            callback(err, stdout, stderr);
+        });
+
         return;
     }
 
@@ -600,7 +695,7 @@ ${comandoSemSudo}
         }
 
         const senhaLimpa = senha.trim().replace(/'/g, "'\\''");
-        const comandoEscapado = comandoSemSudo
+        const comandoEscapado = comandoCorrigido
         .replace(/\\/g, '\\\\')
         .replace(/"/g, '\\"')
         .replace(/\$/g, '\\$')
@@ -610,8 +705,6 @@ ${comandoSemSudo}
         executarComandoComStream(comandoFinal, idComando, isReversao, callback);
     });
 }
-
-// ============ PROCEDER COM EXECUÇÃO ============
 
 function procederComExecucao(comando, idComando, isReversao, res) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -642,8 +735,6 @@ function procederComExecucao(comando, idComando, isReversao, res) {
     });
 }
 
-// ============ SERVER - ARQUIVOS ESTÁTICOS ============
-
 function servirArquivoEstatico(req, res, filePath) {
     const fullPath = path.join(__dirname, filePath);
 
@@ -671,9 +762,6 @@ function servirArquivoEstatico(req, res, filePath) {
     }
 }
 
-// ============================================================
-// i18n: SERVIDOR DE LOCALES
-// ============================================================
 function servirLocale(req, res, lang) {
     if (LANGS_SUPORTADOS.indexOf(lang) === -1) {
         res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -701,8 +789,6 @@ function servirLocale(req, res, lang) {
     });
     fs.createReadStream(arquivo).pipe(res);
 }
-
-// ============ SERVIDOR HTTP ============
 
 const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', `http://localhost:${PORT}`);
@@ -880,6 +966,38 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    if (req.method === 'GET' && url === '/waydroid-status') {
+        exec('waydroid status 2>&1', { shell: '/bin/bash', timeout: 5000 }, (error, stdout, stderr) => {
+            const output = ((stdout || '') + (stderr || '')).trim();
+
+            let installed = true;
+            let initialized = false;
+            let running = false;
+
+            if (/command not found/i.test(output) || /No such file or directory/i.test(output)) {
+                installed = false;
+            }
+
+            if (output.indexOf('is not initialized') !== -1) {
+                initialized = false;
+            } else if (output.indexOf('Session:') !== -1 || output.indexOf('Vendor type:') !== -1) {
+                initialized = true;
+                if (/Session:\s*RUNNING/i.test(output)) {
+                    running = true;
+                }
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                installed: installed,
+                initialized: initialized,
+                running: running,
+                raw: output
+            }));
+        });
+        return;
+    }
+
     if (req.method === 'POST' && url === '/executar') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -917,7 +1035,7 @@ const server = http.createServer((req, res) => {
 server.on('error', (e) => {
     if (e.code === 'EADDRINUSE') {
         console.error(`[ERRO]: A porta ${PORT} já está em uso.`);
-        console.error(`   Execute: kill -9 $(lsof -t -i:${PORT})`);
+        console.error(` Execute: kill -9 $(lsof -t -i:${PORT})`);
     } else {
         console.error('[Erro do servidor]:', e.message);
     }
@@ -946,13 +1064,19 @@ server.listen(PORT, HOST, () => {
     console.log(`====================================================`);
     console.log(` 🐧 Fedora Only Fans - Servidor de Automação v${FOF_VERSION}`);
     console.log(` 🌐 http://localhost:${PORT} (somente local — 127.0.0.1)`);
-    console.log(` 🖥️  Desktop: ${desktop}`);
+    console.log(` 🖥️ Desktop: ${desktop}`);
     console.log(` 🔐 Autenticação: ${metodo.descricao}`);
-    console.log(` 📡 SSE: Ativo (logs em tempo real)`);
+    console.log(` 🏠 HOME do usuário: ${HOME_DIR_USUARIO}`);
+    console.log(` 👤 Usuário: ${USUARIO_REAL}`);
+    console.log(` 📡 SSE: Ativo (logs em tempo real, com buffer de replay)`);
     console.log(` 📁 Arquivos estáticos: Ativo (HTML, CSS, JS, ícone)`);
     console.log(` 🌐 i18n: Ativo (locales em /locales/<lang>.json)`);
-    console.log(` 📄 Páginas: index.html, guiado.html, manutencao.html, 00-*.html a 09-*.html`);
+    console.log(` 📄 Páginas: index.html, guiado.html, manutencao.html, 00-*.html a 11-*.html`);
     console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, bash <(curl), etc`);
     console.log(` 📊 Progresso: .progresso.json (persistente no servidor)`);
+    console.log(` 📱 Waydroid status: /waydroid-status (consultado pela sessão 11)`);
+    console.log(` 🖥️ PTY: Ativo (script -e -q -c, com códigos de saída propagados)`);
+    console.log(` 🔓 Output temp: pré-criado com modo 666 (legível em tempo real)`);
+    console.log(` 🔁 Buffer SSE: ${SSE_BUFFER_MAX} mensagens por comando, TTL ${SSE_BUFFER_TTL_MS/1000}s`);
     console.log(`====================================================`);
 });

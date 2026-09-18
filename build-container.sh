@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Build do Container FOF
-# Versão: 1.0.0-rc.1
+# Versão: 1.0.0-rc.2
 # ============================================================
 
 set -e
@@ -10,7 +10,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
 cd "$DIR"
 
 echo "============================================================"
-echo "  🏗️  Fedora Only Fans - Build do Container"
+echo " 🏗️ Fedora Only Fans - Build do Container"
 echo "============================================================"
 echo ""
 
@@ -39,36 +39,36 @@ WEBKIT_PKG=""
 # Verifica a versão suportada (GTK3): webkit2gtk-4.1 é o pacote atual no
 # Fedora 40+.
 if pkg-config --exists webkit2gtk-4.1 gtk+-3.0 2>/dev/null; then
-    WEBKIT_VERSION="4.1"
-    WEBKIT_PKG="webkit2gtk-4.1"
-    echo "✅ WebKitGTK-4.1 detectado"
+WEBKIT_VERSION="4.1"
+WEBKIT_PKG="webkit2gtk-4.1"
+echo "✅ WebKitGTK-4.1 detectado"
 fi
 
 if [ -z "$WEBKIT_VERSION" ]; then
-    echo "❌ Nenhuma versão compatível do WebKitGTK encontrada!"
-    echo ""
-    if pkg-config --exists webkitgtk-6.0 2>/dev/null; then
-        echo "   Detectamos webkitgtk6.0-devel instalado (base GTK4), mas este"
-        echo "   programa foi escrito para GTK3 e precisa do webkit2gtk4.1."
-        echo "   Os dois pacotes podem conviver no mesmo sistema — instale também:"
-        echo ""
-        echo "   sudo dnf install webkit2gtk4.1-devel gtk3-devel"
-    else
-        echo "   Instale com:"
-        echo ""
-        echo "   sudo dnf install webkit2gtk4.1-devel gtk3-devel"
-        echo ""
-        echo "   Se o comando acima disser que o pacote não foi encontrado,"
-        echo "   confirme a versão do seu Fedora com 'cat /etc/fedora-release'"
-        echo "   e verifique se os repositórios padrão estão habilitados"
-        echo "   ('dnf repolist')."
-    fi
-    echo ""
-    echo "   Se o pacote já está instalado e mesmo assim isto falha, rode:"
-    echo "   pkg-config --list-all | grep -i webkit"
-    echo "   para conferir se o pkg-config está enxergando o pacote certo."
-    echo ""
-    exit 1
+echo "❌ Nenhuma versão compatível do WebKitGTK encontrada!"
+echo ""
+if pkg-config --exists webkitgtk-6.0 2>/dev/null; then
+echo " Detectamos webkitgtk6.0-devel instalado (base GTK4), mas este"
+echo " programa foi escrito para GTK3 e precisa do webkit2gtk4.1."
+echo " Os dois pacotes podem conviver no mesmo sistema — instale também:"
+echo ""
+echo " sudo dnf install webkit2gtk4.1-devel gtk3-devel"
+else
+echo " Instale com:"
+echo ""
+echo " sudo dnf install webkit2gtk4.1-devel gtk3-devel"
+echo ""
+echo " Se o comando acima disser que o pacote não foi encontrado,"
+echo " confirme a versão do seu Fedora com 'cat /etc/fedora-release'"
+echo " e verifique se os repositórios padrão estão habilitados"
+echo " ('dnf repolist')."
+fi
+echo ""
+echo " Se o pacote já está instalado e mesmo assim isto falha, rode:"
+echo " pkg-config --list-all | grep -i webkit"
+echo " para conferir se o pkg-config está enxergando o pacote certo."
+echo ""
+exit 1
 fi
 
 echo "✅ Dependências OK"
@@ -76,10 +76,10 @@ echo "✅ Dependências OK"
 mkdir -p src
 
 if [ ! -f "src/fof-container.c" ]; then
-    echo "❌ Arquivo src/fof-container.c não encontrado!"
-    echo ""
-    echo "   Certifique-se de que o arquivo existe."
-    exit 1
+echo "❌ Arquivo src/fof-container.c não encontrado!"
+echo ""
+echo " Certifique-se de que o arquivo existe."
+exit 1
 fi
 
 echo ""
@@ -87,28 +87,28 @@ echo "📦 Compilando container com WebKitGTK-$WEBKIT_VERSION..."
 
 # Compila usando o pacote WebKitGTK detectado
 if gcc -Wall -O2 \
-    $(pkg-config --cflags $WEBKIT_PKG gtk+-3.0) \
-    -o fof-container src/fof-container.c \
-    $(pkg-config --libs $WEBKIT_PKG gtk+-3.0) -lm; then
-    echo ""
-    echo "============================================================"
-    echo "  ✅ Container compilado com sucesso!"
-    echo "============================================================"
-    echo ""
-    echo "📁 Arquivo: $DIR/fof-container"
-    echo "📦 Tamanho: $(du -h fof-container | cut -f1)"
-    echo "🔧 WebKitGTK: $WEBKIT_VERSION"
-    echo ""
-    echo "Para executar:"
-    echo "  ./fof-container"
-    echo ""
-    echo "Com opções:"
-    echo "  ./fof-container --url http://localhost:3000 --icon icone_app.png"
-    echo ""
-    echo "Para instalar no sistema:"
-    echo "  sudo make install"
-    echo ""
+$(pkg-config --cflags $WEBKIT_PKG gtk+-3.0) \
+-o fof-container src/fof-container.c \
+$(pkg-config --libs $WEBKIT_PKG gtk+-3.0) -lm; then
+echo ""
+echo "============================================================"
+echo " ✅ Container compilado com sucesso!"
+echo "============================================================"
+echo ""
+echo "📁 Arquivo: $DIR/fof-container"
+echo "📦 Tamanho: $(du -h fof-container | cut -f1)"
+echo "🔧 WebKitGTK: $WEBKIT_VERSION"
+echo ""
+echo "Para executar:"
+echo " ./fof-container"
+echo ""
+echo "Com opções:"
+echo " ./fof-container --url http://localhost:3000 --icon icone_app.png"
+echo ""
+echo "Para instalar no sistema:"
+echo " sudo make install"
+echo ""
 else
-    echo "❌ Falha na compilação"
-    exit 1
+echo "❌ Falha na compilação"
+exit 1
 fi

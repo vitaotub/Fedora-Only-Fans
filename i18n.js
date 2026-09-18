@@ -1,28 +1,28 @@
 /**
  * Fedora Only Fans (FOF) - Módulo de Internacionalização (i18n)
- * Versão: 1.0.0-rc.1
+ * Versão: 1.0.0-rc.2
  *
  * Suporta: pt-BR (padrão), en, es
  *
  * Estratégia (Opção B1):
- *   - HTML tem PT-BR como texto padrão dentro de cada elemento traduzível.
- *   - Elementos traduzíveis carregam `data-i18n="chave"` (textContent)
- *     ou `data-i18n-html="chave"` (innerHTML).
- *   - Emojis ficam FORA das strings (em <span class="i18n-emoji">),
- *     para não migrarem entre idiomas.
- *   - i18n.js NÃO toca no DOM quando lang === 'pt-BR' (HTML já está certo).
- *   - Quando lang !== 'pt-BR', carrega o JSON correspondente e substitui.
+ * - HTML tem PT-BR como texto padrão dentro de cada elemento traduzível.
+ * - Elementos traduzíveis carregam `data-i18n="chave"` (textContent)
+ * ou `data-i18n-html="chave"` (innerHTML).
+ * - Emojis ficam FORA das strings (em <span class="i18n-emoji">),
+ * para não migrarem entre idiomas.
+ * - i18n.js NÃO toca no DOM quando lang === 'pt-BR' (HTML já está certo).
+ * - Quando lang !== 'pt-BR', carrega o JSON correspondente e substitui.
  *
  * API pública:
- *   t(chave, vars?)          - retorna string traduzida (com interpolação)
- *   setLang(lang)            - troca o idioma (recarrega a página)
- *   getLang()                - retorna o idioma atual
- *   aplicarTraducoes(root?)  - aplica data-i18n em um subtree (opcional)
- *   initI18n()               - inicializa (chamado automaticamente)
- *   criarSeletorIdioma()     - injeta o seletor nos containers marcados
+ * t(chave, vars?) - retorna string traduzida (com interpolação)
+ * setLang(lang) - troca o idioma (recarrega a página)
+ * getLang() - retorna o idioma atual
+ * aplicarTraducoes(root?) - aplica data-i18n em um subtree (opcional)
+ * initI18n() - inicializa (chamado automaticamente)
+ * criarSeletorIdioma() - injeta o seletor nos containers marcados
  *
  * Eventos:
- *   'i18n-pronto'   - disparado após o JSON ser carregado e aplicado
+ * 'i18n-pronto' - disparado após o JSON ser carregado e aplicado
  */
 
 (function() {
@@ -43,9 +43,9 @@
 
     var estado = {
         lang: LANG_PADRAO,
-        strings: {},      // objeto carregado do JSON (vazio em pt-BR)
-carregado: false,
-carregando: null  // Promise em andamento, se houver
+        strings: {},
+        carregado: false,
+        carregando: null
     };
 
     // ============================================================
@@ -297,8 +297,8 @@ carregando: null  // Promise em andamento, se houver
 
             var opcoes = [
                 { v: 'pt-BR', t: 'Português' },
-                { v: 'en',    t: 'English' },
-                { v: 'es',    t: 'Español' }
+                { v: 'en', t: 'English' },
+                { v: 'es', t: 'Español' }
             ];
 
             opcoes.forEach(function(op) {

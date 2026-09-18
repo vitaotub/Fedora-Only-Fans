@@ -3,7 +3,7 @@
 **🌐 Idioma:** Português (BR) | [English](README.en.md) | [Español](README.es.md)
 
 ![Autor](https://img.shields.io/badge/Criador-Vit%C3%A3oTub-blue?style=flat-square)
-![Versão](https://img.shields.io/badge/Versão-v1.0.0--rc.1-orange?style=flat-square)
+![Versão](https://img.shields.io/badge/Vers%C3%A3o-v1.0.0--rc.2-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![Licença](https://img.shields.io/badge/Licen%C3%A7a-GPL--3.0-green?style=flat-square)
 ![Idiomas](https://img.shields.io/badge/Idiomas-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
@@ -27,7 +27,7 @@ Isso é tudo! O script cuida de todo o resto. 🎉
 O instalador irá:
 
     ✅ Verificar se você está no Fedora
-    ✅ Instalar dependências (Node.js, npm, git, curl)
+    ✅ Instalar dependências (Node.js 18+, npm, git, curl)
     ✅ Baixar o projeto do GitHub
     ✅ Instalar dependências Node.js
     ✅ Criar o comando fof no terminal
@@ -66,11 +66,11 @@ O objetivo é transformar uma instalação limpa do Fedora em um sistema operaci
 
 O FOF tem dois pontos de entrada, com propósitos diferentes:
 
-🧭 Iniciar Configuração	Passo a passo, uma sessão por vez, com navegação intuitiva (Anterior/Próximo/Pular). A ordem importa pro resultado final, então esta é a única forma de percorrer as sessões de configuração do Fedora — não existe um "modo avançado" que pule a ordem.
+🧭 Iniciar Configuração: passo a passo, uma sessão por vez, com navegação intuitiva (Anterior/Próximo). A ordem importa pro resultado final, então esta é a única forma de percorrer as sessões de configuração do Fedora.
 
-🛠️ Manutenção: Kernels, limpeza de temporários, GRUB, atualizar/desinstalar o FOF — tarefas que não têm dependência de ordem entre si nem com o resto da configuração, por isso ficam numa página à parte, acessível a qualquer momento.
+🛠️ Manutenção: kernels, limpeza de temporários, GRUB, atualizar/desinstalar o FOF — tarefas que não têm dependência de ordem entre si nem com o resto da configuração, por isso ficam numa página à parte, acessível a qualquer momento.
 
-O FOF não gera nenhum tipo de relatório de conclusão — cada botão lembra seu próprio estado (executado, pulado, ou pendente), então fechar e reabrir o FOF (ou reiniciar o computador) sempre mostra exatamente onde você parou.
+Cada botão lembra seu próprio estado (executado ou pendente), então fechar e reabrir o FOF (ou reiniciar o computador) sempre mostra exatamente onde você parou.
 
 ---
 
@@ -88,18 +88,24 @@ Sessões da Configuração (em ordem)
         Ajuste de velocidade do DNF, idioma PT-BR, corretor ortográfico e correção de dual-boot
         
     4	📦 Repositórios
-        Ativação do RPM Fusion, configuração do Flatpak/Flathub, codecs multimídia, extras tainted e aceleração gráfica VA-API
+        Ativação do RPM Fusion, configuração do Flatpak/Flathub, codecs multimídia e extras tainted
         
     5	🔤 Fontes
         Instalação de fontes Microsoft para compatibilidade (Arial, Times, Calibri, etc.)
         
     6	🎮 Launchers
-        Instalação de Steam, Heroic Games, Lutris, ProtonUp-Qt, drivers Vulkan para AMD, e ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
+        Instalação de Steam, Heroic Games, Lutris, e ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
         
     7	🎬 Produção Multimídia
         Instalação do OBS Studio (Flatpak), ativação de câmera virtual e EasyEffects (processador de áudio para PipeWire)
         
-    8	📦 Aplicativos Recomendados
+    8	🖥️ Hardware
+        Drivers e ferramentas específicas de GPU (AMD e NVIDIA), controle de fans (CoreCtrl, LACT, CoolerControl) e suporte a controles (grupo input). Inclui Vulkan completo, Mesa 3D/RADV e VA-API/VDPAU para AMD, driver proprietário + NVENC/NVDEC + modesetting para NVIDIA, e ajuste de overclocking (amdgpu.ppfeaturemask)
+        
+    9	📱 Waydroid
+        Instalação do Waydroid (Android no Linux) via COPR yanqiyu/waydroid, com GApps (Google Play Store), tradução ARM (libndk/libhoudini), Magisk, Widevine DRM, Logitech SmartDock e waydroid-helper. Requer GPU AMD ou Intel — não funciona com NVIDIA
+        
+    10	📦 Aplicativos Recomendados
         Curadoria de softwares úteis para o dia-a-dia, todos via Flatpak: produtividade (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entretenimento (Haruna, VLC, MPV, Spotify, Plex, Stremio), ferramentas gráficas (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP e a Suíte Affinity), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), edição de vídeo e modelagem 3D (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift, Blender), edição e criação de áudio (Ardour, LMMS, Audacity) e sincronização em nuvem (Rclone, Rclone Manager)
 
 
@@ -115,6 +121,7 @@ Sessões de Manutenção (sem ordem — página à parte)
 🎨 Características Técnicas
 
     🖥️ Interface escura e moderna - Design pensado para conforto visual
+    🎨 Tema claro/escuro - Alternância em tempo real, com preferência salva
     🌐 Multilíngue - Interface em Português (BR), Inglês e Espanhol, com troca em tempo real
     📡 Logs em tempo real - Acompanhe a execução via Server-Sent Events (SSE)
     📋 Log único por sessão - Cada sessão compartilha um log unificado, em ordem cronológica, com separadores entre execuções
@@ -126,6 +133,7 @@ Sessões de Manutenção (sem ordem — página à parte)
     🖱️ 100% visual - Nunca precisa abrir o terminal
     💾 Persistência - Estado de cada ação salvo automaticamente (servidor local + navegador), sem depender de nenhum relatório agregado
     📦 Container nativo - Aplicação roda em WebKitGTK (sem necessidade de navegador)
+    🗂️ Acordeões nativos - Uso de <details>/<summary> para organizar blocos grandes sem poluir a interface
 
 
 🖥️ Desktops Suportados
@@ -191,7 +199,7 @@ chmod +x iniciar_fof.sh
 O script irá:
 
     ✅ Verificar se todos os arquivos estão presentes
-    ✅ Instalar o Node.js (se necessário)
+    ✅ Instalar o Node.js 18+ (se necessário)
     ✅ Instalar as dependências do projeto
     ✅ Compilar o container nativo WebKitGTK (se possível)
     ✅ Iniciar o servidor na porta 3000
@@ -272,9 +280,11 @@ Fedora-Only-Fans/
 ├── 📄 04-fontes.html          # Sessão 5 (HTML + JS específico)
 ├── 📄 05-launchers.html       # Sessão 6 (HTML + JS específico)
 ├── 📄 06-loja.html            # Sessão 7 (HTML + JS específico)
+├── 📄 10-hardware.html        # Sessão 8 — Hardware (AMD, NVIDIA e Controles)
+├── 📄 11-waydroid.html        # Sessão 9 — Waydroid
+├── 📄 09-softwares-uteis.html # Sessão 10 — Aplicativos Recomendados
 ├── 📄 07-manutencao.html      # Manutenção — kernels, limpeza, GRUB (sem ordem)
 ├── 📄 08-fof-manutencao.html  # Manutenção FOF — atualizar/desinstalar (sem ordem)
-├── 📄 09-softwares-uteis.html # Sessão 8 — Aplicativos Recomendados
 ├── 📄 template-sessao.html    # Molde pra criar uma sessão nova
 ├── 📄 iniciar_fof.sh          # Script de inicialização
 ├── 📄 iniciar_fof_compat.sh   # Modo compatibilidade (GPUs antigas)
@@ -283,14 +293,12 @@ Fedora-Only-Fans/
 ├── 📄 icone_app.png           # Ícone do aplicativo
 ├── 📄 package.json            # Dependências Node.js
 ├── 📄 README.md               # Documentação (PT-BR)
-├── 📄 README.en.md            # Documentação (English)
+├── 📄 README.en.md            # Documentation (English)
 ├── 📄 README.es.md            # Documentación (Español)
 ├── 📄 LICENSE                 # Licença GPL-3.0
 ├── 📄 .gitignore              # Arquivos ignorados pelo Git
 ├── 📄 Makefile                # Build do container nativo
 ├── 📄 build-container.sh      # Script de compilação do container
-├── 📂 test/                   # Teste de fumaça do servidor (npm test)
-│   └── 📄 smoke-test.js
 └── 📂 src/                    # Código fonte do container
     └── 📄 fof-container.c     # Container WebKitGTK (C + GTK3)
 ```
@@ -319,31 +327,24 @@ tail -f /tmp/fof-*.log
 ```
 
 🎯 Roadmap
-v1.0.0-rc.1 (Atual) 🚧
 
-    ✅ Configuração sequencial em ordem (a ordem das sessões importa pro resultado)
-    ✅ Página de Manutenção separada (kernels, limpeza, GRUB, FOF — sem dependência de ordem)
-    ✅ Botões de reversão só onde a ação é reversível
-    ✅ Persistência via localStorage/servidor
-    ✅ Auditoria completa do código (bugs de segurança, lógica e duplicação corrigidos)
-    ✅ Instalação do Btrfs-Assistant via interface
-    ✅ Instalação do OBS Studio via Flatpak
-    ✅ Sincronização com canal estável (distro-sync)
-    ✅ Correção da Central de Apps (sem autenticação)
-    ✅ Ferramentas de compatibilidade Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
-    ✅ Progresso com timeout de segurança
-    ✅ Modo Compatibilidade para GPUs antigas
-    ✅ Botão "Atualizar FOF" sempre clicável
-    ✅ WebKitGTK 4.1 como requisito único
-    ✅ Internacionalização completa (PT-BR, EN, ES)
-    ✅ Ícone do container corrigido no KDE (Wayland e X11)
-    ✅ Sessão 8 "Aplicativos Recomendados" com curadoria de ~40 softwares
-    ✅ Log único por sessão (compartilhado entre múltiplos botões)
-    ✅ Bloqueio de sessão durante execução (evita execuções simultâneas)
-    ✅ Rclone Manager instalado via RPM oficial do GitHub (sempre a última versão)
-    ✅ Drift adicionado à sessão de edição de vídeo
-    ✅ Blender movido para "Edição de Vídeo e Modelagem 3D"
+v1.0.0-rc.2 (Atual) 🚧
+
+    ✅ Nova Sessão 8 — Hardware (AMD, NVIDIA e Controles)
+    ✅ Nova Sessão 9 — Waydroid (Android no Linux)
+    ✅ Reordenação: Aplicativos Recomendados agora é a última sessão (Sessão 10)
+    ✅ Vulkan movido da Sessão 6 (Launchers) para a Sessão 8 (Hardware)
+    ✅ VA-API/VDPAU movido da Sessão 4 (Repositórios) para a Sessão 8 (Hardware)
+    ✅ ProtonUp-Qt removido do FOF (instalação de Proton GE deve ser feita pela Steam)
+    ✅ Acordeões nativos (<details>) para organizar blocos com muitos itens
+    ✅ Tema claro com alternância em tempo real
+    ✅ Checagem de versão do Node.js (18+) na instalação
+    ✅ Correção do botão "GitHub do Projeto" (Affinity)
+    ✅ Correção do botão "Abrir Rclone Manager"
+    ✅ Botões de reverter apenas onde a ação é reversível
     ✅ Avisos em HTML renderizados corretamente em EN/ES
+    ✅ Chaves de localização órfãs removidas
+    ✅ Lista de comandos sem autenticação saneada
 
 v1.0.0 (Futuro) 🔮
 
@@ -361,7 +362,7 @@ O FOF tem um registro central de sessões (SESSOES, no topo de script.js) — é
 
 Pronto — não precisa editar guiado.html, manutencao.html, index.html nem server.js. A posição da sua entrada no array SESSOES já define a ordem de exibição e o número "Sessão N" (calculado automaticamente) das sessões principais, e a rota do servidor aceita qualquer sessão nomeada nesse padrão.
 
-O template-sessao.html traz comentários apontando pra sessões existentes que servem de exemplo pra padrões mais específicos (botão sempre clicável, vários botões lado a lado, dropdown, fluxo com confirmação dupla, etc.). Importante: um comando sempreClicavel: true nunca deve ter um botão de reverter/remover associado — se a ação tiver um "desfazer" com sentido, modele como um segundo botão independente, também sempre clicável (veja grub-aplicar-recomendado/grub-restaurar-padrao em 07-manutencao.html).
+O template-sessao.html traz comentários apontando pra sessões existentes que servem de exemplo pra padrões mais específicos (botão sempre clicável, vários botões lado a lado, dropdown, fluxo com confirmação dupla, etc.). Importante: o FOF não tem botões de "desfazer" genéricos — se uma ação tiver um "desfazer" com sentido, modele como um segundo botão independente, também sempre clicável (ver grub-aplicar-recomendado/grub-restaurar-padrao em 07-manutencao.html e o par amdgpu-overclock em 10-hardware.html).
 
 🌐 Como adicionar um idioma novo
 

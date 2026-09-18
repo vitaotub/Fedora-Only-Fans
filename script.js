@@ -1,20 +1,24 @@
 /**
  * Fedora Only Fans (FOF) - Script Compartilhado
- * Versão: 1.0.0-rc.1
+ * Versão: 1.0.0-rc.2
  *
  * Este arquivo contém as funções GLOBAIS compartilhadas entre todas as sessões.
  * Cada sessão (00-*.html) tem seu próprio JS específico que usa estas funções.
  *
  * i18n: strings visíveis ao usuário usam tOr(chave, fallback) — em pt-BR,
- *       tOr cai no fallback (texto original), mantendo o comportamento
- *       idêntico ao anterior. Em en/es, retorna a string traduzida do JSON.
+ * tOr cai no fallback (texto original), mantendo o comportamento
+ * idêntico ao anterior. Em en/es, retorna a string traduzida do JSON.
  *
  * LOG ÚNICO POR SESSÃO: sessões com múltiplos botões compartilham um único
- *       logBox. O botão carrega data-logbox="<id-do-log>" para indicar onde
- *       escrever. Sessões com 1 botão continuam usando log-<idComando>.
+ * logBox. O botão carrega data-logbox="<id-do-log>" para indicar onde
+ * escrever. Sessões com 1 botão continuam usando log-<idComando>.
  *
  * LOG COMPLETO: sem filtros de ruído. Tudo o que o comando escreve no stdout
- *       e stderr é exibido.
+ * e stderr é exibido.
+ *
+ * TEMA: claro/escuro alternável via botão na UI. Persistência em localStorage
+ * sob a chave 'fof_tema'. O atributo `data-tema` no <html> controla qual
+ * conjunto de variáveis CSS é aplicado (ver style.css).
  */
 
 // ============================================================
@@ -23,8 +27,6 @@
 
 let FOF_VERSION = '';
 
-// i18n: versão usada como cache-buster ao carregar locales. É preenchida
-// por carregarVersaoServidor() e consumida por i18n.js (via window).
 window.FOF_VERSION_UI18N = '';
 
 async function carregarVersaoServidor() {
@@ -42,7 +44,6 @@ async function carregarVersaoServidor() {
         el.textContent = FOF_VERSION || '?';
     });
 
-    // Correção do badge em EN/ES: o badge usa data-i18n-html com {versao}.
     if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
         var badges = document.querySelectorAll('[data-i18n-html="index.badge_versao"]');
         if (badges.length > 0) {
@@ -64,6 +65,63 @@ function _t(chave, fallback) {
 }
 function _tVars(chave, fallback, vars) {
     return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
+}
+
+// ============================================================
+// TEMA CLARO / ESCURO
+// ============================================================
+
+var TEMA_STORAGE_KEY = 'fof_tema';
+
+(function _aplicarTemaInicial() {
+    try {
+        var salvo = localStorage.getItem(TEMA_STORAGE_KEY) || 'escuro';
+        document.documentElement.setAttribute('data-tema', salvo === 'claro' ? 'claro' : 'escuro');
+    } catch (e) {
+        document.documentElement.setAttribute('data-tema', 'escuro');
+    }
+})();
+
+function _temaAtual() {
+    return document.documentElement.getAttribute('data-tema') || 'escuro';
+}
+
+function _aplicarTema(tema) {
+    if (tema !== 'claro' && tema !== 'escuro') tema = 'escuro';
+    document.documentElement.setAttribute('data-tema', tema);
+    try { localStorage.setItem(TEMA_STORAGE_KEY, tema); } catch (e) { /* ignore */ }
+    atualizarBotaoTema();
+}
+
+function alternarTema() {
+    _aplicarTema(_temaAtual() === 'claro' ? 'escuro' : 'claro');
+}
+
+function atualizarBotaoTema() {
+    var btn = document.getElementById('btn-toggle-tema');
+    if (!btn) return;
+    var atual = _temaAtual();
+    btn.textContent = atual === 'claro' ? '🌙' : '☀️';
+    var chave = atual === 'claro' ? 'comum.tema_para_escuro' : 'comum.tema_para_claro';
+    var fallback = atual === 'claro' ? 'Mudar para tema escuro' : 'Mudar para tema claro';
+    var txt = _t(chave, fallback);
+    btn.title = txt;
+    btn.setAttribute('aria-label', txt);
+}
+
+function criarBotaoTema() {
+    var containers = document.querySelectorAll('.tema-toggle-container');
+    for (var i = 0; i < containers.length; i++) {
+        var c = containers[i];
+        if (c.querySelector('.btn-tema')) continue;
+        var btn = document.createElement('button');
+        btn.className = 'btn-tema';
+        btn.id = 'btn-toggle-tema';
+        btn.type = 'button';
+        btn.addEventListener('click', alternarTema);
+        c.appendChild(btn);
+    }
+    atualizarBotaoTema();
 }
 
 // ============================================================
@@ -107,9 +165,7 @@ var SESSOES = [
         'rpm-fusion': { textoConcluido: '✅ RPM Fusion ativado', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_rpm' },
         'flatpak-setup': { textoConcluido: '✅ Flatpak configurado', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_flatpak' },
         'codecs-essenciais': { textoConcluido: '✅ Codecs instalados', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_codecs' },
-        'extras-tainted': { textoConcluido: '✅ Extras instalados', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_extras' },
-        'vaapi-amd': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_vaapi' },
-        'vaapi-swap': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_vaapi' }
+        'extras-tainted': { textoConcluido: '✅ Extras instalados', textoConcluidoKey: 'sessoes.03-repositorios.texto_concluido_extras' }
     }
 },
 {
@@ -125,11 +181,9 @@ var SESSOES = [
     nome: 'Launchers',
     nomeKey: 'sessoes.05-launchers.nome',
     comandos: {
-        'vulkan-amd': { textoConcluido: '✅ Vulkan instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_vulkan' },
         'steam-install': { textoConcluido: '✅ Steam instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_steam' },
         'heroic-install': { textoConcluido: '✅ Heroic instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_heroic' },
         'lutris-install': { textoConcluido: '✅ Lutris instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_lutris' },
-        'protonup-install': { textoConcluido: '✅ ProtonUp instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_protonup' },
         'wine-install': { textoConcluido: '✅ Wine instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_wine' },
         'winetricks-install': { textoConcluido: '✅ Winetricks instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_winetricks' },
         'bottles-install': { textoConcluido: '✅ Bottles instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_bottles' },
@@ -148,14 +202,107 @@ var SESSOES = [
     }
 },
 {
+    id: '10-hardware',
+    nome: 'Hardware',
+    nomeKey: 'sessoes.10-hardware.nome',
+    comandos: {
+        'vulkan-amd': { textoConcluido: '✅ Vulkan instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_vulkan' },
+        'vaapi-amd': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_vaapi' },
+        'vaapi-swap': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_vaapi' },
+        'corectrl-install': { textoConcluido: '✅ CoreCtrl instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_corectrl' },
+        'lact-install': { textoConcluido: '✅ LACT instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_lact' },
+        'amdgpu-overclock': { textoConcluido: '✅ Overclock ativado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_overclock' },
+        'amdgpu-overclock-remove': { textoConcluido: '✅ Overclock desativado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_overclock_remove' },
+        'nvidia-driver-install': { textoConcluido: '✅ Driver Nvidia instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_nvidia_driver' },
+        'nvidia-modeset-on': { sempreClicavel: true },
+        'nvidia-modeset-off': { sempreClicavel: true },
+        'coolercontrol-install': { textoConcluido: '✅ CoolerControl instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_coolercontrol' },
+        'input-group-add': { textoConcluido: '✅ Adicionado ao grupo input', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_input_add' },
+        'input-group-remove': { textoConcluido: '✅ Removido do grupo input', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_input_remove' }
+    }
+},
+{
+    id: '11-waydroid',
+    nome: 'Waydroid',
+    nomeKey: 'sessoes.11-waydroid.nome',
+    comandos: {
+        'waydroid-install': { textoConcluido: '✅ Waydroid instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_waydroid' },
+        'waydroid-init': { textoConcluido: '✅ Waydroid inicializado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_init' },
+        'waydroid-uninstall': { sempreClicavel: true },
+        'waydroid-extras-prep': { textoConcluido: '✅ Ambiente preparado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_prep' },
+        'waydroid-gapps': { textoConcluido: '✅ GApps instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_gapps' },
+        'waydroid-libndk': { textoConcluido: '✅ libndk instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_libndk' },
+        'waydroid-libhoudini': { textoConcluido: '✅ libhoudini instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_libhoudini' },
+        'waydroid-magisk': { textoConcluido: '✅ Magisk instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_magisk' },
+        'waydroid-widevine': { textoConcluido: '✅ Widevine instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_widevine' },
+        'waydroid-smartdock': { textoConcluido: '✅ SmartDock instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_smartdock' },
+        'waydroid-helper': { sempreClicavel: true },
+        'waydroid-prefs': { textoConcluido: '✅ Preferências aplicadas', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_prefs' }
+    }
+},
+{
+    id: '09-softwares-uteis',
+    nome: 'Aplicativos Recomendados',
+    nomeKey: 'sessoes.09-softwares-uteis.nome',
+    comandos: {
+        'instalar-onlyoffice': { textoConcluido: '✅ OnlyOffice instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_onlyoffice' },
+        'instalar-libreoffice': { textoConcluido: '✅ LibreOffice instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_libreoffice' },
+        'instalar-obsidian': { textoConcluido: '✅ Obsidian instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_obsidian' },
+        'instalar-thunderbird': { textoConcluido: '✅ Thunderbird instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_thunderbird' },
+        'instalar-okular': { textoConcluido: '✅ Okular instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_okular' },
+        'instalar-joplin': { textoConcluido: '✅ Joplin instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_joplin' },
+        'instalar-foliate': { textoConcluido: '✅ Foliate instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_foliate' },
+        'instalar-haruna': { textoConcluido: '✅ Haruna instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_haruna' },
+        'instalar-vlc': { textoConcluido: '✅ VLC instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_vlc' },
+        'instalar-mpv': { textoConcluido: '✅ MPV instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_mpv' },
+        'instalar-spotify': { textoConcluido: '✅ Spotify instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_spotify' },
+        'instalar-plex': { textoConcluido: '✅ Plex instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_plex' },
+        'instalar-stremio': { textoConcluido: '✅ Stremio instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_stremio' },
+        'instalar-krita': { textoConcluido: '✅ Krita instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_krita' },
+        'instalar-inkscape': { textoConcluido: '✅ Inkscape instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_inkscape' },
+        'instalar-pinta': { textoConcluido: '✅ Pinta instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_pinta' },
+        'instalar-gimp': { textoConcluido: '✅ GIMP instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_gimp' },
+        'instalar-darktable': { textoConcluido: '✅ Darktable instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_darktable' },
+        'instalar-freecad': { textoConcluido: '✅ FreeCAD instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_freecad' },
+        'instalar-librecad': { textoConcluido: '✅ LibreCAD instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_librecad' },
+        'instalar-cura': { textoConcluido: '✅ Cura instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_cura' },
+        'instalar-upscayl': { textoConcluido: '✅ Upscayl instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_upscayl' },
+        'instalar-xnviewmp': { textoConcluido: '✅ XnView MP instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_xnviewmp' },
+        'instalar-affinity': { sempreClicavel: true },
+        'instalar-opera': { textoConcluido: '✅ Opera instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_opera' },
+        'instalar-brave': { textoConcluido: '✅ Brave instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_brave' },
+        'instalar-zen': { textoConcluido: '✅ Zen Browser instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_zen' },
+        'instalar-edge': { textoConcluido: '✅ Microsoft Edge instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_edge' },
+        'instalar-chromium': { textoConcluido: '✅ Chromium instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_chromium' },
+        'instalar-zoom': { textoConcluido: '✅ Zoom instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_zoom' },
+        'instalar-vivaldi': { textoConcluido: '✅ Vivaldi instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_vivaldi' },
+        'instalar-discord': { textoConcluido: '✅ Discord instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_discord' },
+        'instalar-telegram': { textoConcluido: '✅ Telegram instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_telegram' },
+        'instalar-signal': { textoConcluido: '✅ Signal instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_signal' },
+        'instalar-kdenlive': { textoConcluido: '✅ Kdenlive instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_kdenlive' },
+        'instalar-shotcut': { textoConcluido: '✅ Shotcut instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_shotcut' },
+        'instalar-pitivi': { textoConcluido: '✅ Pitivi instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_pitivi' },
+        'instalar-openshot': { textoConcluido: '✅ OpenShot instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_openshot' },
+        'instalar-avidemux': { textoConcluido: '✅ Avidemux instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_avidemux' },
+        'instalar-lightworks': { textoConcluido: '✅ Lightworks instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_lightworks' },
+        'instalar-drift': { textoConcluido: '✅ Drift instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_drift' },
+        'instalar-blender': { textoConcluido: '✅ Blender instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_blender' },
+        'instalar-ardour': { textoConcluido: '✅ Ardour instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_ardour' },
+        'instalar-lmms': { textoConcluido: '✅ LMMS instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_lmms' },
+        'instalar-audacity': { textoConcluido: '✅ Audacity instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_audacity' },
+        'instalar-rclone': { textoConcluido: '✅ Rclone instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_rclone' },
+        'instalar-rclone-manager': { textoConcluido: '✅ Rclone Manager instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_rclone_manager' }
+    }
+},
+{
     id: '07-manutencao',
     nome: 'Manutenção',
     nomeKey: 'sessoes.07-manutencao.nome',
     manutencao: true,
     comandos: {
         'limpeza-sistema': { sempreClicavel: true, textoConcluido: '✅ Limpeza concluída', textoConcluidoKey: 'sessoes.07-manutencao.texto_concluido_limpeza' },
-        'verificar-grub': { sempreClicavel: true },
         'listar-kernels': { sempreClicavel: true },
+        'remover-kernel': { sempreClicavel: true },
         'grub-aplicar-recomendado': { sempreClicavel: true, textoConcluido: '✅ Configuração aplicada' },
         'grub-restaurar-padrao': { sempreClicavel: true, textoConcluido: '✅ Padrão restaurado' }
     }
@@ -168,73 +315,6 @@ var SESSOES = [
     comandos: {
         'atualizar-fof': { sempreClicavel: true, textoConcluido: '✅ FOF atualizado' },
         'desinstalar-fof': { textoConcluido: '✅ FOF desinstalado' }
-    }
-},
-{
-    id: '09-softwares-uteis',
-    nome: 'Aplicativos Recomendados',
-    nomeKey: 'sessoes.09-softwares-uteis.nome',
-    comandos: {
-        // Bloco 1 — Produtividade e Escritório
-        'instalar-onlyoffice': { textoConcluido: '✅ OnlyOffice instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_onlyoffice' },
-        'instalar-libreoffice': { textoConcluido: '✅ LibreOffice instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_libreoffice' },
-        'instalar-obsidian': { textoConcluido: '✅ Obsidian instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_obsidian' },
-        'instalar-thunderbird': { textoConcluido: '✅ Thunderbird instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_thunderbird' },
-        'instalar-okular': { textoConcluido: '✅ Okular instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_okular' },
-        'instalar-joplin': { textoConcluido: '✅ Joplin instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_joplin' },
-        'instalar-foliate': { textoConcluido: '✅ Foliate instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_foliate' },
-
-        // Bloco 2 — Entretenimento e Multimídia
-        'instalar-haruna': { textoConcluido: '✅ Haruna instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_haruna' },
-        'instalar-vlc': { textoConcluido: '✅ VLC instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_vlc' },
-        'instalar-mpv': { textoConcluido: '✅ MPV instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_mpv' },
-        'instalar-spotify': { textoConcluido: '✅ Spotify instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_spotify' },
-        'instalar-plex': { textoConcluido: '✅ Plex instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_plex' },
-        'instalar-stremio': { textoConcluido: '✅ Stremio instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_stremio' },
-
-        // Bloco 3 — Ferramentas Gráficas
-        'instalar-krita': { textoConcluido: '✅ Krita instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_krita' },
-        'instalar-inkscape': { textoConcluido: '✅ Inkscape instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_inkscape' },
-        'instalar-pinta': { textoConcluido: '✅ Pinta instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_pinta' },
-        'instalar-gimp': { textoConcluido: '✅ GIMP instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_gimp' },
-        'instalar-darktable': { textoConcluido: '✅ Darktable instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_darktable' },
-        'instalar-freecad': { textoConcluido: '✅ FreeCAD instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_freecad' },
-        'instalar-librecad': { textoConcluido: '✅ LibreCAD instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_librecad' },
-        'instalar-cura': { textoConcluido: '✅ Cura instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_cura' },
-        'instalar-upscayl': { textoConcluido: '✅ Upscayl instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_upscayl' },
-        'instalar-xnviewmp': { textoConcluido: '✅ XnView MP instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_xnviewmp' },
-        'instalar-affinity': { sempreClicavel: true },
-
-        // Bloco 4 — Internet e Comunicação
-        'instalar-opera': { textoConcluido: '✅ Opera instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_opera' },
-        'instalar-brave': { textoConcluido: '✅ Brave instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_brave' },
-        'instalar-zen': { textoConcluido: '✅ Zen Browser instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_zen' },
-        'instalar-edge': { textoConcluido: '✅ Microsoft Edge instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_edge' },
-        'instalar-chromium': { textoConcluido: '✅ Chromium instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_chromium' },
-        'instalar-zoom': { textoConcluido: '✅ Zoom instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_zoom' },
-        'instalar-vivaldi': { textoConcluido: '✅ Vivaldi instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_vivaldi' },
-        'instalar-discord': { textoConcluido: '✅ Discord instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_discord' },
-        'instalar-telegram': { textoConcluido: '✅ Telegram instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_telegram' },
-        'instalar-signal': { textoConcluido: '✅ Signal instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_signal' },
-
-        // Bloco 5A — Edição de Vídeo e Modelagem 3D
-        'instalar-kdenlive': { textoConcluido: '✅ Kdenlive instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_kdenlive' },
-        'instalar-shotcut': { textoConcluido: '✅ Shotcut instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_shotcut' },
-        'instalar-pitivi': { textoConcluido: '✅ Pitivi instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_pitivi' },
-        'instalar-openshot': { textoConcluido: '✅ OpenShot instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_openshot' },
-        'instalar-avidemux': { textoConcluido: '✅ Avidemux instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_avidemux' },
-        'instalar-lightworks': { textoConcluido: '✅ Lightworks instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_lightworks' },
-        'instalar-drift': { textoConcluido: '✅ Drift instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_drift' },
-        'instalar-blender': { textoConcluido: '✅ Blender instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_blender' },
-
-        // Bloco 5B — Edição e Criação de Áudio
-        'instalar-ardour': { textoConcluido: '✅ Ardour instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_ardour' },
-        'instalar-lmms': { textoConcluido: '✅ LMMS instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_lmms' },
-        'instalar-audacity': { textoConcluido: '✅ Audacity instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_audacity' },
-
-        // Bloco 6 — Sincronização em Nuvem
-        'instalar-rclone': { textoConcluido: '✅ Rclone instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_rclone' },
-        'instalar-rclone-manager': { textoConcluido: '✅ Rclone Manager instalado', textoConcluidoKey: 'sessoes.09-softwares-uteis.texto_concluido_rclone_manager' }
     }
 }
 ];
@@ -265,8 +345,6 @@ function numerarSessao(sessaoId, container) {
     if (label) label.textContent = _tVars('comum.sessao_label', 'Sessão ' + (index + 1), { n: index + 1 });
 }
 
-// i18n: retorna o nome da sessão no idioma atual. Prioriza nomeKey
-// (tradução), cai para `nome` (PT-BR) se a tradução não existir.
 function nomeDaSessao(sessaoId) {
     const sessao = SESSOES.find(function(s) { return s.id === sessaoId; });
     if (!sessao) return sessaoId;
@@ -280,13 +358,6 @@ function nomeDaSessao(sessaoId) {
 // LOG ÚNICO POR SESSÃO — helpers
 // ============================================================
 
-/**
- * Resolve qual logBox usar para um determinado idComando.
- * Prioridade:
- *   1. Botão com `data-comando="<idComando>"` e `data-logbox` (log compartilhado).
- *   2. Botão `#btn-<idComando>` com `data-logbox` (caso o data-comando esteja ausente).
- *   3. Fallback: `log-<idComando>` (log individual, sessões de 1 botão).
- */
 function _getLogBox(idComando) {
     var btn1 = document.querySelector('[data-comando="' + idComando + '"][data-logbox]');
     if (btn1) {
@@ -301,10 +372,6 @@ function _getLogBox(idComando) {
     return document.getElementById('log-' + idComando);
 }
 
-/**
- * Insere um separador visual no log, antes de uma nova execução.
- * Só insere se o log já tiver conteúdo.
- */
 function _separadorLog(logBox, nomeAcao) {
     if (!logBox) return;
     if (logBox.children.length === 0) return;
@@ -726,10 +793,6 @@ function toggleTerminalLog(logBoxId) {
     logBox.classList.toggle('expandido');
 }
 
-/**
- * Cria o wrapper com toggle para um logBox, se ainda não existir.
- * Idempotente.
- */
 function criarToggleParaLog(logBox, labelKey) {
     if (!logBox) return;
 
@@ -766,8 +829,8 @@ function conectarSSE(idComando, logBox) {
     if (!logBox) return;
 
     var labelKey = (logBox.id && logBox.id.indexOf('log-sessao-') === 0)
-        ? 'comum.log_sessao'
-        : 'comum.log_execucao';
+    ? 'comum.log_sessao'
+    : 'comum.log_execucao';
 
     criarToggleParaLog(logBox, labelKey);
 
@@ -782,8 +845,6 @@ function conectarSSE(idComando, logBox) {
 
         let linhas = logBox.children.length;
 
-        // Sem filtros de ruído. Limite generoso para caber a saída de
-        // comandos longos (dnf upgrade típico = 1500-3000 linhas).
         const MAX_LINHAS = 10000;
 
         eventSource.onmessage = function(event) {
@@ -798,27 +859,17 @@ function conectarSSE(idComando, logBox) {
                     return;
                 }
 
-                // Limpeza mínima: remove apenas sequências de escape ANSI
-                // (códigos de controle de terminal) para que o texto não
-                // chegue poluído. Todo o CONTEÚDO real é preservado.
                 let mensagem = dados.mensagem
-                    // OSC (Operating System Command): \x1b]...BEL ou \x1b]...\x1b\\
-                    .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
-                    // CSI (Control Sequence Introducer): \x1b[...letra
-                    .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
-                    // Escapes simples: \x1b + char único
-                    .replace(/\x1b[@-Z\\-_]/g, '')
-                    // Outros caracteres de controle (exceto \t \n \r)
-                    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+                .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
+                .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
+                .replace(/\x1b[@-Z\\-_]/g, '')
+                .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
                 const lines = mensagem.split('\n');
 
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i];
                     if (line.trim() === '') continue;
-
-                    // Sem filtros: TUDO o que o comando escreve aparece,
-                    // inclusive avisos de Qt/plasma que antes eram omitidos.
 
                     const lineElement = document.createElement('div');
                     lineElement.className = 'log-line ' + dados.tipo;
@@ -900,8 +951,8 @@ function obterBotoesPorId(idComando) {
             if (onclick.includes("'" + idComando + "'") ||
                 onclick.includes('"' + idComando + '"')) {
                 btnExecutar = btn;
-                break;
-            }
+            break;
+                }
         }
     }
 
@@ -1190,6 +1241,7 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarProgressoInicial();
     carregarVersaoServidor();
     setTimeout(initCustomSelects, 300);
+    criarBotaoTema();
 
     if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 50);
@@ -1199,6 +1251,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('sessao-carregada', function() {
     setTimeout(initCustomSelects, 200);
     setTimeout(carregarProgressoInicial, 300);
+    criarBotaoTema();
 
     if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 100);
@@ -1208,6 +1261,7 @@ document.addEventListener('sessao-carregada', function() {
 document.addEventListener('todas-sessoes-carregadas', function() {
     setTimeout(initCustomSelects, 300);
     setTimeout(carregarProgressoInicial, 400);
+    criarBotaoTema();
 
     if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 100);
