@@ -1,6 +1,6 @@
 // ============================================================
 // Fedora Only Fans (FOF) - Container WebKitGTK
-// Versão: 1.0.0-rc.1
+// Versão: 1.0.0-rc.2
 // ============================================================
 
 #include <gtk/gtk.h>
@@ -284,20 +284,20 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                           } else if (strcmp(argv[i], "--debug") == 0) {
                                                                               debug_mode = 1;
                                                                           } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-                                                                              printf("🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.1\n");
+                                                                              printf("🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.2\n");
                                                                               printf("\nUso: %s [opções]\n", argv[0]);
                                                                               printf("\nOpções:\n");
-                                                                              printf("  --url URL        URL do servidor (padrão: http://localhost:3000)\n");
-                                                                              printf("  --icon CAMINHO   Caminho do ícone da aplicação\n");
-                                                                              printf("  --name NOME      Nome da aplicação (padrão: Fedora Only Fans)\n");
-                                                                              printf("  --width N        Largura da janela (padrão: 980)\n");
-                                                                              printf("  --height N       Altura da janela (padrão: 880)\n");
-                                                                              printf("  --debug          Modo debug\n");
-                                                                              printf("  --help, -h       Mostra esta ajuda\n");
+                                                                              printf(" --url URL URL do servidor (padrão: http://localhost:3000)\n");
+                                                                              printf(" --icon CAMINHO Caminho do ícone da aplicação\n");
+                                                                              printf(" --name NOME Nome da aplicação (padrão: Fedora Only Fans)\n");
+                                                                              printf(" --width N Largura da janela (padrão: 980)\n");
+                                                                              printf(" --height N Altura da janela (padrão: 880)\n");
+                                                                              printf(" --debug Modo debug\n");
+                                                                              printf(" --help, -h Mostra esta ajuda\n");
                                                                               printf("\nAtalhos:\n");
-                                                                              printf("  Ctrl+R / F5      Recarregar página\n");
-                                                                              printf("  Ctrl+Shift+I     Abrir inspecionador\n");
-                                                                              printf("  Ctrl+Q           Sair\n");
+                                                                              printf(" Ctrl+R / F5 Recarregar página\n");
+                                                                              printf(" Ctrl+Shift+I Abrir inspecionador\n");
+                                                                              printf(" Ctrl+Q Sair\n");
                                                                               printf("\n");
                                                                               return 0;
                                                                           }
@@ -322,8 +322,8 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                       // O WM_CLASS da janela (lido pelo KDE para associar ícone) é
                                                                       // montado a partir de duas partes: resname (minúscula) e resclass.
                                                                       // O GTK3 decide o resname com base em:
-                                                                      //   1. g_set_prgname() — se chamado, tem precedência
-                                                                      //   2. g_get_prgname()  — derivado do argv[0] se (1) não foi chamado
+                                                                      // 1. g_set_prgname() — se chamado, tem precedência
+                                                                      // 2. g_get_prgname() — derivado do argv[0] se (1) não foi chamado
                                                                       // O resclass é definido por gtk_window_set_wmclass().
                                                                       //
                                                                       // O problema anterior: setávamos wmclass como "fof-container", mas
@@ -399,7 +399,7 @@ gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *
                                                                       sigaction(SIGTERM, &sa, NULL);
 
                                                                       g_print("============================================================\n");
-                                                                      g_print(" 🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.1\n");
+                                                                      g_print(" 🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.2\n");
                                                                       g_print("============================================================\n");
                                                                       g_print(" 🌐 URL: %s\n", url);
                                                                       g_print(" 📐 Janela: %dx%d\n", window_width, window_height);
