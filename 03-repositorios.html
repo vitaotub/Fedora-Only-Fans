@@ -115,9 +115,6 @@ Instalar Extras
 // ============================================================
 // SESSÃO 03: REPOSITÓRIOS, CODECS E ACELERAÇÃO GRÁFICA
 // ============================================================
-//
-// 1.0.0-rc.2: o bloco VA-API foi movido para 10-hardware (Hardware AMD).
-// Esta sessão continua com RPM Fusion, Flatpak, Codecs e Tainted.
 
 function _t(chave, fallback) {
 return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
@@ -175,17 +172,18 @@ btn.disabled = true;
 }
 
 // ===== INICIALIZAÇÃO =====
-document.addEventListener('DOMContentLoaded', function() {
-restaurarEstadoSessao();
-
+// FIX #1 + #2: captura antes de restaurar; IIFE em vez de DOMContentLoaded.
+(function() {
 document.querySelectorAll('.btn-executar').forEach(function(btn) {
 if (!btn.hasAttribute('data-texto-original')) {
 btn.setAttribute('data-texto-original', btn.textContent);
 }
 });
 
+restaurarEstadoSessao();
+
 console.log('📦 Componente 03-repositorios carregado!');
-});
+})();
 </script>
 </body>
 </html>
