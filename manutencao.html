@@ -108,6 +108,14 @@ wrapper.innerHTML = conteudoSemScripts;
 
 container.appendChild(wrapper);
 
+// FIX #1: capturar textos originais ANTES de rodar os scripts da sessão
+// e ANTES de restaurar estado (mesma justificativa do guiado.html).
+wrapper.querySelectorAll('.btn-executar').forEach(function(btn) {
+if (!btn.hasAttribute('data-texto-original')) {
+btn.setAttribute('data-texto-original', btn.textContent);
+}
+});
+
 if (scriptMatch) {
 scriptMatch.forEach(function(script) {
 var scriptContent = script.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
@@ -127,12 +135,6 @@ restaurarEstadoSessao();
 console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
 }
 }
-
-wrapper.querySelectorAll('.btn-executar').forEach(function(btn) {
-if (!btn.hasAttribute('data-texto-original')) {
-btn.setAttribute('data-texto-original', btn.textContent);
-}
-});
 
 if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
 I18N.aplicarTraducoes(wrapper);
