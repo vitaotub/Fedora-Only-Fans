@@ -473,7 +473,20 @@ break;
 
 enviarLog(idComando, `🔐 Autenticando para: ${descricao}\n`, 'info');
 
-const comandoSemSudo = comandoOriginal.replace(/sudo\s+/g, '');
+// FIX: remove "sudo " apenas quando NÃO for seguido de uma flag (-).
+//
+// O regex antigo (/sudo\s+/g) também casava com "sudo -E ...", o que
+// deixava "-E" órfão e quebrava o comando. Este regex preserva flags
+// como -E, -u, -H, --login (o pkexec/kdesu já roda como root, então
+// elas só importam se o comando por algum motivo for executado fora
+// desse fluxo).
+//
+// Exemplos:
+// "sudo dnf install X"          → "dnf install X"
+// "cd X && sudo dnf install Y"  → "cd X && dnf install Y"
+// "sudo waydroid prop set Z"    → "waydroid prop set Z"
+// "sudo -E python3 foo.py"      → "sudo -E python3 foo.py"  (preserva)
+const comandoSemSudo = comandoOriginal.replace(/sudo\s+(?!-)/g, '');
 const comandoCorrigido = _substituirCaminhosUsuario(comandoSemSudo);
 
 const hasPkexec = commandExists('pkexec');
@@ -572,8 +585,8 @@ try { fs.unlinkSync(outputTemp); } catch (e) {}
 }
 };
 
-// FIX #3: apaga apenas o scriptTemp. O outputTemp fica vivo até
-// o cleanupReader() (chamado ao fim do processo) — comandos longos
+// Apaga apenas o scriptTemp. O outputTemp fica vivo até o
+// cleanupReader() (chamado ao fim do processo) — comandos longos
 // (>60s, ex.: dnf upgrade) ainda podem escrever no arquivo.
 setTimeout(() => {
 if (fs.existsSync(scriptTemp)) {
@@ -639,7 +652,7 @@ try { fs.unlinkSync(outputTemp); } catch (e) {}
 }
 };
 
-// FIX #3: idem ramo kdesu — preserva outputTemp até o cleanupReader().
+// Idem ramo kdesu: preserva outputTemp até o cleanupReader().
 setTimeout(() => {
 if (fs.existsSync(scriptTemp)) {
 try { fs.unlinkSync(scriptTemp); } catch (e) {}
