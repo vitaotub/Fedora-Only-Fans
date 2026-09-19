@@ -328,15 +328,6 @@ data-i18n="sessoes.10-hardware.btn_input_remove">
 // ============================================================
 // SESSÃO 10: HARDWARE (Sessão 8 na UI)
 // ============================================================
-//
-// 1.0.0-rc.2 — correções nesta versão:
-// - Vulkan AMD: removido `mesa-vulkan-radeon` do comando (pacote
-// descontinuado no Fedora 40+).
-// - CoreCtrl / LACT: botão "Desinstalar" removido. Em seu lugar,
-// botão "Abrir" (oculto até instalar), mesmo padrão do Rclone.
-// - Overclock e grupo input: agora são toggles reais. Quando um
-// lado executa com sucesso, o lado oposto é resetado (UI + estado),
-// garantindo que apenas um dos dois fique marcado.
 
 function _t(chave, fallback) {
 return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
@@ -346,8 +337,6 @@ return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 // Helpers de UI para os toggles
 // ------------------------------------------------------------
 
-// Marca um botão como "concluído": cinza, desabilitado, com o
-// texto retornado por getTextoAposExecucao.
 function _marcarBotaoConcluido(idComando) {
 var btn = document.getElementById('btn-' + idComando);
 if (!btn) return;
@@ -358,8 +347,6 @@ btn.disabled = true;
 btn.style.opacity = '1';
 }
 
-// Restaura um botão ao estado original: texto do data-texto-original
-// (ou o fallback), cor de fundo padrão do CSS, habilitado.
 function _resetarBotao(idComando, fallbackText) {
 var btn = document.getElementById('btn-' + idComando);
 if (!btn) return;
@@ -371,8 +358,6 @@ btn.disabled = false;
 btn.style.opacity = '1';
 }
 
-// Reseta o irmão do toggle: UI primeiro (síncrono), depois o
-// estado persistido (assíncrono, sem bloquear).
 async function _resetarIrmao(idIrmao, fallbackText) {
 _resetarBotao(idIrmao, fallbackText);
 try {
@@ -530,12 +515,10 @@ _resetarIrmao('input-group-add', _t('sessoes.10-hardware.btn_input_add', '👤 A
 
 function restaurarEstadoSessao() {
 
-// Vulkan
 if (isExecutado('vulkan-amd')) {
 _marcarBotaoConcluido('vulkan-amd');
 }
 
-// VA-API (os dois botões são independentes entre si)
 if (isExecutado('vaapi-amd')) {
 _marcarBotaoConcluido('vaapi-amd');
 }
@@ -543,20 +526,15 @@ if (isExecutado('vaapi-swap')) {
 _marcarBotaoConcluido('vaapi-swap');
 }
 
-// CoreCtrl
 if (isExecutado('corectrl-install')) {
 _marcarBotaoConcluido('corectrl-install');
 }
 
-// LACT
 if (isExecutado('lact-install')) {
 _marcarBotaoConcluido('lact-install');
 }
 
 // Overclock — TOGGLE: só um dos dois pode estar marcado.
-// Se ambos estiverem marcados (estado inconsistente de versão
-// antiga), prioriza o último "aplicado" (o remove ganha, pois
-// significa que o usuário desativou).
 var overclockOn = isExecutado('amdgpu-overclock');
 var overclockOff = isExecutado('amdgpu-overclock-remove');
 if (overclockOn && !overclockOff) {
@@ -566,24 +544,21 @@ _resetarBotao('amdgpu-overclock-remove', _t('sessoes.10-hardware.btn_overclock_o
 _marcarBotaoConcluido('amdgpu-overclock-remove');
 _resetarBotao('amdgpu-overclock', _t('sessoes.10-hardware.btn_overclock_on', '⚙️ Ativar Overclock'));
 } else if (overclockOn && overclockOff) {
-// Estado inconsistente: preserva só o "desativado".
 _marcarBotaoConcluido('amdgpu-overclock-remove');
 _resetarBotao('amdgpu-overclock', _t('sessoes.10-hardware.btn_overclock_on', '⚙️ Ativar Overclock'));
 desmarcarComoExecutado('amdgpu-overclock');
 }
 
-// Nvidia driver
 if (isExecutado('nvidia-driver-install')) {
 _marcarBotaoConcluido('nvidia-driver-install');
 mostrarBotaoDesinstalar('nvidia-driver-install');
 }
 
-// CoolerControl
 if (isExecutado('coolercontrol-install')) {
 _marcarBotaoConcluido('coolercontrol-install');
 }
 
-// Grupo input — TOGGLE: mesma lógica do overclock.
+// Grupo input — TOGGLE.
 var inputOn = isExecutado('input-group-add');
 var inputOff = isExecutado('input-group-remove');
 if (inputOn && !inputOff) {
@@ -598,7 +573,6 @@ _resetarBotao('input-group-add', _t('sessoes.10-hardware.btn_input_add', '👤 A
 desmarcarComoExecutado('input-group-add');
 }
 
-// Botões "Abrir" (CoreCtrl, LACT)
 atualizarBotaoAbrirCoreCtrl();
 atualizarBotaoAbrirLACT();
 }
@@ -607,12 +581,8 @@ atualizarBotaoAbrirLACT();
 // Inicialização
 // ------------------------------------------------------------
 
-document.addEventListener('DOMContentLoaded', function() {
-
-// IMPORTANTE: capturar textos originais ANTES de restaurar
-// estado. Sem isso, um botão já marcado como concluído teria
-// seu "data-texto-original" poluído com o texto "✅ ..." e não
-// poderíamos resetá-lo corretamente.
+// FIX #1 + #2: captura antes de restaurar; IIFE em vez de DOMContentLoaded.
+(function() {
 document.querySelectorAll('.btn-executar').forEach(function(btn) {
 if (!btn.hasAttribute('data-texto-original')) {
 btn.setAttribute('data-texto-original', btn.textContent);
@@ -622,7 +592,7 @@ btn.setAttribute('data-texto-original', btn.textContent);
 restaurarEstadoSessao();
 
 console.log('📦 Componente 10-hardware carregado!');
-});
+})();
 </script>
 </body>
 </html>
