@@ -572,12 +572,12 @@ try { fs.unlinkSync(outputTemp); } catch (e) {}
 }
 };
 
+// FIX #3: apaga apenas o scriptTemp. O outputTemp fica vivo até
+// o cleanupReader() (chamado ao fim do processo) — comandos longos
+// (>60s, ex.: dnf upgrade) ainda podem escrever no arquivo.
 setTimeout(() => {
 if (fs.existsSync(scriptTemp)) {
 try { fs.unlinkSync(scriptTemp); } catch (e) {}
-}
-if (fs.existsSync(outputTemp)) {
-try { fs.unlinkSync(outputTemp); } catch (e) {}
 }
 }, 60000);
 
@@ -639,12 +639,10 @@ try { fs.unlinkSync(outputTemp); } catch (e) {}
 }
 };
 
+// FIX #3: idem ramo kdesu — preserva outputTemp até o cleanupReader().
 setTimeout(() => {
 if (fs.existsSync(scriptTemp)) {
 try { fs.unlinkSync(scriptTemp); } catch (e) {}
-}
-if (fs.existsSync(outputTemp)) {
-try { fs.unlinkSync(outputTemp); } catch (e) {}
 }
 }, 60000);
 
