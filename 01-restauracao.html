@@ -158,10 +158,18 @@ btn.disabled = true;
 }
 
 // ===== INICIALIZAÇÃO =====
-document.addEventListener('DOMContentLoaded', function() {
-restaurarEstadoSessao();
-console.log('📦 Componente ' + ID_SESSAO + ' carregado!');
+// FIX #2: IIFE em vez de DOMContentLoaded (eval não dispara o evento).
+(function() {
+document.querySelectorAll('.btn-executar').forEach(function(btn) {
+if (!btn.hasAttribute('data-texto-original')) {
+btn.setAttribute('data-texto-original', btn.textContent);
+}
 });
+
+restaurarEstadoSessao();
+
+console.log('📦 Componente ' + ID_SESSAO + ' carregado!');
+})();
 </script>
 </body>
 </html>
