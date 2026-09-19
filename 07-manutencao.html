@@ -129,15 +129,6 @@ data-i18n="sessoes.07-manutencao.btn_grub_padrao">
 // ============================================================
 // SESSÃO 07: MANUTENÇÃO E TAREFAS AVANÇADAS
 // ============================================================
-//
-// 1.0.0-rc.2:
-// - Botão "Verificar Configuração Atual" do GRUB removido — o
-// comando de verificação era frágil (múltiplas camadas de escape)
-// e os dois botões restantes cobrem o caso de uso real.
-// - Botão "Remover" do kernel: o texto é restaurado explicitamente
-// para "🗑️ Remover" no finally, e a flag sempreClicavel no
-// script.js impede que completarProgresso() o marque como
-// "Concluído".
 
 function _t(chave, fallback) {
 return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
@@ -409,10 +400,8 @@ const logBox = _getLogBox('remover-kernel');
 const btnRemover = document.getElementById('btn-remover-kernel');
 const selectKernel = document.getElementById('kernel-select');
 
-// Guarda o texto original do botão para restaurar depois
 const textoOriginalBotao = btnRemover.getAttribute('data-texto-original') || btnRemover.textContent;
 
-// Verifica se é o kernel atual (usa snapshot para ler só o output novo)
 try {
 if (logBox) conectarSSE('check-current-kernel', logBox);
 const linhasAntes = logBox ? logBox.querySelectorAll('.log-line.output').length : 0;
@@ -528,11 +517,6 @@ logBox.appendChild(errorLine);
 logBox.scrollTop = logBox.scrollHeight;
 }
 } finally {
-// Garante que o botão volte ao estado "🗑️ Remover", independente
-// do que completarProgresso() tenha tentado aplicar. Como
-// 'remover-kernel' está marcado como sempreClicavel no script.js,
-// completarProgresso() não o desabilita nem troca o texto — mas
-// restauramos aqui por segurança dupla.
 if (btnRemover) {
 btnRemover.disabled = false;
 btnRemover.textContent = textoOriginalBotao;
@@ -755,9 +739,6 @@ btnLimpeza.style.opacity = '1';
 btnLimpeza.style.cursor = 'pointer';
 }
 
-// Botão "Remover" sempre volta ao texto original e clicável.
-// Ele é habilitado apenas quando kernels são listados (via
-// listarKernels), mas o texto é resetado aqui por segurança.
 const btnRemoverKernel = document.getElementById('btn-remover-kernel');
 if (btnRemoverKernel) {
 const textoOriginal = btnRemoverKernel.getAttribute('data-texto-original') || btnRemoverKernel.textContent;
@@ -769,17 +750,18 @@ btnRemoverKernel.style.cursor = 'pointer';
 }
 
 // ===== INICIALIZAÇÃO =====
-document.addEventListener('DOMContentLoaded', function() {
-restaurarEstadoSessao();
-
+// FIX #1 + #2: captura antes de restaurar; IIFE em vez de DOMContentLoaded.
+(function() {
 document.querySelectorAll('.btn-executar').forEach(function(btn) {
 if (!btn.hasAttribute('data-texto-original')) {
 btn.setAttribute('data-texto-original', btn.textContent);
 }
 });
 
+restaurarEstadoSessao();
+
 console.log('📦 Componente 07-manutencao carregado!');
-});
+})();
 </script>
 </body>
 </html>
