@@ -153,16 +153,6 @@ Corrigir Relógio
 // ============================================================
 // SESSÃO 02: OTIMIZAÇÃO DO SISTEMA E IDIOMA
 // ============================================================
-//
-// 1.0.0-rc.2: o comando do dual-boot mudou de
-// `timedatectl set-local-rtc 0` (UTC no hardware clock) para
-// `timedatectl set-local-rtc 1 --adjust-system-clock` (local time
-// no hardware clock), alinhando o Fedora com o comportamento padrão
-// do Windows e evitando o problema de horário errado.
-//
-// O aviso do dual-boot usa data-i18n-html (não data-i18n) para que
-// as tags <strong> sejam renderizadas como negrito, e não como
-// texto literal, em EN/ES.
 
 function _t(chave, fallback) {
 return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
@@ -287,17 +277,19 @@ btnDualBoot.style.cursor = 'pointer';
 }
 
 // ===== INICIALIZAÇÃO =====
-document.addEventListener('DOMContentLoaded', function() {
-restaurarEstadoSessao();
-
+// FIX #1 + #2: capturar textos originais ANTES de restaurar estado.
+// IIFE em vez de DOMContentLoaded (eval não dispara o evento).
+(function() {
 document.querySelectorAll('.btn-executar').forEach(function(btn) {
 if (!btn.hasAttribute('data-texto-original')) {
 btn.setAttribute('data-texto-original', btn.textContent);
 }
 });
 
+restaurarEstadoSessao();
+
 console.log('📦 Componente 02-otimizacao carregado!');
-});
+})();
 </script>
 </body>
 </html>
