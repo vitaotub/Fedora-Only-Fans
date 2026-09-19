@@ -154,7 +154,9 @@ var SESSOES = [
         'idioma-packs': { textoConcluido: '✅ Tradução instalada', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_packs' },
         'idioma-hunspell': { textoConcluido: '✅ Corretor instalado', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_hunspell' },
         'idioma-localectl': { textoConcluido: '✅ Localidade configurada', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_localectl' },
-        'dual-boot-time': { sempreClicavel: true, textoConcluido: '✅ Relógio corrigido', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_dual_boot' }
+        // FIX #7: removido textoConcluido morto — sempreClicavel nunca usa
+        // getTextoAposExecucao (o botão volta ao data-texto-original).
+        'dual-boot-time': { sempreClicavel: true }
     }
 },
 {
@@ -746,7 +748,9 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
 
     if (SEMPRE_CLICAVEIS.includes(idComando)) {
         const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
-        btnExecutar.innerHTML = original;
+        // FIX #15: usar textContent (não innerHTML) para simetria com a
+        // captura de data-texto-original (que usa textContent).
+        btnExecutar.textContent = original;
         btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
         btnExecutar.disabled = false;
@@ -756,7 +760,8 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
 
     if (sucesso) {
         const textoFinal = getTextoAposExecucao(idComando);
-        btnExecutar.innerHTML = textoFinal;
+        // FIX #15: textContent em vez de innerHTML.
+        btnExecutar.textContent = textoFinal;
         btnExecutar.style.backgroundColor = '#4b5563';
         btnExecutar.style.cursor = 'default';
         btnExecutar.disabled = true;
@@ -770,7 +775,8 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
         marcarComoExecutado(idComando);
     } else {
         const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
-        btnExecutar.innerHTML = original;
+        // FIX #15: textContent em vez de innerHTML.
+        btnExecutar.textContent = original;
         btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
         btnExecutar.disabled = false;
@@ -1109,8 +1115,11 @@ async function desinstalarPacote(idComando, comandoRemover, nomeExibicao) {
             btn.disabled = false;
         }
 
+        // FIX #14: além de desabilitar, esconder o botão Reverter após
+        // desinstalação bem-sucedida (não há mais nada para reverter).
         if (btnReverter) {
             btnReverter.disabled = true;
+            btnReverter.style.display = 'none';
         }
 
         if (logBox) {
