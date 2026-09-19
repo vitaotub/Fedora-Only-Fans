@@ -541,7 +541,9 @@ fi
 print_step "Atualizando Fedora Only Fans..."
 cd "$INSTALL_DIR"
 
-git stash save "Backup automático antes da atualização" 2>/dev/null
+# FIX #10: `git stash save` foi deprecado em favor de `git stash push -m`
+# (Git 2.13+, 2017). Em versões futuras, `save` emite warning.
+git stash push -m "Backup automático antes da atualização" 2>/dev/null
 
 if ! git pull origin main; then
 print_error "Falha ao atualizar"
