@@ -78,28 +78,19 @@ document.documentElement.setAttribute('data-tema', 'escuro');
 var sessaoAtual = 0;
 var sessoesCarregadas = {};
 
-// Cores fixas para cada bolinha indicadora de sessão.
-// 1.0.0-rc.2: 10 sessões principais (era 8).
-// A 8ª é 10-hardware e a 9ª é 11-waydroid; a 10ª é 09-softwares-uteis.
 var CORES_SESSOES = [
-'#f59e0b', // Sessão 1 - Boas-vindas (laranja)
-'#8b5cf6', // Sessão 2 - Restauração (roxo)
-'#3c67e3', // Sessão 3 - Otimização (azul)
-'#10b981', // Sessão 4 - Repositórios (verde)
-'#3b82f6', // Sessão 5 - Fontes (azul claro)
-'#d97706', // Sessão 6 - Launchers (laranja escuro)
-'#357a38', // Sessão 7 - Produção Multimídia (verde escuro)
-'#e11d48', // Sessão 8 - Hardware (rosa)
-'#06b6d4', // Sessão 9 - Waydroid (ciano)
-'#a855f7'  // Sessão 10 - Aplicativos Recomendados (púrpura)
+'#f59e0b',
+'#8b5cf6',
+'#3c67e3',
+'#10b981',
+'#3b82f6',
+'#d97706',
+'#357a38',
+'#e11d48',
+'#06b6d4',
+'#a855f7'
 ];
 
-// ------------------------------------------------------------
-// i18n helpers locais (wrappers sobre tOr global)
-// tOr(chave, fallback) → string traduzida, ou fallback em PT-BR.
-// Como o fallback é o próprio texto PT-BR, a UI em pt-BR fica
-// idêntica ao original.
-// ------------------------------------------------------------
 function _t(chave, fallback) {
 return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 }
@@ -139,6 +130,15 @@ var conteudoSemScripts = conteudo.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi,
 
 container.innerHTML = conteudoSemScripts;
 
+// FIX #1: capturar textos originais ANTES de rodar os scripts da sessão
+// e ANTES de restaurar estado. O HTML acabou de ser injetado do arquivo-
+// fonte, então os botões ainda têm o texto original.
+container.querySelectorAll('.btn-executar').forEach(function(btn) {
+if (!btn.hasAttribute('data-texto-original')) {
+btn.setAttribute('data-texto-original', btn.textContent);
+}
+});
+
 if (scriptMatch) {
 scriptMatch.forEach(function(script) {
 var scriptContent = script.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
@@ -159,16 +159,8 @@ console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
 }
 }
 
-container.querySelectorAll('.btn-executar').forEach(function(btn) {
-if (!btn.hasAttribute('data-texto-original')) {
-btn.setAttribute('data-texto-original', btn.textContent);
-}
-});
-
 numerarSessao(nomeSessao, container);
 
-// i18n: aplica traduções dentro do subtree recém-injetado
-// (a sessão carregada tem seus próprios data-i18n).
 if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
 I18N.aplicarTraducoes(container);
 }
