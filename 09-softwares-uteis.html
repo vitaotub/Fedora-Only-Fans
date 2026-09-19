@@ -359,16 +359,12 @@ data-i18n="sessoes.09-softwares-uteis.btn_abrir_rclone_manager">
 // ============================================================
 // SESSÃO 09: APLICATIVOS RECOMENDADOS (Sessão 10 na UI)
 // ============================================================
-//
-// 1.0.0-rc.2: a numeração "Sessão 10" na UI é calculada pelo script.js
-// (posição no array SESSOES). O conteúdo permanece idêntico ao rc.1.
 
 function _t(chave, fallback) {
 return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 }
 
 var APPS_FLATPAK = {
-// Bloco 1
 'instalar-onlyoffice': { appId: 'org.onlyoffice.desktopeditors', fallback: '📝 OnlyOffice' },
 'instalar-libreoffice': { appId: 'org.libreoffice.LibreOffice', fallback: '📄 LibreOffice' },
 'instalar-obsidian': { appId: 'md.obsidian.Obsidian', fallback: '💎 Obsidian' },
@@ -376,14 +372,12 @@ var APPS_FLATPAK = {
 'instalar-okular': { appId: 'org.kde.okular', fallback: '📚 Okular' },
 'instalar-joplin': { appId: 'net.cozic.joplin_desktop', fallback: '📝 Joplin' },
 'instalar-foliate': { appId: 'com.github.johnfactotum.Foliate', fallback: '📖 Foliate' },
-// Bloco 2
 'instalar-haruna': { appId: 'org.kde.haruna', fallback: '🎥 Haruna' },
 'instalar-vlc': { appId: 'org.videolan.VLC', fallback: '🎬 VLC Media Player' },
 'instalar-mpv': { appId: 'io.mpv.Mpv', fallback: '🎥 MPV' },
 'instalar-spotify': { appId: 'com.spotify.Client', fallback: '🎵 Spotify' },
 'instalar-plex': { appId: 'tv.plex.PlexDesktop', fallback: '📺 Plex' },
 'instalar-stremio': { appId: 'com.stremio.Stremio', fallback: '🎬 Stremio' },
-// Bloco 3
 'instalar-krita': { appId: 'org.kde.krita', fallback: '🎨 Krita' },
 'instalar-inkscape': { appId: 'org.inkscape.Inkscape', fallback: '🎨 Inkscape' },
 'instalar-pinta': { appId: 'com.github.PintaProject.Pinta', fallback: '🎨 Pinta' },
@@ -394,7 +388,6 @@ var APPS_FLATPAK = {
 'instalar-cura': { appId: 'com.ultimaker.cura', fallback: '🖨️ Cura' },
 'instalar-upscayl': { appId: 'org.upscayl.Upscayl', fallback: '🔍 Upscayl' },
 'instalar-xnviewmp': { appId: 'com.xnview.XnViewMP', fallback: '🖼️ XnView MP' },
-// Bloco 4
 'instalar-opera': { appId: 'com.opera.Opera', fallback: '🌐 Opera' },
 'instalar-brave': { appId: 'com.brave.Browser', fallback: '🦁 Brave' },
 'instalar-zen': { appId: 'app.zen_browser.zen', fallback: '🧘 Zen Browser' },
@@ -405,7 +398,6 @@ var APPS_FLATPAK = {
 'instalar-discord': { appId: 'com.discordapp.Discord', fallback: '💬 Discord' },
 'instalar-telegram': { appId: 'org.telegram.desktop', fallback: '✈️ Telegram' },
 'instalar-signal': { appId: 'org.signal.Signal', fallback: '🔒 Signal' },
-// Bloco 5A
 'instalar-kdenlive': { appId: 'org.kde.kdenlive', fallback: '🎬 Kdenlive' },
 'instalar-shotcut': { appId: 'org.shotcut.Shotcut', fallback: '✂️ Shotcut' },
 'instalar-pitivi': { appId: 'org.pitivi.Pitivi', fallback: '🎞️ Pitivi' },
@@ -413,7 +405,6 @@ var APPS_FLATPAK = {
 'instalar-avidemux': { appId: 'org.avidemux.Avidemux', fallback: '✂️ Avidemux' },
 'instalar-drift': { appId: 'org.cutwire.Drift', fallback: '🎬 Drift' },
 'instalar-blender': { appId: 'org.blender.Blender', fallback: '🧊 Blender' },
-// Bloco 5B
 'instalar-ardour': { appId: 'org.ardour.Ardour', fallback: '🎵 Ardour' },
 'instalar-lmms': { appId: 'io.lmms.LMMS', fallback: '🎹 LMMS' },
 'instalar-audacity': { appId: 'org.audacityteam.Audacity', fallback: '🎙️ Audacity' }
@@ -582,17 +573,19 @@ btnRcloneMgr.disabled = true;
 atualizarBotaoAbrirRclone();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-restaurarEstadoSessao();
-
+// ===== INICIALIZAÇÃO =====
+// FIX #1 + #2: captura antes de restaurar; IIFE em vez de DOMContentLoaded.
+(function() {
 document.querySelectorAll('.btn-executar').forEach(function(btn) {
 if (!btn.hasAttribute('data-texto-original')) {
 btn.setAttribute('data-texto-original', btn.textContent);
 }
 });
 
+restaurarEstadoSessao();
+
 console.log('📦 Componente 09-softwares-uteis carregado!');
-});
+})();
 </script>
 </body>
 </html>
