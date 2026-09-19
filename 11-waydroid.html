@@ -327,13 +327,33 @@ data-i18n="sessoes.11-waydroid.btn_prefs">
 //
 // 1.0.0-rc.2 — correções nesta versão:
 // - `waydroid-init`: o COPR yanqiyu/waydroid exige que as URLs
-// OTA sejam passadas explicitamente.
+// OTA sejam passadas explicitamente. Adicionamos `-f` para permitir
+// que o botão sirva como "reset" caso a primeira inicialização
+// falhe no meio (o usuário não precisa desinstalar antes de tentar
+// de novo).
+// - `waydroid-install`: inclui `git` e `python3-pip` que são
+// pré-requisitos do clone do waydroid_script e do venv Python.
+// - `waydroid-uninstall`: também limpa `~/.local/share/fof-waydroid`
+// (repo de extras + helper) para não deixar lixo.
 // - `abrir-waydroid`: mostra o log no painel e aguarda o
 // container subir via polling em /waydroid-status.
 // - Detecção de container: bloqueia os botões de extras quando o
 // container não está rodando. Estratégia fail-safe: bloqueia
 // preventivamente ao carregar, e só libera se /waydroid-status
 // confirmar que está rodando.
+//
+// CORREÇÕES ADICIONAIS (fix desta revisão):
+// - `_waydroidExtra`: removido `sudo -E` do comando do venv. O
+// server.js remove `sudo ` via regex, e isso deixava `-E` órfão,
+// quebrando TODOS os extras. Como o pkexec/kdesu já roda o script
+// como root, não é preciso `sudo` nenhum aqui.
+// - `waydroid-extras-prep` e `waydroid-helper`: recolocado o
+// `chown -R $USER:$USER` no final. Esses comandos rodam via pkexec
+// (como root), criando arquivos root-owned em $HOME. Sem o chown,
+// o usuário não consegue apagar/modificar esses arquivos depois.
+// - `waydroid-prefs`: revertido de `&&` para `;` entre os três
+// `prop set`. Eles são independentes — com `;`, uma falha num
+// não impede os outros dois de rodarem.
 //
 // CORREÇÃO IMPORTANTE: as sessões são carregadas dinamicamente
 // pelo guiado.html/manutencao.html via eval(), DEPOIS que o
@@ -348,9 +368,6 @@ return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 function _tVars(chave, fallback, vars) {
 return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
 }
-
-var WAYDROID_EXTRAS_DIR = '~/.local/share/fof-waydroid/waydroid_script';
-var WAYDROID_HELPER_DIR = '~/.local/share/fof-waydroid/helper';
 
 var WAYDROID_EXTRAS_IDS = [
 'waydroid-gapps',
@@ -370,7 +387,7 @@ async function _verificarContainerWaydroid() {
 try {
 var r = await fetch(API_URL + '/waydroid-status');
 if (!r.ok) {
-console.warn('[Waydroid] /waydroid-status retornou HTTP ' + r.status + '. Servidor precisa ser reiniciado?');
+console.warn('[Waydroid] /waydroid-status retornou HTTP ' + r.status);
 return { installed: false, initialized: false, running: false, raw: '' };
 }
 return await r.json();
@@ -399,13 +416,8 @@ btn.style.pointerEvents = '';
 btn.style.cursor = 'pointer';
 }
 
-// Bloqueio preventivo — chamado ao carregar a sessão.
-// Roda em síncrono e garante que os botões fiquem travados
-// ANTES de qualquer verificação assíncrona.
 function _bloquearExtrasPreventivamente() {
 WAYDROID_EXTRAS_IDS.forEach(function(id) {
-// Se o botão já foi executado antes, o restaurarEstadoSessao()
-// já cuidou dele. Não mexemos.
 if (isExecutado(id)) return;
 _bloquearBotaoExtra(id);
 });
@@ -416,8 +428,6 @@ var status = await _verificarContainerWaydroid();
 var containerRodando = status.running === true;
 var instalado = status.installed !== false;
 var inicializado = status.initialized === true;
-
-console.log('[Waydroid] status:', status);
 
 var badge = document.getElementById('waydroid-status-badge');
 if (badge) {
@@ -453,13 +463,18 @@ _bloquearBotaoExtra(id);
 
 async function executarWaydroidInstall() {
 var idComando = 'waydroid-install';
-var comando = 'sudo dnf copr enable yanqiyu/waydroid -y && sudo dnf install -y waydroid lzip';
+// git e python3-pip são pré-requisitos do waydroid_script (extras):
+// git para o clone, python3-pip para bootstrap do venv.
+var comando = 'sudo dnf copr enable yanqiyu/waydroid -y && sudo dnf install -y waydroid lzip git python3-pip';
 await executarComandoGenerico(idComando, comando, _t('sessoes.11-waydroid.btn_waydroid', '📦 Instalar Waydroid'));
 }
 
 async function executarWaydroidInit() {
 var idComando = 'waydroid-init';
-var comando = 'sudo waydroid init -s GAPPS -c https://ota.waydro.id/system -v https://ota.waydro.id/vendor';
+// -f força reinicialização: se a primeira tentativa falhar no meio,
+// o usuário pode reclicar (o botão é one-shot, então não há risco de
+// reset acidental depois que completa).
+var comando = 'sudo waydroid init -f -s GAPPS -c https://ota.waydro.id/system -v https://ota.waydro.id/vendor';
 await executarComandoGenerico(idComando, comando, _t('sessoes.11-waydroid.btn_init', '🚀 Inicializar Waydroid'));
 }
 
@@ -548,7 +563,10 @@ async function executarWaydroidUninstall() {
 if (!confirm(_t('sessoes.11-waydroid.confirmar_uninstall',
 'Isso irá remover o Waydroid e TODOS os dados do container Android (apps instalados, configurações). Continuar?'))) return;
 var idComando = 'waydroid-uninstall';
-var comando = 'sudo waydroid container stop; sudo dnf remove -y waydroid; sudo rm -rf /var/lib/waydroid ~/.local/share/waydroid';
+// Também remove ~/.local/share/fof-waydroid (repo de extras + helper).
+// Usa $HOME em vez de ~ para que o server.js substitua pelo caminho
+// real do usuário ANTES de rodar como root (senão expandiria p/ /root).
+var comando = 'sudo waydroid container stop; sudo dnf remove -y waydroid; sudo rm -rf /var/lib/waydroid $HOME/.local/share/waydroid $HOME/.local/share/fof-waydroid';
 await executarComandoGenerico(idComando, comando, _t('sessoes.11-waydroid.btn_uninstall_waydroid', '🗑️ Desinstalar Waydroid'));
 }
 
@@ -558,7 +576,14 @@ await executarComandoGenerico(idComando, comando, _t('sessoes.11-waydroid.btn_un
 
 async function executarWaydroidPrep() {
 var idComando = 'waydroid-extras-prep';
-var comando = 'mkdir -p ~/.local/share/fof-waydroid && cd ~/.local/share/fof-waydroid && (test -d waydroid_script || git clone https://github.com/casualsnek/waydroid_script.git) && cd waydroid_script && python3 -m venv venv && venv/bin/pip install --upgrade pip && venv/bin/pip install -r requirements.txt && chown -R $USER:$USER ~/.local/share/fof-waydroid';
+// Prepara o repositório, cria o venv do Python e ajusta permissões.
+// O `chown -R $USER:$USER` no final é OBRIGATÓRIO: como o comando
+// roda via pkexec (root), os arquivos clonados/criados ficam com
+// owner root. Sem o chown, o usuário não consegue mexer depois.
+var comando = 'mkdir -p $HOME/.local/share/fof-waydroid && cd $HOME/.local/share/fof-waydroid && ' +
+'(test -d waydroid_script || git clone https://github.com/casualsnek/waydroid_script.git) && ' +
+'cd waydroid_script && python3 -m venv venv && ./venv/bin/pip install --upgrade pip && ./venv/bin/pip install -r requirements.txt && ' +
+'chown -R $USER:$USER $HOME/.local/share/fof-waydroid';
 await executarComandoGenerico(idComando, comando, _t('sessoes.11-waydroid.btn_prep', '⚙️ Preparar Ambiente de Extras'));
 }
 
@@ -570,7 +595,11 @@ alert(_t('sessoes.11-waydroid.container_guard_alert',
 await _atualizarBloqueioExtrasWaydroid();
 return;
 }
-var comando = 'cd ' + WAYDROID_EXTRAS_DIR + ' && sudo venv/bin/python3 main.py install ' + componente;
+// IMPORTANTE: NÃO usar `sudo` aqui. O server.js remove "sudo " via
+// regex antes de montar o script, e o script é executado como root
+// via pkexec/kdesu. Adicionar `sudo -E` deixa "-E" órfão e quebra
+// TODO o comando. O venv tem seu próprio shebang e roda direto.
+var comando = 'cd $HOME/.local/share/fof-waydroid/waydroid_script && ./venv/bin/python3 main.py install ' + componente;
 await executarComandoGenerico(idComando, comando, nomeBotao);
 }
 
@@ -604,7 +633,13 @@ await _waydroidExtra('waydroid-smartdock', 'smartdock', _t('sessoes.11-waydroid.
 
 async function executarWaydroidHelper() {
 var idComando = 'waydroid-helper';
-var comando = 'mkdir -p ' + WAYDROID_HELPER_DIR + ' && cd ' + WAYDROID_HELPER_DIR + ' && curl -sL https://github.com/waydroid-helper/waydroid-helper/releases/latest/download/waydroid-helper-x86_64.AppImage -o waydroid-helper.AppImage && chmod +x waydroid-helper.AppImage && chown -R $USER:$USER ' + WAYDROID_HELPER_DIR + ' && nohup ./waydroid-helper.AppImage > /dev/null 2>&1 &';
+// chown ANTES do nohup para dar posse ao binário antes de o usuário
+// executá-lo. Sem isso, o AppImage fica root-owned e o nohup falha
+// (root não acha o display do usuário sem os Xauthority corretos).
+var comando = 'mkdir -p $HOME/.local/share/fof-waydroid/helper && cd $HOME/.local/share/fof-waydroid/helper && ' +
+'curl -sL https://github.com/waydroid-helper/waydroid-helper/releases/latest/download/waydroid-helper-x86_64.AppImage -o waydroid-helper.AppImage && ' +
+'chmod +x waydroid-helper.AppImage && chown -R $USER:$USER $HOME/.local/share/fof-waydroid/helper && ' +
+'nohup ./waydroid-helper.AppImage > /dev/null 2>&1 &';
 await executarComandoGenerico(idComando, comando, _t('sessoes.11-waydroid.btn_helper', '🚀 Baixar e Abrir waydroid-helper'));
 }
 
@@ -617,6 +652,9 @@ await _atualizarBloqueioExtrasWaydroid();
 return;
 }
 var idComando = 'waydroid-prefs';
+// Os três prop set são independentes. Com ';' (em vez de '&&'), uma
+// falha num deles não impede os outros. Como o pkexec retorna o exit
+// code do ÚLTIMO comando, ainda temos o resultado correto ao final.
 var comando = 'sudo waydroid prop set persist.waydroid.multi_windows true; sudo waydroid prop set persist.waydroid.fake_touch "*"; sudo waydroid prop set persist.waydroid.fake_wifi "*"';
 await executarComandoGenerico(idComando, comando, _t('sessoes.11-waydroid.btn_prefs', '⚙️ Aplicar Ajustes Recomendados'));
 }
@@ -683,7 +721,7 @@ _atualizarBloqueioExtrasWaydroid();
 });
 }
 
-console.log('📦 Componente 11-waydroid carregado!');
+console.log('📦 Componente 11-waydroid carregado e verificado!');
 })();
 </script>
 </body>
