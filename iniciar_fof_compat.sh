@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Modo Compatibilidade
-# Versão: 1.0.0-rc.2
+# Versão: 1.0.0-rc.3
 # ============================================================
 #
 # Este script força renderização por software para GPUs
