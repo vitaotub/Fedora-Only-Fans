@@ -25,6 +25,14 @@
     --bg-comando: rgba(0, 0, 0, 0.2);
     --bg-input: #1a2236;
 
+    /* Cores temáticas de acento (progresso, badges, indicadores).
+       Estas variáveis permitem que cada tema defina sua própria
+       tonalidade com contraste adequado — evitando cores claras
+       hardcoded que ficam ilegíveis em fundo branco. */
+    --accent-soft: #60a5fa;
+    --warning-soft: #f59e0b;
+    --success-soft: #34d399;
+
     /* Matrix theme */
     --matrix-green: #00ff41;
     --matrix-green-dim: #00cc33;
@@ -61,6 +69,15 @@
     --bg-tertiary: #f9fafb;
     --bg-comando: rgba(0, 0, 0, 0.03);
     --bg-input: #ffffff;
+
+    /* Acentos com contraste adequado sobre fundo claro.
+       Usamos tons mais escuros que os do tema escuro:
+       - accent-soft: azul mais saturado (WCAG AA sobre #f3f4f6)
+       - warning-soft: laranja escuro (legível em branco)
+       - success-soft: verde escuro (legível em branco) */
+    --accent-soft: #2563eb;
+    --warning-soft: #b45309;
+    --success-soft: #047857;
 
     /* Terminal: permanece escuro por design */
     --matrix-green: #00ff41;
@@ -127,7 +144,11 @@ body {
 
 /* ============================================================
  * AVISOS E INFO EXTRA
- * ============================================================ */
+ * ============================================================
+ * A cor do texto usa variáveis temáticas. No tema claro, o
+ * `--warning-text` cai para um tom escuro legível sobre o fundo
+ * de aviso. Isso substitui o override pontual que existia antes.
+ */
 
 .aviso-caixa {
     background-color: var(--warning-bg);
@@ -135,13 +156,9 @@ body {
     border-radius: 6px;
     padding: 0.75rem 1rem;
     margin: 1rem 0;
-    color: #fbd38d;
+    color: var(--warning-soft);
     font-size: 0.9rem;
     font-weight: 500;
-}
-
-[data-tema="claro"] .aviso-caixa {
-    color: #92400e;
 }
 
 .aviso-sucesso {
@@ -465,8 +482,11 @@ body {
     margin-top: 0.15rem;
 }
 
+/* CORREÇÃO TEMA CLARO: usava #60a5fa hardcoded (azul claro),
+   ilegível sobre fundo branco. Agora usa --accent-soft, que tem
+   valor próprio em cada tema (#60a5fa no escuro, #2563eb no claro). */
 .progress-text .percentage {
-    color: #60a5fa;
+    color: var(--accent-soft);
     font-weight: bold;
     font-family: "SFMono-Regular", monospace;
 }
@@ -476,20 +496,27 @@ body {
 }
 
 .progress-text .status.running {
-    color: #60a5fa;
+    color: var(--accent-soft);
 }
 
+/* CORREÇÃO TEMA CLARO: #34d399 (verde claro) sobre fundo branco
+   ficava com contraste fraco. --success-soft é #34d399 no escuro e
+   #047857 (verde escuro) no claro. */
 .progress-text .status.success {
-    color: #34d399;
+    color: var(--success-soft);
 }
 
 .progress-text .status.error {
-    color: #ef4444;
+    color: var(--danger);
 }
 
 /* ============================================================
  * TERMINAL LOG — MATRIX THEME
- * ============================================================ */
+ * ============================================================
+ * O terminal é intencionalmente escuro nos DOIS temas (fundo preto,
+ * texto verde-neon). Não usa variáveis temáticas — é um componente
+ * com identidade visual própria.
+ */
 
 .terminal-log-wrapper {
     position: relative;
@@ -691,10 +718,12 @@ body {
     box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
 }
 
+/* CORREÇÃO TEMA CLARO: usava #60a5fa hardcoded.
+   Agora usa --accent-soft, que se adapta ao tema. */
 .custom-select-arrow {
     font-size: 0.6rem;
     transition: transform 0.2s ease;
-    color: #60a5fa;
+    color: var(--accent-soft);
 }
 
 .custom-select-trigger.open .custom-select-arrow {
@@ -868,10 +897,13 @@ body {
     font-weight: 600;
 }
 
+/* CORREÇÃO TEMA CLARO: usava #f59e0b hardcoded (laranja médio),
+   contraste fraco sobre fundo claro. Agora usa --warning-soft, que
+   é #f59e0b no escuro e #b45309 no claro. */
 .header-avancado .titulo .badge-modo {
     background-color: rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
-    border: 1px solid #f59e0b;
+    color: var(--warning-soft);
+    border: 1px solid var(--warning-soft);
     padding: 0.2rem 0.8rem;
     border-radius: 12px;
     font-size: 0.7rem;
@@ -1054,8 +1086,10 @@ body {
     gap: 0.5rem;
 }
 
+/* CORREÇÃO TEMA CLARO: usava #60a5fa hardcoded.
+   Agora usa --accent-soft, adaptável ao tema. */
 .progress-guide .info .sessao-atual {
-    color: #60a5fa;
+    color: var(--accent-soft);
     font-weight: bold;
 }
 
