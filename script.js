@@ -238,7 +238,12 @@ var SESSOES = [
         'waydroid-magisk': { textoConcluido: '✅ Magisk instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_magisk' },
         'waydroid-widevine': { textoConcluido: '✅ Widevine instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_widevine' },
         'waydroid-smartdock': { textoConcluido: '✅ SmartDock instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_smartdock' },
-        'waydroid-helper': { sempreClicavel: true },
+        // waydroid-helper: agora são DOIS comandos separados, seguindo
+        // o padrão CoreCtrl/LACT/Rclone. O install usa o COPR oficial
+        // cuteneko/waydroid-helper; o open usa `gtk-launch` (whitelist
+        // de comandos sem autenticação).
+        'waydroid-helper-install': { textoConcluido: '✅ waydroid-helper instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_helper_install' },
+        'waydroid-helper-open': { sempreClicavel: true },
         'waydroid-prefs': { textoConcluido: '✅ Preferências aplicadas', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_prefs' }
     }
 },
