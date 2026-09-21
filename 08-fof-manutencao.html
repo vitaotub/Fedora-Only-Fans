@@ -126,6 +126,23 @@ btn.disabled = false;
 btn.textContent = nomeAcao;
 btn.style.opacity = '1';
 }
+} else {
+// Aguarda a conclusão real do install.sh --update para poder
+// injetar o aviso de "reinicie o FOF" somente se deu certo.
+// O install.sh --update recompila o container nativo (fof-container)
+// automaticamente. Porém, o processo em execução continua com o
+// binário ANTIGO em memória — só troca depois de fechar e reabrir
+// o FOF. Este aviso deixa isso explícito para o usuário.
+const sucesso = await aguardarConclusaoReal(idComando, 1800000);
+
+if (sucesso) {
+const aviso = document.createElement('div');
+aviso.className = 'log-line warning';
+aviso.textContent = '💡 ' + _t('sessoes.08-fof-manutencao.atualizar_aviso_reiniciar',
+'Feche e reabra o FOF para usar a nova versão do container.');
+logBox.appendChild(aviso);
+logBox.scrollTop = logBox.scrollHeight;
+}
 }
 } catch (e) {
 const errorLine = document.createElement('div');
@@ -141,6 +158,7 @@ btn.textContent = nomeAcao;
 btn.style.opacity = '1';
 }
 } finally {
+// "Atualizar FOF" é sempre clicável — reabilita após 3s
 setTimeout(function() {
 if (btn) {
 btn.disabled = false;
