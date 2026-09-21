@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Instalação
-# Versão: 1.0.0-rc.2
+# Versão: 1.0.0-rc.3
 # ============================================================
 
 set -e
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-VERSION="1.0.0-rc.2"
+VERSION="1.0.0-rc.3"
 INSTALL_DIR="$HOME/.local/share/fedora-only-fans"
 BIN_DIR="$HOME/.local/bin"
 
