@@ -3,7 +3,7 @@
 **🌐 Idioma:** [Português (BR)](README.md) | [English](README.en.md) | Español
 
 ![Autor](https://img.shields.io/badge/Creador-Vit%C3%A3oTub-blue?style=flat-square)
-![Versión](https://img.shields.io/badge/Versi%C3%B3n-v1.0.0--rc.2-orange?style=flat-square)
+![Versión](https://img.shields.io/badge/Versi%C3%B3n-v1.0.0--rc.3-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![Licencia](https://img.shields.io/badge/Licencia-GPL--3.0-green?style=flat-square)
 ![Idiomas](https://img.shields.io/badge/Idiomas-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
@@ -103,7 +103,7 @@ Sesiones de Configuración (en orden)
         Controladores y herramientas específicas de GPU (AMD y NVIDIA), control de ventiladores (CoreCtrl, LACT, CoolerControl) y soporte para mandos (grupo input). Incluye Vulkan completo, Mesa 3D/RADV y VA-API/VDPAU para AMD, controlador propietario + NVENC/NVDEC + modesetting para NVIDIA, y ajuste de overclocking (amdgpu.ppfeaturemask)
         
     9	📱 Waydroid
-        Instalación de Waydroid (Android en Linux) vía COPR yanqiyu/waydroid, con GApps (Google Play Store), traducción ARM (libndk/libhoudini), Magisk, Widevine DRM, Logitech SmartDock y waydroid-helper. Requiere GPU AMD o Intel — no funciona con NVIDIA
+        Instalación de Waydroid (Android en Linux) vía COPR yanqiyu/waydroid, con GApps (Google Play Store), traducción ARM (libndk/libhoudini), Magisk, Widevine DRM, Logitech SmartDock y waydroid-helper (vía el COPR oficial cuteneko/waydroid-helper). Requiere GPU AMD o Intel — no funciona con NVIDIA
         
     10	📦 Aplicaciones Recomendadas
         Selección curada de software útil para el día a día, todo vía Flatpak: productividad (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entretenimiento (Haruna, VLC, MPV, Spotify, Plex, Stremio), herramientas gráficas (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP y la Suite Affinity), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), edición de vídeo y modelado 3D (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift, Blender), edición y creación de audio (Ardour, LMMS, Audacity) y sincronización en la nube (Rclone, Rclone Manager)
@@ -328,23 +328,18 @@ tail -f /tmp/fof-*.log
 
 🎯 Roadmap
 
-v1.0.0-rc.2 (Actual) 🚧
+v1.0.0-rc.3 (Actual) 🚧
 
-    ✅ Nueva Sesión 8 — Hardware (AMD, NVIDIA y Mandos)
-    ✅ Nueva Sesión 9 — Waydroid (Android en Linux)
-    ✅ Reordenación: Aplicaciones Recomendadas ahora es la última sesión (Sesión 10)
-    ✅ Vulkan movido de la Sesión 6 (Launchers) a la Sesión 8 (Hardware)
-    ✅ VA-API/VDPAU movido de la Sesión 4 (Repositorios) a la Sesión 8 (Hardware)
-    ✅ ProtonUp-Qt eliminado de FOF (la instalación de Proton GE debe hacerse vía Steam)
-    ✅ Acordeones nativos (<details>) para organizar bloques con muchos ítems
-    ✅ Tema claro con alternancia en tiempo real
-    ✅ Verificación de versión de Node.js (18+) en la instalación
-    ✅ Corrección del botón "GitHub del Proyecto" (Affinity)
-    ✅ Corrección del botón "Abrir Rclone Manager"
-    ✅ Botones de reversión solo donde la acción es reversible
-    ✅ Avisos HTML renderizados correctamente en EN/ES
-    ✅ Claves de localización huérfanas eliminadas
-    ✅ Lista de comandos sin autenticación saneada
+    ✅ Sesión Waydroid: waydroid-helper ahora usa el COPR oficial cuteneko/waydroid-helper (recomendado por upstream) en lugar de descargar AppImage
+    ✅ Sesión Waydroid: botón de waydroid-helper dividido en dos (Instalar / Abrir), siguiendo el patrón CoreCtrl/LACT/Rclone
+    ✅ Sesión Waydroid: acordeón renombrado a "Configuraciones Avanzadas" y bloque de preajustes a "Ajustes Recomendados"
+    ✅ Sesión Bienvenida: tema claro corregido (la tarjeta ya no se oscurece)
+    ✅ Tema claro: nuevas variables CSS (--accent-soft, --warning-soft, --success-soft) garantizan contraste adecuado en porcentajes, badges y textos de progreso
+    ✅ Servidor: regex de strip de sudo corregido para preservar flags (-E, -u, -H)
+    ✅ Servidor: outputTemp ya no se elimina tras el timeout de 60s (comandos largos no pierden el final del registro)
+    ✅ Sesiones: migración de DOMContentLoaded a IIFE (el listener nunca se disparaba por la carga vía eval)
+    ✅ Guiado/Mantenimiento: captura de data-texto-original movida antes de restaurarEstadoSessao()
+    ✅ Correcciones menores en script.js (clave muerta eliminada, botón Revertir oculto tras desinstalación, simetría textContent/innerHTML)
 
 v1.0.0 (Futuro) 🔮
 
