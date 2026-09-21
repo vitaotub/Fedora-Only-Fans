@@ -3,7 +3,7 @@
 **🌐 Language:** [Português (BR)](README.md) | English | [Español](README.es.md)
 
 ![Author](https://img.shields.io/badge/Creator-Vit%C3%A3oTub-blue?style=flat-square)
-![Version](https://img.shields.io/badge/Version-v1.0.0--rc.2-orange?style=flat-square)
+![Version](https://img.shields.io/badge/Version-v1.0.0--rc.3-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![License](https://img.shields.io/badge/License-GPL--3.0-green?style=flat-square)
 ![Languages](https://img.shields.io/badge/Languages-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
@@ -103,7 +103,7 @@ Setup Sessions (in order)
         GPU-specific drivers and tools (AMD and NVIDIA), fan control (CoreCtrl, LACT, CoolerControl) and controller support (input group). Includes full Vulkan, Mesa 3D/RADV and VA-API/VDPAU for AMD, proprietary driver + NVENC/NVDEC + modesetting for NVIDIA, and overclocking adjustment (amdgpu.ppfeaturemask)
         
     9	📱 Waydroid
-        Waydroid installation (Android on Linux) via COPR yanqiyu/waydroid, with GApps (Google Play Store), ARM translation (libndk/libhoudini), Magisk, Widevine DRM, Logitech SmartDock and waydroid-helper. Requires AMD or Intel GPU — does not work with NVIDIA
+        Waydroid installation (Android on Linux) via COPR yanqiyu/waydroid, with GApps (Google Play Store), ARM translation (libndk/libhoudini), Magisk, Widevine DRM, Logitech SmartDock and waydroid-helper (via the official COPR cuteneko/waydroid-helper). Requires AMD or Intel GPU — does not work with NVIDIA
         
     10	📦 Recommended Apps
         Curated selection of useful everyday software, all via Flatpak: productivity (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entertainment (Haruna, VLC, MPV, Spotify, Plex, Stremio), graphics tools (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP and the Affinity Suite), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), video editing and 3D modeling (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift, Blender), audio editing and creation (Ardour, LMMS, Audacity) and cloud sync (Rclone, Rclone Manager)
@@ -328,23 +328,18 @@ tail -f /tmp/fof-*.log
 
 🎯 Roadmap
 
-v1.0.0-rc.2 (Current) 🚧
+v1.0.0-rc.3 (Current) 🚧
 
-    ✅ New Session 8 — Hardware (AMD, NVIDIA and Controllers)
-    ✅ New Session 9 — Waydroid (Android on Linux)
-    ✅ Reordering: Recommended Apps is now the last session (Session 10)
-    ✅ Vulkan moved from Session 6 (Launchers) to Session 8 (Hardware)
-    ✅ VA-API/VDPAU moved from Session 4 (Repositories) to Session 8 (Hardware)
-    ✅ ProtonUp-Qt removed from FOF (Proton GE installation should be done via Steam)
-    ✅ Native accordions (<details>) to organize blocks with many items
-    ✅ Light theme with real-time switching
-    ✅ Node.js version check (18+) during installation
-    ✅ Fixed "Project GitHub" button (Affinity)
-    ✅ Fixed "Open Rclone Manager" button
-    ✅ Revert buttons only where the action is reversible
-    ✅ HTML notices correctly rendered in EN/ES
-    ✅ Orphan localization keys removed
-    ✅ Authentication-free command list sanitized
+    ✅ Waydroid Session: waydroid-helper now uses the official COPR cuteneko/waydroid-helper (recommended by upstream) instead of downloading AppImage
+    ✅ Waydroid Session: waydroid-helper button split into two (Install / Open), following the CoreCtrl/LACT/Rclone pattern
+    ✅ Waydroid Session: accordion renamed to "Advanced Settings" and presets block to "Recommended Tweaks"
+    ✅ Welcome Session: light theme fixed (card is no longer darkened)
+    ✅ Light theme: new CSS variables (--accent-soft, --warning-soft, --success-soft) ensure adequate contrast on percentages, badges and progress text
+    ✅ Server: sudo strip regex fixed to preserve flags (-E, -u, -H)
+    ✅ Server: outputTemp is no longer deleted after 60s timeout (long commands don't lose the end of the log)
+    ✅ Sessions: DOMContentLoaded migrated to IIFE (listener never fired due to eval loading)
+    ✅ Guided/Maintenance: data-texto-original capture moved before restaurarEstadoSessao()
+    ✅ Minor fixes in script.js (dead key removed, Revert button hidden after uninstall, textContent/innerHTML symmetry)
 
 v1.0.0 (Future) 🔮
 
