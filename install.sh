@@ -165,19 +165,35 @@ compilar_container_install() {
 print_step "Compilando container nativo..."
 cd "$INSTALL_DIR"
 
-if [ -f "$INSTALL_DIR/build-container.sh" ]; then
+if [ ! -f "$INSTALL_DIR/build-container.sh" ]; then
+print_warning "build-container.sh não encontrado"
+print_info "O FOF usará o navegador como fallback"
+return 1
+fi
+
 chmod +x "$INSTALL_DIR/build-container.sh"
-if "$INSTALL_DIR/build-container.sh" && [ -f "$INSTALL_DIR/fof-container" ]; then
+
+# Melhoria: capturar stdout+stderr do build-container.sh no LOG_FILE.
+# Assim, se a compilação falhar (pkg-config sem webkit2gtk4.1, gcc
+# reclamando, etc.), o motivo fica visível para diagnóstico — em vez
+# de um simples "não foi possível recompilar o container".
+if "$INSTALL_DIR/build-container.sh" >> "$LOG_FILE" 2>&1; then
+if [ -f "$INSTALL_DIR/fof-container" ]; then
 ln -sf "$INSTALL_DIR/fof-container" "$BIN_DIR/fof-container"
 chmod +x "$BIN_DIR/fof-container"
 print_success "Container compilado e instalado"
 return 0
-fi
-fi
-
-print_warning "Não foi possível compilar o container"
-print_info "O FOF usará o navegador como fallback"
+else
+print_warning "Compilação retornou sucesso, mas o binário não foi encontrado"
+print_info "Verifique o log: $LOG_FILE"
 return 1
+fi
+else
+print_warning "Falha ao compilar o container"
+print_info "Motivo registrado em: $LOG_FILE"
+print_info "O FOF continuará usando o container antigo (se existir) ou o navegador como fallback"
+return 1
+fi
 }
 
 verificar_sistema() {
@@ -541,8 +557,9 @@ fi
 print_step "Atualizando Fedora Only Fans..."
 cd "$INSTALL_DIR"
 
-# FIX #10: `git stash save` foi deprecado em favor de `git stash push -m`
-# (Git 2.13+, 2017). Em versões futuras, `save` emite warning.
+# git stash push -m é o substituto moderno do git stash save (que foi
+# deprecado no Git 2.13+, 2017). O -m define a mensagem, preservando o
+# comportamento do save.
 git stash push -m "Backup automático antes da atualização" 2>/dev/null
 
 if ! git pull origin main; then
@@ -557,11 +574,15 @@ if ! npm install --no-audit --no-fund --silent; then
 print_warning "Falha ao atualizar dependências, continuando..."
 fi
 
-print_step "Recompilando container..."
-if [ -f "$INSTALL_DIR/build-container.sh" ]; then
-chmod +x "$INSTALL_DIR/build-container.sh"
-"$INSTALL_DIR/build-container.sh" 2>/dev/null || print_warning "Não foi possível recompilar o container"
-fi
+# Recompila o container nativo. O install.sh --update é chamado pelo
+# botão "Atualizar FOF" na sessão 08, então essa recompilação roda
+# automaticamente em cada atualização.
+#
+# A função compilar_container_install captura stdout+stderr no
+# LOG_FILE. Se falhar, o motivo fica disponível para diagnóstico.
+# Como essa função retorna 1 em caso de falha, usamos `|| true` para
+# não abortar o script (o container antigo continua funcionando).
+compilar_container_install || true
 
 print_step "Recriando symlinks dos comandos..."
 mkdir -p "$BIN_DIR"
