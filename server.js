@@ -5,7 +5,7 @@ const path = require('path');
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const ARQUIVO_PROGRESSO = path.join(__dirname, '.progresso.json');
-const FOF_VERSION = '1.0.0-rc.2';
+const FOF_VERSION = '1.0.0-rc.3';
 
 const LANGS_SUPORTADOS = ['pt-BR', 'en', 'es'];
 const LOCALES_DIR = path.join(__dirname, 'locales');
