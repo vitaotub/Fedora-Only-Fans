@@ -267,32 +267,45 @@ data-i18n="sessoes.11-waydroid.btn_smartdock">
 </details>
 
 <!-- ============================================================
-HELPER E PREFERÊNCIAS
+CONFIGURAÇÕES AVANÇADAS
 ============================================================ -->
 <details class="acordeao">
-<summary data-i18n="sessoes.11-waydroid.helper_titulo">🎛️ waydroid-helper e Configurações</summary>
+<summary data-i18n="sessoes.11-waydroid.helper_titulo">🎛️ Configurações Avançadas</summary>
 <div class="acordeao-conteudo">
 
 <div class="bloco-comando">
 <div class="comando-info">
 <h3 data-i18n="sessoes.11-waydroid.helper_titulo_inner">waydroid-helper (GUI Avançada)</h3>
-<p data-i18n="sessoes.11-waydroid.helper_desc">Interface gráfica para configurações avançadas do Waydroid. Baixa o AppImage mais recente do GitHub e abre.</p>
-<div class="grupo-botoes">
+<p data-i18n="sessoes.11-waydroid.helper_desc">Interface gráfica para configurações avançadas do Waydroid. Instalação via COPR oficial cuteneko/waydroid-helper.</p>
+<div class="botoes-flex">
 <button class="btn-executar"
-onclick="executarWaydroidHelper()"
-data-comando="waydroid-helper"
+onclick="executarWaydroidHelperInstall()"
+data-comando="waydroid-helper-install"
 data-logbox="log-sessao-11-waydroid"
-id="btn-waydroid-helper"
-data-i18n="sessoes.11-waydroid.btn_helper">
-🚀 Baixar e Abrir waydroid-helper
+id="btn-waydroid-helper-install"
+data-i18n="sessoes.11-waydroid.btn_helper_install">
+📦 Instalar waydroid-helper
+</button>
+<button class="btn-executar verde"
+style="display: none;"
+onclick="executarWaydroidHelperOpen()"
+data-comando="waydroid-helper-open"
+data-logbox="log-sessao-11-waydroid"
+id="btn-waydroid-helper-open"
+data-i18n="sessoes.11-waydroid.btn_helper_open">
+🚀 Abrir waydroid-helper
 </button>
 </div>
+</div>
+<div class="progress-container" id="progress-waydroid-helper-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-waydroid-helper-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-waydroid-helper-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-waydroid-helper-install">0%</span></div>
 </div>
 </div>
 
 <div class="bloco-comando">
 <div class="comando-info">
-<h3 data-i18n="sessoes.11-waydroid.prefs_titulo">Pré-configurações Recomendadas</h3>
+<h3 data-i18n="sessoes.11-waydroid.prefs_titulo">Ajustes Recomendados</h3>
 <p data-i18n="sessoes.11-waydroid.prefs_desc">Aplica ajustes que melhoram a usabilidade (janelas independentes, DPI adequado, comportamento de toque em jogos).</p>
 <div class="aviso-caixa" data-i18n="sessoes.11-waydroid.prefs_aviso">
 ⚠️ O container do Waydroid precisa estar em execução para estas configurações serem aplicadas. Abra o Waydroid uma vez antes de usar este botão.
@@ -327,14 +340,7 @@ data-i18n="sessoes.11-waydroid.btn_prefs">
 //
 // 1.0.0-rc.2 — correções nesta versão:
 // - `waydroid-init`: o COPR yanqiyu/waydroid exige que as URLs
-// OTA sejam passadas explicitamente. Adicionamos `-f` para permitir
-// que o botão sirva como "reset" caso a primeira inicialização
-// falhe no meio (o usuário não precisa desinstalar antes de tentar
-// de novo).
-// - `waydroid-install`: inclui `git` e `python3-pip` que são
-// pré-requisitos do clone do waydroid_script e do venv Python.
-// - `waydroid-uninstall`: também limpa `~/.local/share/fof-waydroid`
-// (repo de extras + helper) para não deixar lixo.
+// OTA sejam passadas explicitamente.
 // - `abrir-waydroid`: mostra o log no painel e aguarda o
 // container subir via polling em /waydroid-status.
 // - Detecção de container: bloqueia os botões de extras quando o
@@ -342,18 +348,22 @@ data-i18n="sessoes.11-waydroid.btn_prefs">
 // preventivamente ao carregar, e só libera se /waydroid-status
 // confirmar que está rodando.
 //
-// CORREÇÕES ADICIONAIS (fix desta revisão):
-// - `_waydroidExtra`: removido `sudo -E` do comando do venv. O
-// server.js remove `sudo ` via regex, e isso deixava `-E` órfão,
-// quebrando TODOS os extras. Como o pkexec/kdesu já roda o script
-// como root, não é preciso `sudo` nenhum aqui.
-// - `waydroid-extras-prep` e `waydroid-helper`: recolocado o
-// `chown -R $USER:$USER` no final. Esses comandos rodam via pkexec
-// (como root), criando arquivos root-owned em $HOME. Sem o chown,
-// o usuário não consegue apagar/modificar esses arquivos depois.
-// - `waydroid-prefs`: revertido de `&&` para `;` entre os três
-// `prop set`. Eles são independentes — com `;`, uma falha num
-// não impede os outros dois de rodarem.
+// CORREÇÕES ADICIONAIS:
+// - `_waydroidExtra`: removido `sudo -E` (o server.js removia
+// `sudo ` via regex e deixava `-E` órfão, quebrando os extras).
+// - `waydroid-extras-prep`: recolocado o `chown -R $USER:$USER`
+// para não deixar arquivos root-owned no $HOME após rodar via
+// pkexec/kdesu.
+// - `waydroid-prefs`: revertido de `&&` para `;`.
+// - `waydroid-helper`: dividido em DOIS botões (install + open),
+// seguindo o padrão CoreCtrl/LACT/Rclone. O install agora usa o
+// COPR oficial cuteneko/waydroid-helper (recomendado pelo próprio
+// projeto upstream), e o open usa `gtk-launch` — mesmo padrão do
+// Btrfs-Assistant. A abordagem antiga (baixar AppImage do GitHub
+// Releases + `nohup ... &` dentro do bloco redirecionado do
+// kdesu/pkexec) era frágil: o bloco nunca fechava, o job herdava
+// stdout de processo morto, e como rodava como root não achava o
+// display do usuário.
 //
 // CORREÇÃO IMPORTANTE: as sessões são carregadas dinamicamente
 // pelo guiado.html/manutencao.html via eval(), DEPOIS que o
@@ -563,7 +573,7 @@ async function executarWaydroidUninstall() {
 if (!confirm(_t('sessoes.11-waydroid.confirmar_uninstall',
 'Isso irá remover o Waydroid e TODOS os dados do container Android (apps instalados, configurações). Continuar?'))) return;
 var idComando = 'waydroid-uninstall';
-// Também remove ~/.local/share/fof-waydroid (repo de extras + helper).
+// Também remove ~/.local/share/fof-waydroid (repo de extras).
 // Usa $HOME em vez de ~ para que o server.js substitua pelo caminho
 // real do usuário ANTES de rodar como root (senão expandiria p/ /root).
 var comando = 'sudo waydroid container stop; sudo dnf remove -y waydroid; sudo rm -rf /var/lib/waydroid $HOME/.local/share/waydroid $HOME/.local/share/fof-waydroid';
@@ -628,20 +638,64 @@ await _waydroidExtra('waydroid-smartdock', 'smartdock', _t('sessoes.11-waydroid.
 }
 
 // ============================================================
-// HELPER E PREFS
+// CONFIGURAÇÕES AVANÇADAS — waydroid-helper (install + open)
 // ============================================================
 
-async function executarWaydroidHelper() {
-var idComando = 'waydroid-helper';
-// chown ANTES do nohup para dar posse ao binário antes de o usuário
-// executá-lo. Sem isso, o AppImage fica root-owned e o nohup falha
-// (root não acha o display do usuário sem os Xauthority corretos).
-var comando = 'mkdir -p $HOME/.local/share/fof-waydroid/helper && cd $HOME/.local/share/fof-waydroid/helper && ' +
-'curl -sL https://github.com/waydroid-helper/waydroid-helper/releases/latest/download/waydroid-helper-x86_64.AppImage -o waydroid-helper.AppImage && ' +
-'chmod +x waydroid-helper.AppImage && chown -R $USER:$USER $HOME/.local/share/fof-waydroid/helper && ' +
-'nohup ./waydroid-helper.AppImage > /dev/null 2>&1 &';
-await executarComandoGenerico(idComando, comando, _t('sessoes.11-waydroid.btn_helper', '🚀 Baixar e Abrir waydroid-helper'));
+/**
+ * INSTALL: instala o waydroid-helper via COPR oficial cuteneko/waydroid-helper.
+ *
+ * O projeto upstream recomenda explicitamente o COPR no Fedora:
+ *   sudo dnf copr enable cuteneko/waydroid-helper
+ *   sudo dnf install waydroid-helper
+ *
+ * Isso substitui a abordagem antiga (baixar AppImage do GitHub
+ * Releases), que era frágil:
+ *  - exigia `nohup ... &` dentro do bloco redirecionado do kdesu/pkexec
+ *    (o bloco nunca fechava, o job herdava stdout de processo morto);
+ *  - rodava o AppImage como root, sem acesso ao display do usuário;
+ *  - silenciava erros com `> /dev/null 2>&1`;
+ *  - exigia `chown` manual para devolver posse ao usuário.
+ *
+ * Com o COPR, o pacote é instalado via dnf como qualquer outro, fica
+ * no PATH, aparece no menu de aplicativos, e ganha atualizações
+ * automáticas via `dnf upgrade`.
+ */
+async function executarWaydroidHelperInstall() {
+var idComando = 'waydroid-helper-install';
+var comando = 'sudo dnf copr enable cuteneko/waydroid-helper -y && sudo dnf install -y waydroid-helper';
+await executarComandoGenerico(idComando, comando,
+_t('sessoes.11-waydroid.btn_helper_install', '📦 Instalar waydroid-helper'),
+function() {
+atualizarBotaoAbrirWaydroidHelper();
+});
 }
+
+/**
+ * OPEN: abre o waydroid-helper instalado via dnf.
+ *
+ * Usa `abrirFerramentaExterna` com `gtk-launch`, exatamente o mesmo
+ * padrão do Btrfs-Assistant (01-restauracao.html). `gtk-launch` está
+ * na whitelist COMANDOS_SEM_AUTENTICACAO do server.js, então este
+ * comando não pede senha — só dispara o binário como o usuário atual,
+ * via DBus do desktop.
+ */
+function executarWaydroidHelperOpen() {
+abrirFerramentaExterna('gtk-launch waydroid-helper 2>/dev/null &', 'waydroid-helper-install', 'waydroid-helper');
+}
+
+function atualizarBotaoAbrirWaydroidHelper() {
+var btn = document.getElementById('btn-waydroid-helper-open');
+if (!btn) return;
+if (isExecutado('waydroid-helper-install')) {
+btn.style.display = '';
+} else {
+btn.style.display = 'none';
+}
+}
+
+// ============================================================
+// AJUSTES RECOMENDADOS
+// ============================================================
 
 async function executarWaydroidPrefs() {
 var status = await _verificarContainerWaydroid();
@@ -674,7 +728,8 @@ var naoRevertiveis = [
 'waydroid-magisk',
 'waydroid-widevine',
 'waydroid-smartdock',
-'waydroid-prefs'
+'waydroid-prefs',
+'waydroid-helper-install'
 ];
 naoRevertiveis.forEach(function(id) {
 if (isExecutado(id)) {
@@ -692,6 +747,10 @@ b.style.opacity = '1';
 // Bloqueia TODOS os extras preventivamente. Os botões que já
 // foram executados continuam com o texto "✅ ..." e disabled.
 _bloquearExtrasPreventivamente();
+
+// Ajusta visibilidade do botão "Abrir waydroid-helper" conforme o
+// estado persistido do install.
+atualizarBotaoAbrirWaydroidHelper();
 
 // Agora consulta o /waydroid-status e ajusta conforme o caso.
 // Se o container estiver rodando, libera; se não, mantém bloqueado.
