@@ -393,6 +393,7 @@
 "atualizar_info": "ℹ️ La actualización conserva su configuración e historial.",
 "atualizar_confirmar": "🔄 ¿Actualizar Fedora Only Fans a la versión más reciente?\n\nEsto descargará e instalará la última versión desde GitHub.",
 "atualizar_log_iniciando": "🔄 Actualizando FOF...",
+"atualizar_aviso_reiniciar": "Cierra y reabre FOF para usar la nueva versión del contenedor.",
 "desinstalar_titulo": "🗑️ Desinstalar Fedora Only Fans",
 "desinstalar_desc": "Elimina completamente FOF de su sistema, incluyendo todos los archivos, configuraciones y accesos directos.",
 "desinstalar_aviso": "⚠️ ATENCIÓN: ¡Esta acción es irreversible! Todos los datos del FOF serán eliminados.",
