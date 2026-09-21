@@ -1,6 +1,6 @@
 // ============================================================
 // Fedora Only Fans (FOF) - Container WebKitGTK
-// Versão: 1.0.0-rc.2
+// Versão: 1.0.0-rc.3
 // ============================================================
 
 #include <gtk/gtk.h>
@@ -308,7 +308,7 @@ window_height = atoi(argv[++i]);
 } else if (strcmp(argv[i], "--debug") == 0) {
 debug_mode = 1;
 } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-printf("🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.2\n");
+printf("🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.3\n");
 printf("\nUso: %s [opções]\n", argv[0]);
 printf("\nOpções:\n");
 printf(" --url URL URL do servidor (padrão: http://localhost:3000)\n");
@@ -423,7 +423,7 @@ sigaction(SIGINT, &sa, NULL);
 sigaction(SIGTERM, &sa, NULL);
 
 g_print("============================================================\n");
-g_print(" 🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.2\n");
+g_print(" 🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.3\n");
 g_print("============================================================\n");
 g_print(" 🌐 URL: %s\n", url);
 g_print(" 📐 Janela: %dx%d\n", window_width, window_height);
