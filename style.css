@@ -1,6 +1,6 @@
 /* ============================================
  * Fedora Only Fans (FOF) - Estilos Compartilhados
- * Versão: 1.0.0-rc.2
+ * Versão: 1.0.0-rc.3
  * ============================================ */
 
 :root {
@@ -70,11 +70,7 @@
     --bg-comando: rgba(0, 0, 0, 0.03);
     --bg-input: #ffffff;
 
-    /* Acentos com contraste adequado sobre fundo claro.
-       Usamos tons mais escuros que os do tema escuro:
-       - accent-soft: azul mais saturado (WCAG AA sobre #f3f4f6)
-       - warning-soft: laranja escuro (legível em branco)
-       - success-soft: verde escuro (legível em branco) */
+    /* Acentos com contraste adequado sobre fundo claro. */
     --accent-soft: #2563eb;
     --warning-soft: #b45309;
     --success-soft: #047857;
@@ -144,11 +140,7 @@ body {
 
 /* ============================================================
  * AVISOS E INFO EXTRA
- * ============================================================
- * A cor do texto usa variáveis temáticas. No tema claro, o
- * `--warning-text` cai para um tom escuro legível sobre o fundo
- * de aviso. Isso substitui o override pontual que existia antes.
- */
+ * ============================================================ */
 
 .aviso-caixa {
     background-color: var(--warning-bg);
@@ -482,9 +474,6 @@ body {
     margin-top: 0.15rem;
 }
 
-/* CORREÇÃO TEMA CLARO: usava #60a5fa hardcoded (azul claro),
-   ilegível sobre fundo branco. Agora usa --accent-soft, que tem
-   valor próprio em cada tema (#60a5fa no escuro, #2563eb no claro). */
 .progress-text .percentage {
     color: var(--accent-soft);
     font-weight: bold;
@@ -499,9 +488,6 @@ body {
     color: var(--accent-soft);
 }
 
-/* CORREÇÃO TEMA CLARO: #34d399 (verde claro) sobre fundo branco
-   ficava com contraste fraco. --success-soft é #34d399 no escuro e
-   #047857 (verde escuro) no claro. */
 .progress-text .status.success {
     color: var(--success-soft);
 }
@@ -516,6 +502,17 @@ body {
  * O terminal é intencionalmente escuro nos DOIS temas (fundo preto,
  * texto verde-neon). Não usa variáveis temáticas — é um componente
  * com identidade visual própria.
+ *
+ * ESTADO PADRÃO: EXPANDIDO.
+ * O script.js adiciona a classe 'expandido' logo após criar o
+ * elemento (dentro de um requestAnimationFrame, para evitar o
+ * flash de transição de altura). O CSS abaixo reflete isso: a
+ * regra base já define o visual aberto; o colapso é feito via
+ * `.terminal-log:not(.expandido)`.
+ *
+ * O usuário pode clicar no toggle para recolher — o clique
+ * remove a classe 'expandido' (via classList.toggle em
+ * toggleTerminalLog).
  */
 
 .terminal-log-wrapper {
@@ -550,6 +547,8 @@ body {
     color: var(--matrix-green);
 }
 
+/* A seta aponta para baixo quando expandido, para cima quando
+   colapsado. O estado base do toggle coincide com o do log. */
 .terminal-log-toggle.expandido .toggle-arrow {
     transform: rotate(180deg);
 }
@@ -562,45 +561,52 @@ body {
     text-overflow: ellipsis;
 }
 
+/* Estado base: EXPANDIDO (o script.js adiciona a classe na criação) */
 .terminal-log {
     background-color: var(--matrix-bg);
     border: 1px solid rgba(0, 255, 65, 0.3);
     border-radius: 6px;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 0.85rem;
-    padding: 0;
     margin-top: 0.25rem;
-    height: 0;
-    max-height: 0;
-    overflow: hidden;
+    padding: 0.6rem 0.8rem;
+    min-height: 120px;
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
     display: block;
     scroll-behavior: smooth;
     line-height: 1.4;
     transition: all 0.3s ease;
-    opacity: 0;
+    opacity: 1;
     box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.08);
 }
 
-.terminal-log.expandido {
-    height: auto;
-    min-height: 120px;
-    max-height: 200px;
-    overflow-y: auto;
-    overflow-x: auto;
-    padding: 0.6rem 0.8rem;
-    opacity: 1;
+/* Modificador: COLAPSADO.
+   Aplicado quando o usuário clica no toggle (removendo 'expandido'),
+   ou no primeiro frame antes do requestAnimationFrame do script.js
+   adicionar a classe — o que evita o flash de abertura. */
+.terminal-log:not(.expandido) {
+    height: 0;
+    min-height: 0;
+    max-height: 0;
+    padding: 0;
+    overflow: hidden;
+    opacity: 0;
 }
 
+/* Logs compartilhados (sessões com múltiplos botões) ganham mais
+   altura. O comportamento colapsado é o mesmo. */
 .terminal-log.sessao-compartilhado {
     min-height: 200px;
     max-height: 400px;
 }
 
-.terminal-log.sessao-compartilhado.expandido {
-    min-height: 200px;
-    max-height: 400px;
+.terminal-log.sessao-compartilhado:not(.expandido) {
+    min-height: 0;
+    max-height: 0;
 }
 
 .terminal-log .log-line {
@@ -718,8 +724,6 @@ body {
     box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
 }
 
-/* CORREÇÃO TEMA CLARO: usava #60a5fa hardcoded.
-   Agora usa --accent-soft, que se adapta ao tema. */
 .custom-select-arrow {
     font-size: 0.6rem;
     transition: transform 0.2s ease;
@@ -897,9 +901,6 @@ body {
     font-weight: 600;
 }
 
-/* CORREÇÃO TEMA CLARO: usava #f59e0b hardcoded (laranja médio),
-   contraste fraco sobre fundo claro. Agora usa --warning-soft, que
-   é #f59e0b no escuro e #b45309 no claro. */
 .header-avancado .titulo .badge-modo {
     background-color: rgba(245, 158, 11, 0.2);
     color: var(--warning-soft);
@@ -1086,8 +1087,6 @@ body {
     gap: 0.5rem;
 }
 
-/* CORREÇÃO TEMA CLARO: usava #60a5fa hardcoded.
-   Agora usa --accent-soft, adaptável ao tema. */
 .progress-guide .info .sessao-atual {
     color: var(--accent-soft);
     font-weight: bold;
