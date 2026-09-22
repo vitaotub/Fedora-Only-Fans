@@ -1,6 +1,6 @@
 /**
  * Fedora Only Fans (FOF) - Script Compartilhado
- * Versão: 1.0.0-rc.2
+ * Versão: 1.0.0-rc.3
  *
  * Este arquivo contém as funções GLOBAIS compartilhadas entre todas as sessões.
  * Cada sessão (00-*.html) tem seu próprio JS específico que usa estas funções.
@@ -831,9 +831,13 @@ function criarToggleParaLog(logBox, labelKey) {
     wrapper.appendChild(toggle);
     wrapper.appendChild(logBox);
 
+    // EXPANDIDO POR PADRÃO: adiciona a classe 'expandido' tanto no
+    // toggle quanto no logBox. O usuário pode clicar para recolher
+    // (toggleTerminalLog alterna a classe, então o clique remove
+    // 'expandido' e o log colapsa).
     logBox.style.display = 'block';
-    logBox.style.height = '0';
-    logBox.style.maxHeight = '0';
+    toggle.classList.add('expandido');
+    logBox.classList.add('expandido');
 }
 
 function conectarSSE(idComando, logBox) {
