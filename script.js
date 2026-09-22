@@ -13,6 +13,12 @@
  * logBox. O botão carrega data-logbox="<id-do-log>" para indicar onde
  * escrever. Sessões com 1 botão continuam usando log-<idComando>.
  *
+ * LOG EXPANDIDO POR PADRÃO: ao contrário de versões anteriores, o log de
+ * cada sessão já nasce expandido. O usuário pode clicar no toggle para
+ * recolher (o clique remove a classe 'expandido'). A transição de altura
+ * é adiada um frame via requestAnimationFrame para evitar o flash de
+ * abertura na primeira renderização.
+ *
  * LOG COMPLETO: sem filtros de ruído. Tudo o que o comando escreve no stdout
  * e stderr é exibido.
  *
@@ -154,8 +160,6 @@ var SESSOES = [
         'idioma-packs': { textoConcluido: '✅ Tradução instalada', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_packs' },
         'idioma-hunspell': { textoConcluido: '✅ Corretor instalado', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_hunspell' },
         'idioma-localectl': { textoConcluido: '✅ Localidade configurada', textoConcluidoKey: 'sessoes.02-otimizacao.texto_concluido_localectl' },
-        // FIX #7: removido textoConcluido morto — sempreClicavel nunca usa
-        // getTextoAposExecucao (o botão volta ao data-texto-original).
         'dual-boot-time': { sempreClicavel: true }
     }
 },
@@ -238,10 +242,6 @@ var SESSOES = [
         'waydroid-magisk': { textoConcluido: '✅ Magisk instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_magisk' },
         'waydroid-widevine': { textoConcluido: '✅ Widevine instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_widevine' },
         'waydroid-smartdock': { textoConcluido: '✅ SmartDock instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_smartdock' },
-        // waydroid-helper: agora são DOIS comandos separados, seguindo
-        // o padrão CoreCtrl/LACT/Rclone. O install usa o COPR oficial
-        // cuteneko/waydroid-helper; o open usa `gtk-launch` (whitelist
-        // de comandos sem autenticação).
         'waydroid-helper-install': { textoConcluido: '✅ waydroid-helper instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_helper_install' },
         'waydroid-helper-open': { sempreClicavel: true },
         'waydroid-prefs': { textoConcluido: '✅ Preferências aplicadas', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_prefs' }
@@ -753,8 +753,6 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
 
     if (SEMPRE_CLICAVEIS.includes(idComando)) {
         const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
-        // FIX #15: usar textContent (não innerHTML) para simetria com a
-        // captura de data-texto-original (que usa textContent).
         btnExecutar.textContent = original;
         btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
@@ -765,7 +763,6 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
 
     if (sucesso) {
         const textoFinal = getTextoAposExecucao(idComando);
-        // FIX #15: textContent em vez de innerHTML.
         btnExecutar.textContent = textoFinal;
         btnExecutar.style.backgroundColor = '#4b5563';
         btnExecutar.style.cursor = 'default';
@@ -780,7 +777,6 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
         marcarComoExecutado(idComando);
     } else {
         const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
-        // FIX #15: textContent em vez de innerHTML.
         btnExecutar.textContent = original;
         btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
@@ -831,13 +827,20 @@ function criarToggleParaLog(logBox, labelKey) {
     wrapper.appendChild(toggle);
     wrapper.appendChild(logBox);
 
-    // EXPANDIDO POR PADRÃO: adiciona a classe 'expandido' tanto no
-    // toggle quanto no logBox. O usuário pode clicar para recolher
-    // (toggleTerminalLog alterna a classe, então o clique remove
-    // 'expandido' e o log colapsa).
+    // EXPANDIDO POR PADRÃO: adiciona a classe 'expandido' no toggle
+    // e no logBox. O CSS trata o estado SEM a classe como colapsado
+    // (via :not(.expandido)), então isto inverte o default — o usuário
+    // vê o log aberto e clica para recolher, se quiser.
+    //
+    // O requestAnimationFrame adia a adição um frame para evitar o
+    // flash de transição de altura (0 → auto) que o navegador
+    // dispararia se a classe fosse aplicada no mesmo tick da inserção
+    // no DOM.
     logBox.style.display = 'block';
-    toggle.classList.add('expandido');
-    logBox.classList.add('expandido');
+    requestAnimationFrame(function() {
+        toggle.classList.add('expandido');
+        logBox.classList.add('expandido');
+    });
 }
 
 function conectarSSE(idComando, logBox) {
@@ -1124,8 +1127,6 @@ async function desinstalarPacote(idComando, comandoRemover, nomeExibicao) {
             btn.disabled = false;
         }
 
-        // FIX #14: além de desabilitar, esconder o botão Reverter após
-        // desinstalação bem-sucedida (não há mais nada para reverter).
         if (btnReverter) {
             btnReverter.disabled = true;
             btnReverter.style.display = 'none';
