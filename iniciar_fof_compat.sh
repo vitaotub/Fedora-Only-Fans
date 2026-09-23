@@ -11,7 +11,6 @@
 # Opções:
 # --debug, -d Modo debug (logs detalhados)
 # --no-clean Não limpar perfis do navegador
-# --no-minimize Não minimizar o terminal do servidor
 # --help, -h Mostra esta ajuda
 # ============================================================
 
@@ -82,7 +81,6 @@ echo ""
 echo "Opções:"
 echo " --debug, -d Modo debug (logs detalhados)"
 echo " --no-clean Não limpar perfis do navegador"
-echo " --no-minimize Não minimizar o terminal do servidor"
 echo " --help, -h Mostra esta ajuda"
 echo ""
 echo "Este modo força renderização por software para"
@@ -113,6 +111,6 @@ echo "🔄 Iniciando o FOF em modo compatível..."
 echo ""
 
 # Executar o script normal com as variáveis de ambiente já exportadas.
-# Todas as opções (incluindo --no-minimize) são repassadas via "$@" e
+# Todas as opções são repassadas via "$@" e
 # tratadas pelo iniciar_fof.sh.
 ./iniciar_fof.sh "$@"
