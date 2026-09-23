@@ -1,9 +1,9 @@
 /**
  * Fedora Only Fans (FOF) - Script Compartilhado
- * Versão: 1.0.0-rc.3
+ * Versão: 1.0.0-09222026
  *
  * Este arquivo contém as funções GLOBAIS compartilhadas entre todas as sessões.
- * Cada sessão (00-*.html) tem seu próprio JS específico que usa estas funções.
+ * Cada sessão (NN-*.html) tem seu próprio JS específico que usa estas funções.
  *
  * i18n: strings visíveis ao usuário usam tOr(chave, fallback) — em pt-BR,
  * tOr cai no fallback (texto original), mantendo o comportamento
@@ -18,9 +18,6 @@
  * recolher (o clique remove a classe 'expandido'). A transição de altura
  * é adiada um frame via requestAnimationFrame para evitar o flash de
  * abertura na primeira renderização.
- *
- * LOG COMPLETO: sem filtros de ruído. Tudo o que o comando escreve no stdout
- * e stderr é exibido.
  *
  * TEMA: claro/escuro alternável via botão na UI. Persistência em localStorage
  * sob a chave 'fof_tema'. O atributo `data-tema` no <html> controla qual
@@ -133,6 +130,14 @@ function criarBotaoTema() {
 // ============================================================
 // REGISTRO CENTRAL DE SESSÕES
 // ============================================================
+//
+// A ORDEM DAS ENTRADAS NESTE ARRAY DEFINE:
+// - a ordem de exibição das sessões principais (guiado.html)
+// - o número "Sessão N" mostrado na UI (numerarSessao)
+// - a cor do indicador no topo (guiado.html CORES_SESSOES casa com posição)
+//
+// Sessões de manutenção (manutencao: true) são filtradas separadamente
+// e aparecem em manutencao.html, sem numeração.
 
 var SESSOES = [
     {
@@ -183,68 +188,71 @@ var SESSOES = [
     }
 },
 {
-    id: '05-launchers',
-    nome: 'Launchers',
-    nomeKey: 'sessoes.05-launchers.nome',
-    comandos: {
-        'steam-install': { textoConcluido: '✅ Steam instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_steam' },
-        'heroic-install': { textoConcluido: '✅ Heroic instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_heroic' },
-        'lutris-install': { textoConcluido: '✅ Lutris instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_lutris' },
-        'wine-install': { textoConcluido: '✅ Wine instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_wine' },
-        'winetricks-install': { textoConcluido: '✅ Winetricks instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_winetricks' },
-        'bottles-install': { textoConcluido: '✅ Bottles instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_bottles' },
-        'gamemode-install': { textoConcluido: '✅ GameMode ativado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_gamemode' },
-        'mangohud-install': { textoConcluido: '✅ MangoHud instalado', textoConcluidoKey: 'sessoes.05-launchers.texto_concluido_mangohud' }
-    }
-},
-{
-    id: '06-loja',
-    nome: 'Produção Multimídia',
-    nomeKey: 'sessoes.06-loja.nome',
-    comandos: {
-        'instalar-obs-studio': { textoConcluido: '✅ OBS Studio instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_obs' },
-        'obs-cam': { textoConcluido: '✅ Câmera Virtual ativada', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_cam' },
-        'instalar-easyeffects': { textoConcluido: '✅ EasyEffects instalado', textoConcluidoKey: 'sessoes.06-loja.texto_concluido_easyeffects' }
-    }
-},
-{
-    id: '10-hardware',
+    id: '05-hardware',
     nome: 'Hardware',
-    nomeKey: 'sessoes.10-hardware.nome',
+    nomeKey: 'sessoes.05-hardware.nome',
     comandos: {
-        'vulkan-amd': { textoConcluido: '✅ Vulkan instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_vulkan' },
-        'vaapi-amd': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_vaapi' },
-        'vaapi-swap': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_vaapi' },
-        'corectrl-install': { textoConcluido: '✅ CoreCtrl instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_corectrl' },
-        'lact-install': { textoConcluido: '✅ LACT instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_lact' },
-        'amdgpu-overclock': { textoConcluido: '✅ Overclock ativado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_overclock' },
-        'amdgpu-overclock-remove': { textoConcluido: '✅ Overclock desativado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_overclock_remove' },
-        'nvidia-driver-install': { textoConcluido: '✅ Driver Nvidia instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_nvidia_driver' },
+        'vulkan-amd': { textoConcluido: '✅ Vulkan instalado', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_vulkan' },
+        'vaapi-amd': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_vaapi' },
+        'vaapi-swap': { textoConcluido: '✅ VA-API instalado', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_vaapi' },
+        'corectrl-install': { textoConcluido: '✅ CoreCtrl instalado', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_corectrl' },
+        'lact-install': { textoConcluido: '✅ LACT instalado', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_lact' },
+        'amdgpu-overclock': { textoConcluido: '✅ Overclock ativado', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_overclock' },
+        'amdgpu-overclock-remove': { textoConcluido: '✅ Overclock desativado', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_overclock_remove' },
+        'nvidia-driver-install': { textoConcluido: '✅ Driver Nvidia instalado', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_nvidia_driver' },
         'nvidia-modeset-on': { sempreClicavel: true },
         'nvidia-modeset-off': { sempreClicavel: true },
-        'coolercontrol-install': { textoConcluido: '✅ CoolerControl instalado', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_coolercontrol' },
-        'input-group-add': { textoConcluido: '✅ Adicionado ao grupo input', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_input_add' },
-        'input-group-remove': { textoConcluido: '✅ Removido do grupo input', textoConcluidoKey: 'sessoes.10-hardware.texto_concluido_input_remove' }
+        'coolercontrol-install': { textoConcluido: '✅ CoolerControl instalado', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_coolercontrol' },
+        'input-group-add': { textoConcluido: '✅ Adicionado ao grupo input', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_input_add' },
+        'input-group-remove': { textoConcluido: '✅ Removido do grupo input', textoConcluidoKey: 'sessoes.05-hardware.texto_concluido_input_remove' }
     }
 },
 {
-    id: '11-waydroid',
-    nome: 'Waydroid',
-    nomeKey: 'sessoes.11-waydroid.nome',
+    id: '06-gaming',
+    nome: 'Gaming',
+    nomeKey: 'sessoes.06-gaming.nome',
     comandos: {
-        'waydroid-install': { textoConcluido: '✅ Waydroid instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_waydroid' },
-        'waydroid-init': { textoConcluido: '✅ Waydroid inicializado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_init' },
+        'steam-install': { textoConcluido: '✅ Steam instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_steam' },
+        'heroic-install': { textoConcluido: '✅ Heroic instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_heroic' },
+        'lutris-install': { textoConcluido: '✅ Lutris instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_lutris' },
+        'wine-install': { textoConcluido: '✅ Wine instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_wine' },
+        'winetricks-install': { textoConcluido: '✅ Winetricks instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_winetricks' },
+        'bottles-install': { textoConcluido: '✅ Bottles instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_bottles' },
+        'ntsync-install': { textoConcluido: '✅ NTSYNC instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_ntsync' },
+        'gamemode-install': { textoConcluido: '✅ GameMode ativado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_gamemode' },
+        'mangohud-install': { textoConcluido: '✅ MangoHud instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_mangohud' },
+        'goverlay-install': { textoConcluido: '✅ Goverlay instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_goverlay' },
+        'gamescope-install': { textoConcluido: '✅ Gamescope instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_gamescope' }
+    }
+},
+{
+    id: '07-loja',
+    nome: 'Produção Multimídia',
+    nomeKey: 'sessoes.07-loja.nome',
+    comandos: {
+        'instalar-obs-studio': { textoConcluido: '✅ OBS Studio instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_obs' },
+        'obs-cam': { textoConcluido: '✅ Câmera Virtual ativada', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_cam' },
+        'instalar-easyeffects': { textoConcluido: '✅ EasyEffects instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_easyeffects' }
+    }
+},
+{
+    id: '08-waydroid',
+    nome: 'Waydroid',
+    nomeKey: 'sessoes.08-waydroid.nome',
+    comandos: {
+        'waydroid-install': { textoConcluido: '✅ Waydroid instalado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_waydroid' },
+        'waydroid-init': { textoConcluido: '✅ Waydroid inicializado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_init' },
         'waydroid-uninstall': { sempreClicavel: true },
-        'waydroid-extras-prep': { textoConcluido: '✅ Ambiente preparado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_prep' },
-        'waydroid-gapps': { textoConcluido: '✅ GApps instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_gapps' },
-        'waydroid-libndk': { textoConcluido: '✅ libndk instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_libndk' },
-        'waydroid-libhoudini': { textoConcluido: '✅ libhoudini instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_libhoudini' },
-        'waydroid-magisk': { textoConcluido: '✅ Magisk instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_magisk' },
-        'waydroid-widevine': { textoConcluido: '✅ Widevine instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_widevine' },
-        'waydroid-smartdock': { textoConcluido: '✅ SmartDock instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_smartdock' },
-        'waydroid-helper-install': { textoConcluido: '✅ waydroid-helper instalado', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_helper_install' },
+        'waydroid-extras-prep': { textoConcluido: '✅ Ambiente preparado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_prep' },
+        'waydroid-gapps': { textoConcluido: '✅ GApps instalado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_gapps' },
+        'waydroid-libndk': { textoConcluido: '✅ libndk instalado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_libndk' },
+        'waydroid-libhoudini': { textoConcluido: '✅ libhoudini instalado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_libhoudini' },
+        'waydroid-magisk': { textoConcluido: '✅ Magisk instalado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_magisk' },
+        'waydroid-widevine': { textoConcluido: '✅ Widevine instalado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_widevine' },
+        'waydroid-smartdock': { textoConcluido: '✅ SmartDock instalado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_smartdock' },
+        'waydroid-helper-install': { textoConcluido: '✅ waydroid-helper instalado', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_helper_install' },
         'waydroid-helper-open': { sempreClicavel: true },
-        'waydroid-prefs': { textoConcluido: '✅ Preferências aplicadas', textoConcluidoKey: 'sessoes.11-waydroid.texto_concluido_prefs' }
+        'waydroid-prefs': { textoConcluido: '✅ Preferências aplicadas', textoConcluidoKey: 'sessoes.08-waydroid.texto_concluido_prefs' }
     }
 },
 {
@@ -302,12 +310,12 @@ var SESSOES = [
     }
 },
 {
-    id: '07-manutencao',
+    id: '90-manutencao',
     nome: 'Manutenção',
-    nomeKey: 'sessoes.07-manutencao.nome',
+    nomeKey: 'sessoes.90-manutencao.nome',
     manutencao: true,
     comandos: {
-        'limpeza-sistema': { sempreClicavel: true, textoConcluido: '✅ Limpeza concluída', textoConcluidoKey: 'sessoes.07-manutencao.texto_concluido_limpeza' },
+        'limpeza-sistema': { sempreClicavel: true, textoConcluido: '✅ Limpeza concluída', textoConcluidoKey: 'sessoes.90-manutencao.texto_concluido_limpeza' },
         'listar-kernels': { sempreClicavel: true },
         'remover-kernel': { sempreClicavel: true },
         'grub-aplicar-recomendado': { sempreClicavel: true, textoConcluido: '✅ Configuração aplicada' },
@@ -315,9 +323,9 @@ var SESSOES = [
     }
 },
 {
-    id: '08-fof-manutencao',
+    id: '91-fof-manutencao',
     nome: 'Manutenção FOF',
-    nomeKey: 'sessoes.08-fof-manutencao.nome',
+    nomeKey: 'sessoes.91-fof-manutencao.nome',
     manutencao: true,
     comandos: {
         'atualizar-fof': { sempreClicavel: true, textoConcluido: '✅ FOF atualizado' },

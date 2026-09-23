@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOF - Gaming</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sessao-container" id="sessao-06-gaming">
+<div class="sessao-titulo">
+<span class="sessao-label">Sessão</span>
+<span data-i18n="sessoes.06-gaming.titulo">🎮 Gaming</span>
+</div>
+
+<div class="sessao-descricao" data-i18n="sessoes.06-gaming.descricao">
+Instala os principais launchers, ferramentas de compatibilidade com Windows (Wine/Proton), utilitários de desempenho e monitoramento, e traz dicas prontas para otimizar a experiência de jogos no Fedora.
+</div>
+
+<!-- ============================================================
+LAUNCHERS
+============================================================ -->
+<details class="acordeao" open>
+<summary data-i18n="sessoes.06-gaming.launchers_titulo">🎮 Launchers</summary>
+<div class="acordeao-conteudo">
+
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.06-gaming.launchers_titulo">🎮 Launchers</h3>
+<p data-i18n="sessoes.06-gaming.launchers_desc">Instale os principais launchers de jogos para o Fedora.</p>
+<p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;" data-i18n="sessoes.06-gaming.launchers_info">
+ℹ️ Todos os launchers são instalados via Flatpak.
+</p>
+
+<div class="grid-launchers">
+<div class="launcher-item">
+<button class="btn-executar"
+onclick="executarSteam()"
+data-comando="steam-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-steam-install"
+data-i18n="sessoes.06-gaming.btn_steam">
+🎮 Steam
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar verde"
+onclick="executarHeroic()"
+data-comando="heroic-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-heroic-install"
+data-i18n="sessoes.06-gaming.btn_heroic">
+⚡ Heroic Games
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar roxo"
+onclick="executarLutris()"
+data-comando="lutris-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-lutris-install"
+data-i18n="sessoes.06-gaming.btn_lutris">
+🎯 Lutris
+</button>
+</div>
+</div>
+</div>
+
+<div class="progress-container" id="progress-steam-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-steam-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-steam-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-steam-install">0%</span></div>
+</div>
+
+<div class="progress-container" id="progress-heroic-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-heroic-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-heroic-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-heroic-install">0%</span></div>
+</div>
+
+<div class="progress-container" id="progress-lutris-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-lutris-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-lutris-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-lutris-install">0%</span></div>
+</div>
+</div>
+
+</div>
+</details>
+
+<!-- ============================================================
+COMPATIBILIDADE
+============================================================ -->
+<details class="acordeao">
+<summary data-i18n="sessoes.06-gaming.compat_titulo">🍷 Compatibilidade (Wine/Proton)</summary>
+<div class="acordeao-conteudo">
+
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.06-gaming.compat_titulo">🍷 Compatibilidade (Wine/Proton)</h3>
+<p data-i18n="sessoes.06-gaming.compat_desc">Ferramentas pra rodar jogos e programas do Windows fora da Steam, e recursos que ajudam na compatibilidade.</p>
+
+<div class="grid-launchers">
+<div class="launcher-item">
+<button class="btn-executar"
+onclick="executarWine()"
+data-comando="wine-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-wine-install"
+data-i18n="sessoes.06-gaming.btn_wine">
+🍷 Wine
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar verde"
+onclick="executarWinetricks()"
+data-comando="winetricks-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-winetricks-install"
+data-i18n="sessoes.06-gaming.btn_winetricks">
+🔧 Winetricks
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar roxo"
+onclick="executarBottles()"
+data-comando="bottles-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-bottles-install"
+data-i18n="sessoes.06-gaming.btn_bottles">
+🍾 Bottles
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar azul-claro"
+onclick="executarNTSync()"
+data-comando="ntsync-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-ntsync-install"
+data-i18n="sessoes.06-gaming.btn_ntsync">
+⚡ NTSYNC
+</button>
+</div>
+</div>
+
+<div class="info-extra" style="margin-top: 1rem;" data-i18n-html="sessoes.06-gaming.compat_info_extra">
+ℹ️ <strong>Winetricks</strong> instala componentes extras (fontes, bibliotecas) dentro de um prefixo Wine.
+<strong>Bottles</strong> é uma alternativa moderna ao Wine puro, com gerenciamento visual de "garrafas" (prefixos) e suporte a runners Proton-GE.
+<strong>NTSYNC</strong> é um módulo de kernel que traz ganhos significativos de desempenho e compatibilidade para jogos Windows via Wine/Proton.
+</div>
+
+<div class="aviso-caixa" style="margin-top: 0.75rem;" data-i18n-html="sessoes.06-gaming.ntsync_aviso">
+⚠️ <strong>O que é o NTSYNC?</strong> É um módulo do kernel Linux que implementa a sincronização de threads do Windows nativamente no kernel, reduzindo o overhead de CPU e melhorando a fluidez em jogos (menos micro-stutters e frame times mais estáveis). É seguro ativar — o Fedora 44 já o habilita por padrão para Wine/Steam. <strong>Recomendado para usuários de GE-Proton</strong>, onde o suporte ao NTSYNC já é nativo. O Wine padrão dos repositórios ainda não se beneficia do NTSYNC — nesse caso, o ganho real vem ao rodar jogos via Proton/GE-Proton. <strong>Após instalar, reinicie o computador para ativar o NTSYNC</strong> — o módulo é configurado para carregar automaticamente no boot. Se preferir ativar sem reiniciar, rode <code>sudo modprobe ntsync</code> no terminal.
+</div>
+</div>
+
+<div class="progress-container" id="progress-wine-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-wine-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-wine-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-wine-install">0%</span></div>
+</div>
+
+<div class="progress-container" id="progress-winetricks-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-winetricks-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-winetricks-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-winetricks-install">0%</span></div>
+</div>
+
+<div class="progress-container" id="progress-bottles-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-bottles-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-bottles-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-bottles-install">0%</span></div>
+</div>
+
+<div class="progress-container" id="progress-ntsync-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-ntsync-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-ntsync-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-ntsync-install">0%</span></div>
+</div>
+</div>
+
+</div>
+</details>
+
+<!-- ============================================================
+DESEMPENHO E MONITORAMENTO
+============================================================ -->
+<details class="acordeao">
+<summary data-i18n="sessoes.06-gaming.performance_titulo">⚡ Desempenho e Monitoramento</summary>
+<div class="acordeao-conteudo">
+
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.06-gaming.performance_titulo">⚡ Desempenho e Monitoramento</h3>
+<p data-i18n="sessoes.06-gaming.performance_desc">Ferramentas que otimizam o desempenho durante o jogo e permitem monitorar FPS, uso de CPU/GPU e outras métricas.</p>
+
+<div class="grid-launchers">
+<div class="launcher-item">
+<button class="btn-executar laranja"
+onclick="executarGameMode()"
+data-comando="gamemode-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-gamemode-install"
+data-i18n="sessoes.06-gaming.btn_gamemode">
+⚙️ GameMode
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar azul-claro"
+onclick="executarMangoHud()"
+data-comando="mangohud-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-mangohud-install"
+data-i18n="sessoes.06-gaming.btn_mangohud">
+📊 MangoHud
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar verde"
+onclick="executarGoverlay()"
+data-comando="goverlay-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-goverlay-install"
+data-i18n="sessoes.06-gaming.btn_goverlay">
+🎛️ Goverlay
+</button>
+</div>
+<div class="launcher-item">
+<button class="btn-executar roxo"
+onclick="executarGamescope()"
+data-comando="gamescope-install"
+data-logbox="log-sessao-06-gaming"
+id="btn-gamescope-install"
+data-i18n="sessoes.06-gaming.btn_gamescope">
+🖥️ Gamescope
+</button>
+</div>
+</div>
+
+<div class="info-extra" style="margin-top: 1rem;" data-i18n-html="sessoes.06-gaming.performance_info_extra">
+ℹ️ <strong>GameMode</strong> ajusta a CPU/GPU pra prioridade máxima enquanto um jogo roda.
+<strong>MangoHud</strong> mostra um overlay de FPS/uso de CPU e GPU dentro do jogo.
+<strong>Goverlay</strong> é uma interface gráfica para configurar o MangoHud sem editar arquivos de texto.
+<strong>Gamescope</strong> é um micro-compositor da Valve que permite escalonamento (FSR/NIS), limitação de FPS, HDR e mais.
+</div>
+</div>
+
+<div class="progress-container" id="progress-gamemode-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-gamemode-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-gamemode-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-gamemode-install">0%</span></div>
+</div>
+
+<div class="progress-container" id="progress-mangohud-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-mangohud-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-mangohud-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-mangohud-install">0%</span></div>
+</div>
+
+<div class="progress-container" id="progress-goverlay-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-goverlay-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-goverlay-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-goverlay-install">0%</span></div>
+</div>
+
+<div class="progress-container" id="progress-gamescope-install">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-gamescope-install"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-gamescope-install">⏳ Iniciando...</span><span class="percentage" id="progress-percent-gamescope-install">0%</span></div>
+</div>
+</div>
+
+</div>
+</details>
+
+<!-- ============================================================
+DICAS E TRUQUES
+============================================================ -->
+<details class="acordeao">
+<summary data-i18n="sessoes.06-gaming.dicas_titulo">💡 Dicas e Truques</summary>
+<div class="acordeao-conteudo">
+
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.06-gaming.dicas_titulo">💡 Dicas e Truques</h3>
+<p data-i18n="sessoes.06-gaming.dicas_desc">Configurações recomendadas para tirar o máximo dos jogos no Fedora.</p>
+
+<div class="aviso-caixa" data-i18n-html="sessoes.06-gaming.dicas_aviso_steam">
+💡 <strong>Steam — Opções de Inicialização:</strong> você pode adicionar comandos às opções de inicialização de cada jogo (clique com o botão direito no jogo → Propriedades → Opções de Inicialização). Exemplos:
+</div>
+
+<p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem;" data-i18n="sessoes.06-gaming.dica_mangohud_label">📊 MangoHud + GameMode (mais comum):</p>
+<div style="background-color: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.85rem; color: var(--text-main); margin-bottom: 1rem; overflow-x: auto;">MANGOHUD=1 gamemoderun %command%</div>
+
+<p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem;" data-i18n="sessoes.06-gaming.dica_gamescope_label">🖥️ Gamescope (resolução e limite de FPS):</p>
+<div style="background-color: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.85rem; color: var(--text-main); margin-bottom: 1rem; overflow-x: auto;">gamescope -W 1920 -H 1080 -r 60 -- %command%</div>
+
+<p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem;" data-i18n="sessoes.06-gaming.dica_combo_label">⚡ Combinação completa (Gamescope + MangoHud + GameMode):</p>
+<div style="background-color: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.85rem; color: var(--text-main); margin-bottom: 1rem; overflow-x: auto;">MANGOHUD=1 gamemoderun gamescope -f -- %command%</div>
+
+<div class="info-extra" data-i18n-html="sessoes.06-gaming.dicas_nota">
+ℹ️ Substitua os valores de <code>-W</code> e <code>-H</code> pela resolução desejada. O <code>-r 60</code> limita o FPS a 60 — remova se quiser FPS ilimitado.
+</div>
+</div>
+</div>
+
+</div>
+</details>
+
+<!-- Log único da sessão -->
+<div class="terminal-log sessao-compartilhado" id="log-sessao-06-gaming"></div>
+</div>
+
+<!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
+<script>
+// ============================================================
+// SESSÃO 06: GAMING
+// ============================================================
+
+function _t(chave, fallback) {
+return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+}
+
+async function executarSteam() {
+const idComando = 'steam-install';
+const comando = 'flatpak install flathub com.valvesoftware.Steam -y && (sudo dnf install -y steam-devices 2>/dev/null || true)';
+await executarComandoGenerico(idComando, comando, _t('sessoes.06-gaming.btn_steam', '🎮 Steam'), mostrarBotaoDesinstalar);
+}
+
+async function executarHeroic() {
+const idComando = 'heroic-install';
+const comando = 'flatpak install flathub com.heroicgameslauncher.hgl -y';
+await executarComandoGenerico(idComando, comando, _t('sessoes.06-gaming.btn_heroic', '⚡ Heroic Games'), mostrarBotaoDesinstalar);
+}
+
+async function executarLutris() {
+const idComando = 'lutris-install';
+const comando = 'flatpak install flathub net.lutris.Lutris -y';
+await executarComandoGenerico(idComando, comando, _t('sessoes.06-gaming.btn_lutris', '🎯 Lutris'), mostrarBotaoDesinstalar);
+}
+
+async function executarWine() {
+await executarComandoGenerico('wine-install', 'sudo dnf install wine -y', _t('sessoes.06-gaming.btn_wine', '🍷 Wine'), mostrarBotaoDesinstalar);
+}
+
+async function executarWinetricks() {
+await executarComandoGenerico('winetricks-install', 'sudo dnf install winetricks -y', _t('sessoes.06-gaming.btn_winetricks', '🔧 Winetricks'), mostrarBotaoDesinstalar);
+}
+
+async function executarBottles() {
+await executarComandoGenerico('bottles-install', 'flatpak install flathub com.usebottles.bottles -y', _t('sessoes.06-gaming.btn_bottles', '🍾 Bottles'), mostrarBotaoDesinstalar);
+}
+
+async function executarNTSync() {
+await executarComandoGenerico('ntsync-install', 'sudo dnf install -y wine-ntsync', _t('sessoes.06-gaming.btn_ntsync', '⚡ NTSYNC'), mostrarBotaoDesinstalar);
+}
+
+async function executarGameMode() {
+await executarComandoGenerico('gamemode-install', 'sudo dnf install gamemode -y', _t('sessoes.06-gaming.btn_gamemode', '⚙️ GameMode'), mostrarBotaoDesinstalar);
+}
+
+async function executarMangoHud() {
+await executarComandoGenerico('mangohud-install', 'sudo dnf install mangohud -y', _t('sessoes.06-gaming.btn_mangohud', '📊 MangoHud'), mostrarBotaoDesinstalar);
+}
+
+async function executarGoverlay() {
+await executarComandoGenerico('goverlay-install', 'sudo dnf install goverlay -y', _t('sessoes.06-gaming.btn_goverlay', '🎛️ Goverlay'), mostrarBotaoDesinstalar);
+}
+
+async function executarGamescope() {
+await executarComandoGenerico('gamescope-install', 'sudo dnf install gamescope -y', _t('sessoes.06-gaming.btn_gamescope', '🖥️ Gamescope'), mostrarBotaoDesinstalar);
+}
+
+// ===== RESTAURAR ESTADO DA SESSÃO =====
+function restaurarEstadoSessao() {
+const comandos = [
+'steam-install', 'heroic-install', 'lutris-install',
+'wine-install', 'winetricks-install', 'bottles-install', 'ntsync-install',
+'gamemode-install', 'mangohud-install', 'goverlay-install', 'gamescope-install'
+];
+
+comandos.forEach(function(id) {
+if (isExecutado(id)) {
+const btn = document.getElementById('btn-' + id);
+if (btn) {
+const textoFinal = getTextoAposExecucao(id);
+btn.textContent = textoFinal;
+btn.style.backgroundColor = '#4b5563';
+btn.style.cursor = 'default';
+btn.disabled = true;
+}
+}
+});
+}
+
+// ===== INICIALIZAÇÃO =====
+(function() {
+document.querySelectorAll('.btn-executar').forEach(function(btn) {
+if (!btn.hasAttribute('data-texto-original')) {
+btn.setAttribute('data-texto-original', btn.textContent);
+}
+});
+
+restaurarEstadoSessao();
+
+console.log('📦 Componente 06-gaming carregado!');
+})();
+</script>
+</body>
+</html>

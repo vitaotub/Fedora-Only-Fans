@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Inicialização
-# Versão: 1.0.0-rc.3
 # ============================================================
 #
 # Este script inicia o servidor e abre a interface do FOF
@@ -20,7 +19,7 @@ set -o pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
 cd "$DIR"
 
-VERSION="1.0.0-rc.3"
+VERSION="1.0.0-09222026"
 DEBUG=false
 NO_CLEAN=false
 LOG_FILE="/tmp/fof-$(date +%Y%m%d-%H%M%S).log"
@@ -209,13 +208,13 @@ local sessoes=(
 "02-otimizacao.html"
 "03-repositorios.html"
 "04-fontes.html"
-"05-launchers.html"
-"06-loja.html"
-"07-manutencao.html"
-"08-fof-manutencao.html"
+"05-hardware.html"
+"06-gaming.html"
+"07-loja.html"
+"08-waydroid.html"
 "09-softwares-uteis.html"
-"10-hardware.html"
-"11-waydroid.html"
+"90-manutencao.html"
+"91-fof-manutencao.html"
 )
 
 local missing=0

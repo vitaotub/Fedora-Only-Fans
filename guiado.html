@@ -78,19 +78,29 @@ document.documentElement.setAttribute('data-tema', 'escuro');
 var sessaoAtual = 0;
 var sessoesCarregadas = {};
 
+// Cores fixas para cada bolinha indicadora de sessão.
+// A ORDEM DESTE ARRAY CASA COM A ORDEM DE SESSOES_PRINCIPAIS
+// (script.js). Se uma sessão for reordenada ou inserida, ajustar
+// as cores aqui também.
 var CORES_SESSOES = [
-'#f59e0b',
-'#8b5cf6',
-'#3c67e3',
-'#10b981',
-'#3b82f6',
-'#d97706',
-'#357a38',
-'#e11d48',
-'#06b6d4',
-'#a855f7'
+'#f59e0b', // Sessão 1  - Boas-vindas (laranja)
+'#8b5cf6', // Sessão 2  - Restauração (roxo)
+'#3c67e3', // Sessão 3  - Otimização (azul)
+'#10b981', // Sessão 4  - Repositórios (verde)
+'#3b82f6', // Sessão 5  - Fontes (azul claro)
+'#e11d48', // Sessão 6  - Hardware (rosa)
+'#22c55e', // Sessão 7  - Gaming (verde vibrante)
+'#357a38', // Sessão 8  - Produção Multimídia (verde escuro)
+'#06b6d4', // Sessão 9  - Waydroid (ciano)
+'#a855f7'  // Sessão 10 - Aplicativos Recomendados (púrpura)
 ];
 
+// ------------------------------------------------------------
+// i18n helpers locais (wrappers sobre tOr global)
+// tOr(chave, fallback) → string traduzida, ou fallback em PT-BR.
+// Como o fallback é o próprio texto PT-BR, a UI em pt-BR fica
+// idêntica ao original.
+// ------------------------------------------------------------
 function _t(chave, fallback) {
 return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 }

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOF - Manutenção do FOF</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- ===== CONTEÚDO DA SESSÃO ===== -->
+<div class="sessao-container" id="sessao-08-fof-manutencao" style="border-left: 4px solid var(--accent);">
+<div class="sessao-titulo" data-i18n="sessoes.08-fof-manutencao.titulo">
+🔧 Manutenção do FOF
+</div>
+
+<!-- Atualizar FOF -->
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.08-fof-manutencao.atualizar_titulo">🔄 Atualizar Fedora Only Fans</h3>
+<p data-i18n="sessoes.08-fof-manutencao.atualizar_desc">Baixa e instala a versão mais recente do FOF diretamente do GitHub. Mantenha seu app sempre atualizado!</p>
+<div style="margin-top: 1rem;">
+<button class="btn-executar"
+style="background-color: #3c67e3;"
+onclick="atualizarFOF()"
+data-comando="atualizar-fof"
+data-logbox="log-sessao-08-fof-manutencao"
+id="btn-atualizar-fof"
+data-i18n="sessoes.08-fof-manutencao.btn_atualizar">
+🔄 Atualizar FOF
+</button>
+</div>
+<div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);" data-i18n="sessoes.08-fof-manutencao.atualizar_info">
+ℹ️ A atualização mantém suas configurações e histórico.
+</div>
+</div>
+</div>
+
+<!-- Desinstalar FOF -->
+<div class="bloco-comando" style="border-left: 4px solid #ef4444;">
+<div class="comando-info">
+<h3 data-i18n="sessoes.08-fof-manutencao.desinstalar_titulo">🗑️ Desinstalar Fedora Only Fans</h3>
+<p data-i18n="sessoes.08-fof-manutencao.desinstalar_desc">Remove completamente o FOF do seu sistema, incluindo todos os arquivos, configurações e atalhos.</p>
+<div class="aviso-caixa" data-i18n="sessoes.08-fof-manutencao.desinstalar_aviso">⚠️ ATENÇÃO: Esta ação é irreversível! Todos os dados do FOF serão removidos.</div>
+<div style="margin-top: 1rem;">
+<button class="btn-executar"
+style="background-color: #ef4444;"
+onclick="desinstalarFOF()"
+data-comando="desinstalar-fof"
+data-logbox="log-sessao-08-fof-manutencao"
+id="btn-desinstalar-fof"
+data-i18n="sessoes.08-fof-manutencao.btn_desinstalar">
+🗑️ Desinstalar FOF
+</button>
+</div>
+</div>
+</div>
+
+<!-- Log único da sessão -->
+<div class="terminal-log sessao-compartilhado" id="log-sessao-08-fof-manutencao"></div>
+</div>
+
+<!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
+<script>
+// ============================================================
+// SESSÃO 91: MANUTENÇÃO DO FOF
+// ============================================================
+
+function _t(chave, fallback) {
+return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+}
+
+async function atualizarFOF() {
+const idComando = 'atualizar-fof';
+const logBox = _getLogBox(idComando);
+const btn = document.getElementById('btn-' + idComando);
+
+if (!logBox) return;
+
+const confirmacao = confirm(_t('sessoes.08-fof-manutencao.atualizar_confirmar',
+'🔄 Deseja atualizar o Fedora Only Fans para a versão mais recente?\n\nIsso irá baixar e instalar a última versão do GitHub.'));
+
+if (!confirmacao) return;
+
+iniciarProgresso(idComando);
+
+logBox.style.display = 'block';
+
+const nomeAcao = _t('sessoes.08-fof-manutencao.btn_atualizar', '🔄 Atualizar FOF');
+_separadorLog(logBox, nomeAcao);
+
+const header = document.createElement('div');
+header.className = 'log-line info';
+header.textContent = _t('sessoes.08-fof-manutencao.atualizar_log_iniciando', '🔄 Atualizando FOF...') + ' (' + new Date().toLocaleTimeString() + ')';
+logBox.appendChild(header);
+logBox.scrollTop = logBox.scrollHeight;
+
+conectarSSE(idComando, logBox);
+
+if (btn) {
+btn.disabled = true;
+btn.textContent = '⏳ ' + nomeAcao.replace(/^[^\s]+\s/, '') + '...';
+btn.style.opacity = '0.6';
+}
+
+_bloquearSessao(idComando);
+
+try {
+const comando = 'bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --update';
+
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ comando: comando, idComando: idComando })
+});
+
+if (!response.ok) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = '❌ Erro HTTP: ' + response.status;
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+completarProgresso(idComando, false);
+
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+}
+} else {
+// Aguarda a conclusão real do install.sh --update para poder
+// injetar o aviso de "reinicie o FOF" somente se deu certo.
+// O install.sh --update recompila o container nativo (fof-container)
+// automaticamente. Porém, o processo em execução continua com o
+// binário ANTIGO em memória — só troca depois de fechar e reabrir
+// o FOF. Este aviso deixa isso explícito para o usuário.
+const sucesso = await aguardarConclusaoReal(idComando, 1800000);
+
+if (sucesso) {
+const aviso = document.createElement('div');
+aviso.className = 'log-line warning';
+aviso.textContent = '💡 ' + _t('sessoes.08-fof-manutencao.atualizar_aviso_reiniciar',
+'Feche e reabra o FOF para usar a nova versão do container.');
+logBox.appendChild(aviso);
+logBox.scrollTop = logBox.scrollHeight;
+}
+}
+} catch (e) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = '❌ Erro de conexão: ' + e.message;
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+completarProgresso(idComando, false);
+
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+}
+} finally {
+// "Atualizar FOF" é sempre clicável — reabilita após 3s
+setTimeout(function() {
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+btn.style.backgroundColor = '#3c67e3';
+}
+}, 3000);
+}
+}
+
+async function desinstalarFOF() {
+const idComando = 'desinstalar-fof';
+const logBox = _getLogBox(idComando);
+const btn = document.getElementById('btn-' + idComando);
+
+if (!logBox) return;
+
+const confirmacao = confirm(_t('sessoes.08-fof-manutencao.desinstalar_confirmar1',
+'⚠️ ATENÇÃO!\n\nVocê está prestes a DESINSTALAR completamente o Fedora Only Fans.\n\nIsso irá remover:\n• Todos os arquivos do FOF\n• Atalhos do menu\n• Comando "fof" do terminal\n\nEsta ação é IRREVERSÍVEL!\n\nTem certeza que deseja continuar?'));
+
+if (!confirmacao) return;
+
+const confirmacao2 = confirm(_t('sessoes.08-fof-manutencao.desinstalar_confirmar2',
+'🔄 Última confirmação!\n\nTodos os dados do FOF serão perdidos.\n\nDeseja realmente desinstalar o Fedora Only Fans?'));
+
+if (!confirmacao2) return;
+
+iniciarProgresso(idComando);
+
+logBox.style.display = 'block';
+
+const nomeAcao = _t('sessoes.08-fof-manutencao.btn_desinstalar', '🗑️ Desinstalar FOF');
+_separadorLog(logBox, nomeAcao);
+
+const header = document.createElement('div');
+header.className = 'log-line info';
+header.textContent = _t('sessoes.08-fof-manutencao.desinstalar_log_iniciando', '🗑️ Desinstalando FOF...') + ' (' + new Date().toLocaleTimeString() + ')';
+logBox.appendChild(header);
+logBox.scrollTop = logBox.scrollHeight;
+
+conectarSSE(idComando, logBox);
+
+if (btn) {
+btn.disabled = true;
+btn.textContent = '⏳ ' + nomeAcao.replace(/^[^\s]+\s/, '') + '...';
+btn.style.opacity = '0.6';
+}
+
+_bloquearSessao(idComando);
+
+try {
+const comando = 'echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/main/install.sh) --uninstall';
+
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ comando: comando, idComando: idComando })
+});
+
+if (!response.ok) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = '❌ Erro HTTP: ' + response.status;
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+completarProgresso(idComando, false);
+
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+}
+} else {
+const sucesso = await aguardarConclusaoReal(idComando, 180000);
+
+if (sucesso && isExecutado(idComando)) {
+const successLine = document.createElement('div');
+successLine.className = 'log-line success';
+successLine.textContent = _t('sessoes.08-fof-manutencao.desinstalar_log_sucesso', '✅ FOF desinstalado com sucesso!');
+logBox.appendChild(successLine);
+logBox.scrollTop = logBox.scrollHeight;
+
+localStorage.removeItem(STORAGE_KEY);
+
+alert(_t('sessoes.08-fof-manutencao.desinstalar_msg_final',
+'✅ Fedora Only Fans foi desinstalado completamente do seu computador.\n\nVocê pode fechar esta janela agora.'));
+try {
+window.close();
+} catch(e) { /* usuário fecha manualmente */ }
+}
+}
+} catch (e) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = '❌ Erro de conexão: ' + e.message;
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+completarProgresso(idComando, false);
+
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+}
+}
+}
+
+// ===== RESTAURAR ESTADO DA SESSÃO =====
+function restaurarEstadoSessao() {
+if (isExecutado('desinstalar-fof')) {
+const btn = document.getElementById('btn-desinstalar-fof');
+if (btn) {
+const textoFinal = getTextoAposExecucao('desinstalar-fof');
+btn.textContent = textoFinal;
+btn.style.backgroundColor = '#4b5563';
+btn.style.cursor = 'default';
+btn.disabled = true;
+}
+}
+
+const btnAtualizar = document.getElementById('btn-atualizar-fof');
+if (btnAtualizar) {
+btnAtualizar.disabled = false;
+btnAtualizar.textContent = _t('sessoes.08-fof-manutencao.btn_atualizar', '🔄 Atualizar FOF');
+btnAtualizar.style.backgroundColor = '#3c67e3';
+btnAtualizar.style.opacity = '1';
+btnAtualizar.style.cursor = 'pointer';
+}
+}
+
+// ===== INICIALIZAÇÃO =====
+// FIX #1 + #2: captura antes de restaurar; IIFE em vez de DOMContentLoaded.
+(function() {
+document.querySelectorAll('.btn-executar').forEach(function(btn) {
+if (!btn.hasAttribute('data-texto-original')) {
+btn.setAttribute('data-texto-original', btn.textContent);
+}
+});
+
+restaurarEstadoSessao();
+
+console.log('📦 Componente 91-fof-manutencao carregado!');
+})();
+</script>
+</body>
+</html>

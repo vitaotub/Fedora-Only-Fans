@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
 # Fedora Only Fans (FOF) - Script de Instalação
-# Versão: 1.0.0-rc.3
 # ============================================================
 
 set -e
@@ -13,7 +12,7 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-VERSION="1.0.0-rc.3"
+VERSION="1.0.0-09222026"
 INSTALL_DIR="$HOME/.local/share/fedora-only-fans"
 BIN_DIR="$HOME/.local/bin"
 
@@ -41,13 +40,13 @@ SESSAO_ARQUIVOS=(
 "02-otimizacao.html"
 "03-repositorios.html"
 "04-fontes.html"
-"05-launchers.html"
-"06-loja.html"
-"07-manutencao.html"
-"08-fof-manutencao.html"
+"05-hardware.html"
+"06-gaming.html"
+"07-loja.html"
+"08-waydroid.html"
 "09-softwares-uteis.html"
-"10-hardware.html"
-"11-waydroid.html"
+"90-manutencao.html"
+"91-fof-manutencao.html"
 )
 
 ARQUIVOS_PRINCIPAIS=(

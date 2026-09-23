@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOF - Boas-vindas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- ===== CONTEÚDO DA SESSÃO ===== -->
+<!--
+TEMA CLARO: este card usava 3 estilos inline hardcoded que quebravam
+o tema claro (background-color escuro translúcido do card, color bege
+no título, e background-color preto translúcido no bloco interno).
+Agora usa apenas border-left com a cor de destaque da sessão (mesmo
+padrão das outras sessões). O fundo vem do CSS global
+(.sessao-container { background-color: var(--bg-card); }), que respeita
+o tema automaticamente.
+-->
+<div class="sessao-container" id="sessao-00-boas-vindas" style="border-left: 4px solid #f59e0b;">
+<div class="sessao-titulo">
+<span class="sessao-label">Sessão</span>
+<span data-i18n="sessoes.00-boas-vindas.titulo">👋 Boas-vindas e Atualização</span>
+</div>
+<div class="sessao-descricao" data-i18n-html="sessoes.00-boas-vindas.descricao">
+Antes de prosseguir com as etapas de configuração e instalação de aplicativos, é <strong>altamente recomendado</strong> realizar uma atualização completa no seu sistema operacional.
+</div>
+<div class="bloco-comando" style="margin-bottom: 0;">
+<div class="comando-info">
+<h3 data-i18n="sessoes.00-boas-vindas.atualizacao_titulo">Atualização Geral do Fedora</h3>
+<p data-i18n="sessoes.00-boas-vindas.atualizacao_desc">Atualiza o índice de repositórios, sincroniza as chaves de segurança e baixa as versões mais recentes de todos os componentes do sistema.</p>
+<div class="grupo-botoes">
+<button class="btn-executar ativo" onclick="executarAtualizacaoFedora()" data-comando="atualizacao-inicial" id="btn-atualizar-fedora" data-i18n="sessoes.00-boas-vindas.btn_atualizar">
+🔄 Atualizar Fedora
+</button>
+</div>
+
+<div class="aviso-caixa" style="margin-top: 1rem;" data-i18n="sessoes.00-boas-vindas.aviso_reiniciar">
+💡 Recomenda-se reiniciar o computador após aplicar atualizações de sistema, seja diretamente pela interface do FOF ou pela notificação do próprio Fedora. Reiniciar garante que todas as alterações sejam aplicadas corretamente e evita eventuais inconsistências no funcionamento do sistema.
+</div>
+</div>
+<div class="progress-container" id="progress-atualizacao-inicial">
+<div class="progress-bar">
+<div class="progress-fill" id="progress-fill-atualizacao-inicial"></div>
+</div>
+<div class="progress-text">
+<span class="status" id="progress-status-atualizacao-inicial">⏳ Iniciando...</span>
+<span class="percentage" id="progress-percent-atualizacao-inicial">0%</span>
+</div>
+</div>
+<div class="terminal-log" id="log-atualizacao-inicial"></div>
+</div>
+</div>
+
+<!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
+<script>
+// ============================================================
+// SESSÃO 00: BOAS-VINDAS E ATUALIZAÇÃO
+// ============================================================
+
+var ID_SESSAO = '00-boas-vindas';
+var ID_COMANDO = 'atualizacao-inicial';
+
+function _t(chave, fallback) {
+return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+}
+
+async function executarAtualizacaoFedora() {
+const comando = 'sudo dnf upgrade --refresh -y';
+const logBox = document.getElementById('log-' + ID_COMANDO);
+const btn = document.getElementById('btn-atualizar-fedora');
+
+if (!logBox) return;
+
+if (btn && btn.disabled) {
+return;
+}
+
+iniciarProgresso(ID_COMANDO);
+
+logBox.innerHTML = '';
+logBox.style.display = 'block';
+
+const header = document.createElement('div');
+header.className = 'log-line info';
+header.textContent = _t('sessoes.00-boas-vindas.log_iniciando', '🚀 Iniciando atualização...') + ' (' + new Date().toLocaleTimeString() + ')';
+logBox.appendChild(header);
+logBox.scrollTop = logBox.scrollHeight;
+
+conectarSSE(ID_COMANDO, logBox);
+
+if (btn) {
+btn.disabled = true;
+btn.textContent = '⏳ ' + _t('sessoes.00-boas-vindas.btn_atualizar', '🔄 Atualizar Fedora').replace(/^[^\s]+\s/, '');
+btn.style.opacity = '0.6';
+}
+
+try {
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+comando: comando,
+idComando: ID_COMANDO
+})
+});
+
+if (!response.ok) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = '❌ Erro HTTP: ' + response.status + ' - ' + response.statusText;
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+completarProgresso(ID_COMANDO, false);
+
+if (btn) {
+btn.disabled = false;
+btn.textContent = _t('sessoes.00-boas-vindas.btn_atualizar', '🔄 Atualizar Fedora');
+btn.style.opacity = '1';
+btn.style.backgroundColor = '#d97706';
+}
+}
+} catch (e) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = '❌ Erro de conexão: ' + e.message;
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+completarProgresso(ID_COMANDO, false);
+
+if (btn) {
+btn.disabled = false;
+btn.textContent = _t('sessoes.00-boas-vindas.btn_atualizar', '🔄 Atualizar Fedora');
+btn.style.opacity = '1';
+btn.style.backgroundColor = '#d97706';
+}
+} finally {
+setTimeout(function() {
+if (btn) {
+btn.disabled = false;
+btn.textContent = _t('sessoes.00-boas-vindas.btn_atualizar', '🔄 Atualizar Fedora');
+btn.style.opacity = '1';
+btn.style.backgroundColor = '#d97706';
+}
+}, 3000);
+}
+}
+
+function restaurarEstadoSessao() {
+const btn = document.getElementById('btn-atualizar-fedora');
+if (btn) {
+btn.disabled = false;
+btn.textContent = _t('sessoes.00-boas-vindas.btn_atualizar', '🔄 Atualizar Fedora');
+btn.style.opacity = '1';
+btn.style.backgroundColor = '#d97706';
+}
+}
+
+// ===== INICIALIZAÇÃO =====
+// FIX #2: IIFE em vez de DOMContentLoaded. As sessões são injetadas
+// via eval() DEPOIS que o evento DOMContentLoaded da página principal
+// já disparou, então o listener NUNCA executaria.
+(function() {
+document.querySelectorAll('.btn-executar').forEach(function(btn) {
+if (!btn.hasAttribute('data-texto-original')) {
+btn.setAttribute('data-texto-original', btn.textContent);
+}
+});
+
+restaurarEstadoSessao();
+
+console.log('📦 Componente ' + ID_SESSAO + ' carregado!');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOF - Manutenção</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sessao-container" id="sessao-07-manutencao">
+<div class="sessao-titulo" data-i18n="sessoes.07-manutencao.titulo">
+🛠️ Manutenção e Tarefas Avançadas
+</div>
+
+<!-- Limpeza -->
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.07-manutencao.limpeza_titulo">Limpar Arquivos Temporários e Resíduos</h3>
+<p data-i18n="sessoes.07-manutencao.limpeza_desc">Limpa o cache do DNF, dependências órfãs e runtimes de flatpak não utilizados.</p>
+<div class="grupo-botoes">
+<button class="btn-executar"
+onclick="executarLimpeza()"
+data-comando="limpeza-sistema"
+data-logbox="log-sessao-07-manutencao"
+id="btn-limpeza-sistema"
+data-i18n="sessoes.07-manutencao.btn_limpeza">
+Executar Limpeza
+</button>
+</div>
+</div>
+
+<div class="progress-container" id="progress-limpeza-sistema">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-limpeza-sistema"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-limpeza-sistema">⏳ Iniciando...</span><span class="percentage" id="progress-percent-limpeza-sistema">0%</span></div>
+</div>
+</div>
+
+<!-- Kernels -->
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.07-manutencao.kernel_titulo">Gerenciamento de Kernels</h3>
+<p data-i18n="sessoes.07-manutencao.kernel_desc">Gerencie os kernels instalados no seu sistema.</p>
+<div class="aviso-caixa" data-i18n="sessoes.07-manutencao.kernel_aviso">⚠️ IMPORTANTE: Não é recomendado remover nenhuma versão anterior do kernel pois o Fedora mantém apenas os 3 últimos kernels.</div>
+
+<div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+<button class="btn-executar"
+onclick="listarKernels()"
+data-comando="listar-kernels"
+data-logbox="log-sessao-07-manutencao"
+id="btn-listar-kernels"
+data-i18n="sessoes.07-manutencao.btn_verificar_kernels">
+📋 Verificar Kernels
+</button>
+<div style="display: flex; align-items: center; gap: 0.75rem;">
+<label for="kernel-select" style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="sessoes.07-manutencao.kernel_label_selecionar">Selecionar:</label>
+<select id="kernel-select" class="kernel-dropdown" disabled>
+<option value="" data-i18n="sessoes.07-manutencao.kernel_option_nenhum">Nenhum kernel detectado</option>
+</select>
+</div>
+<button class="btn-executar"
+style="background-color: #ef4444;"
+onclick="removerKernel()"
+data-comando="remover-kernel"
+data-logbox="log-sessao-07-manutencao"
+id="btn-remover-kernel"
+disabled
+data-i18n="sessoes.07-manutencao.btn_remover_kernel">
+🗑️ Remover
+</button>
+</div>
+</div>
+
+<div class="progress-container" id="progress-listar-kernels">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-listar-kernels"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-listar-kernels">⏳ Iniciando...</span><span class="percentage" id="progress-percent-listar-kernels">0%</span></div>
+</div>
+</div>
+
+<!-- ===== GRUB ===== -->
+<div class="bloco-comando">
+<div class="comando-info">
+<h3 data-i18n="sessoes.07-manutencao.grub_titulo">🖥️ Configuração do GRUB</h3>
+<p data-i18n="sessoes.07-manutencao.grub_desc">Configure o GRUB para sempre aparecer ao ligar o computador e defina o tempo de exibição para 10 segundos.</p>
+
+<div class="aviso-caixa" data-i18n="sessoes.07-manutencao.grub_aviso">
+⚠️ Esta alteração afeta o boot do sistema. Certifique-se de que o GRUB está instalado corretamente.
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; align-items: center;">
+<button class="btn-executar laranja"
+onclick="executarConfigGrubRecomendado()"
+data-comando="grub-aplicar-recomendado"
+data-logbox="log-sessao-07-manutencao"
+id="btn-grub-aplicar-recomendado"
+data-i18n="sessoes.07-manutencao.btn_grub_recomendado">
+⚙️ Aplicar Configuração Recomendada
+</button>
+<button class="btn-executar"
+style="background-color: #6b7280;"
+onclick="executarConfigGrubPadrao()"
+data-comando="grub-restaurar-padrao"
+data-logbox="log-sessao-07-manutencao"
+id="btn-grub-restaurar-padrao"
+data-i18n="sessoes.07-manutencao.btn_grub_padrao">
+↩️ Restaurar Padrão do Sistema
+</button>
+</div>
+
+<div id="grub-status" style="margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; display: none;"></div>
+</div>
+
+<div class="progress-container" id="progress-grub-aplicar-recomendado">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-grub-aplicar-recomendado"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-grub-aplicar-recomendado">⏳ Iniciando...</span><span class="percentage" id="progress-percent-grub-aplicar-recomendado">0%</span></div>
+</div>
+
+<div class="progress-container" id="progress-grub-restaurar-padrao">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill-grub-restaurar-padrao"></div></div>
+<div class="progress-text"><span class="status" id="progress-status-grub-restaurar-padrao">⏳ Iniciando...</span><span class="percentage" id="progress-percent-grub-restaurar-padrao">0%</span></div>
+</div>
+</div>
+
+<!-- Log único da sessão -->
+<div class="terminal-log sessao-compartilhado" id="log-sessao-07-manutencao"></div>
+</div>
+
+<!-- ===== JAVASCRIPT ESPECÍFICO DA SESSÃO ===== -->
+<script>
+// ============================================================
+// SESSÃO 90: MANUTENÇÃO E TAREFAS AVANÇADAS
+// ============================================================
+
+function _t(chave, fallback) {
+return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+}
+function _tVars(chave, fallback, vars) {
+return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
+}
+
+async function executarLimpeza() {
+const idComando = 'limpeza-sistema';
+const comando = 'sudo dnf clean all && sudo dnf autoremove -y';
+const logBox = _getLogBox(idComando);
+const btn = document.getElementById('btn-' + idComando);
+
+if (!logBox) return;
+if (btn && btn.disabled) return;
+
+iniciarProgresso(idComando);
+
+logBox.style.display = 'block';
+
+const nomeAcao = _t('sessoes.07-manutencao.btn_limpeza', 'Executar Limpeza');
+_separadorLog(logBox, nomeAcao);
+
+const header = document.createElement('div');
+header.className = 'log-line info';
+header.textContent = _t('sessoes.07-manutencao.log_executando_limpeza', '🧹 Executando limpeza do sistema...');
+logBox.appendChild(header);
+logBox.scrollTop = logBox.scrollHeight;
+
+conectarSSE(idComando, logBox);
+
+if (btn) {
+btn.disabled = true;
+btn.textContent = '⏳ ' + nomeAcao + '...';
+btn.style.opacity = '0.6';
+}
+
+_bloquearSessao(idComando);
+
+try {
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ comando: comando, idComando: idComando })
+});
+
+if (!response.ok) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = '❌ Erro HTTP: ' + response.status;
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+completarProgresso(idComando, false);
+
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+}
+}
+} catch (e) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = '❌ Erro de conexão: ' + e.message;
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+completarProgresso(idComando, false);
+
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+}
+} finally {
+setTimeout(function() {
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+btn.style.backgroundColor = 'var(--accent, #3c67e3)';
+}
+}, 3000);
+}
+}
+
+var kernelsList = [];
+
+async function listarKernels() {
+const idComando = 'listar-kernels';
+const comando = 'rpm -q kernel-core --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\n" 2>/dev/null';
+
+const logBox = _getLogBox(idComando);
+const btn = document.getElementById('btn-' + idComando);
+
+if (!logBox) return;
+
+iniciarProgresso(idComando);
+
+logBox.style.display = 'block';
+
+const nomeAcao = _t('sessoes.07-manutencao.btn_verificar_kernels', '📋 Verificar Kernels');
+_separadorLog(logBox, nomeAcao);
+
+const header = document.createElement('div');
+header.className = 'log-line info';
+header.textContent = _t('sessoes.07-manutencao.log_verificando_kernels', '📋 Verificando kernels instalados...');
+logBox.appendChild(header);
+logBox.scrollTop = logBox.scrollHeight;
+
+conectarSSE(idComando, logBox);
+
+if (btn) {
+btn.disabled = true;
+btn.textContent = '⏳ ' + nomeAcao.replace(/^[^\s]+\s/, '') + '...';
+btn.style.opacity = '0.6';
+}
+
+_bloquearSessao(idComando);
+
+const linhasAntes = logBox.querySelectorAll('.log-line.output').length;
+
+try {
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ comando: comando, idComando: idComando })
+});
+
+if (!response.ok) {
+throw new Error('Erro ao listar kernels');
+}
+
+await aguardarConclusaoReal(idComando, 30000);
+
+var todasLinhas = logBox.querySelectorAll('.log-line.output');
+var logLines = Array.from(todasLinhas).slice(linhasAntes);
+const kernels = [];
+logLines.forEach(line => {
+const text = line.textContent.trim();
+if (text && !text.includes('Comando aceito') && !text.includes('rpm -q')) {
+const kernelMatch = text.match(/kernel-core-(.+)/);
+if (kernelMatch) {
+kernels.push(kernelMatch[1]);
+} else if (text.match(/^\d/)) {
+kernels.push(text);
+}
+}
+});
+
+const select = document.getElementById('kernel-select');
+const btnRemover = document.getElementById('btn-remover-kernel');
+
+select.innerHTML = '';
+
+if (kernels.length > 0) {
+kernelsList = kernels;
+kernels.forEach(function(kernel) {
+const option = document.createElement('option');
+option.value = kernel;
+option.textContent = 'kernel-' + kernel;
+select.appendChild(option);
+});
+select.disabled = false;
+btnRemover.disabled = false;
+
+const successLine = document.createElement('div');
+successLine.className = 'log-line success';
+if (kernels.length === 1) {
+successLine.textContent = _tVars('sessoes.07-manutencao.kernel_singular_encontrado', '✅ ' + kernels.length + ' kernel encontrado', { n: kernels.length });
+} else {
+successLine.textContent = _tVars('sessoes.07-manutencao.kernel_plural_encontrado', '✅ ' + kernels.length + ' kernels encontrados', { n: kernels.length });
+}
+logBox.appendChild(successLine);
+logBox.scrollTop = logBox.scrollHeight;
+} else {
+await listarKernelsFallback(logBox);
+}
+
+completarProgresso(idComando, true);
+
+} catch (e) {
+console.error('Erro ao listar kernels:', e);
+await listarKernelsFallback(logBox);
+completarProgresso(idComando, true);
+} finally {
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+}
+}
+}
+
+async function listarKernelsFallback(logBox) {
+const idComando = 'uname-current';
+const comando = 'uname -r';
+
+if (!logBox) return;
+
+try {
+conectarSSE(idComando, logBox);
+
+const linhasAntes = logBox.querySelectorAll('.log-line.output').length;
+
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ comando: comando, idComando: idComando })
+});
+
+if (response.ok) {
+await aguardarConclusaoReal(idComando, 10000);
+
+var todasLinhas = logBox.querySelectorAll('.log-line.output');
+var logLines = Array.from(todasLinhas).slice(linhasAntes);
+let currentKernel = '';
+logLines.forEach(line => {
+const text = line.textContent.trim();
+if (text && !text.includes('Comando aceito') && !text.includes('uname -r')) {
+currentKernel = text;
+}
+});
+
+const select = document.getElementById('kernel-select');
+const btnRemover = document.getElementById('btn-remover-kernel');
+
+select.innerHTML = '';
+
+if (currentKernel) {
+kernelsList = [currentKernel];
+const option = document.createElement('option');
+option.value = currentKernel;
+option.textContent = 'kernel-' + currentKernel + ' (atual)';
+select.appendChild(option);
+select.disabled = false;
+btnRemover.disabled = false;
+
+const successLine = document.createElement('div');
+successLine.className = 'log-line success';
+successLine.textContent = _tVars('sessoes.07-manutencao.kernel_atual_singular', '✅ Kernel atual encontrado: ' + currentKernel, { kernel: currentKernel });
+logBox.appendChild(successLine);
+logBox.scrollTop = logBox.scrollHeight;
+} else {
+const optNenhum = document.createElement('option');
+optNenhum.value = '';
+optNenhum.textContent = _t('sessoes.07-manutencao.kernel_option_nenhum_short', 'Nenhum kernel encontrado');
+select.innerHTML = '';
+select.appendChild(optNenhum);
+select.disabled = true;
+btnRemover.disabled = true;
+}
+}
+} catch (e) {
+console.error('Erro no fallback de kernels:', e);
+}
+}
+
+async function removerKernel() {
+const select = document.getElementById('kernel-select');
+const kernel = select.value;
+
+if (!kernel) {
+alert(_t('sessoes.07-manutencao.kernel_msg_selecione', 'Selecione um kernel para remover.'));
+return;
+}
+
+const logBox = _getLogBox('remover-kernel');
+const btnRemover = document.getElementById('btn-remover-kernel');
+const selectKernel = document.getElementById('kernel-select');
+
+const textoOriginalBotao = btnRemover.getAttribute('data-texto-original') || btnRemover.textContent;
+
+try {
+if (logBox) conectarSSE('check-current-kernel', logBox);
+const linhasAntes = logBox ? logBox.querySelectorAll('.log-line.output').length : 0;
+
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ comando: 'uname -r', idComando: 'check-current-kernel' })
+});
+
+if (response.ok) {
+await aguardarConclusaoReal('check-current-kernel', 5000);
+
+if (logBox) {
+var todasLinhas = logBox.querySelectorAll('.log-line.output');
+var logLines = Array.from(todasLinhas).slice(linhasAntes);
+let currentKernel = '';
+logLines.forEach(line => {
+const text = line.textContent.trim();
+if (text && !text.includes('Comando aceito') && !text.includes('uname -r')) {
+currentKernel = text;
+}
+});
+
+if (currentKernel && kernel.includes(currentKernel)) {
+alert(_tVars('sessoes.07-manutencao.kernel_msg_atual_nao_removivel',
+'❌ Não é possível remover o kernel que você está usando atualmente (' + currentKernel + ').\n\nReinicie o computador com outro kernel antes de remover este.',
+{ kernel: currentKernel }));
+return;
+}
+}
+}
+} catch (e) {
+console.error('Erro ao verificar kernel atual:', e);
+}
+
+const confirmacao = confirm(_tVars('sessoes.07-manutencao.kernel_confirmar_remocao',
+'⚠️ ATENÇÃO!\n\nVocê está prestes a remover o kernel:\n' + kernel + '\n\nTem certeza que deseja continuar?',
+{ kernel: kernel }));
+
+if (!confirmacao) return;
+
+iniciarProgresso('remover-kernel');
+
+if (logBox) {
+logBox.style.display = 'block';
+_separadorLog(logBox, '🗑️ Remover kernel ' + kernel);
+
+const infoLine = document.createElement('div');
+infoLine.className = 'log-line info';
+infoLine.textContent = _tVars('sessoes.07-manutencao.kernel_log_removendo', '🗑️ Removendo kernel: ' + kernel + '...', { kernel: kernel });
+logBox.appendChild(infoLine);
+logBox.scrollTop = logBox.scrollHeight;
+}
+
+if (btnRemover) {
+btnRemover.disabled = true;
+btnRemover.textContent = '⏳ ' + _t('sessoes.07-manutencao.btn_remover_kernel', '🗑️ Remover').replace(/^[^\s]+\s/, '') + '...';
+btnRemover.style.opacity = '0.6';
+}
+if (selectKernel) {
+selectKernel.disabled = true;
+}
+
+_bloquearSessao('remover-kernel');
+
+try {
+const comando = 'sudo dnf remove kernel-core-' + kernel + ' -y';
+const idComando = 'remover-kernel';
+
+if (logBox) conectarSSE(idComando, logBox);
+
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ comando: comando, idComando: idComando })
+});
+
+if (response.ok) {
+const sucesso = await aguardarConclusaoReal(idComando, 180000);
+
+if (sucesso) {
+if (logBox) {
+const successLine = document.createElement('div');
+successLine.className = 'log-line success';
+successLine.textContent = _tVars('sessoes.07-manutencao.kernel_log_sucesso', '✅ Kernel ' + kernel + ' removido com sucesso!', { kernel: kernel });
+logBox.appendChild(successLine);
+logBox.scrollTop = logBox.scrollHeight;
+}
+
+setTimeout(function() {
+listarKernels();
+}, 1000);
+} else {
+if (logBox) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = sucesso === null
+? _t('sessoes.07-manutencao.kernel_log_timeout', '❌ Tempo esgotado esperando a remoção.')
+: _t('sessoes.07-manutencao.kernel_log_falha', '❌ Falha ao remover kernel.');
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+}
+}
+}
+} catch (e) {
+console.error('Erro ao remover kernel:', e);
+if (logBox) {
+const errorLine = document.createElement('div');
+errorLine.className = 'log-line error';
+errorLine.textContent = _tVars('sessoes.07-manutencao.kernel_log_erro', '❌ Erro ao remover kernel: ' + e.message, { msg: e.message });
+logBox.appendChild(errorLine);
+logBox.scrollTop = logBox.scrollHeight;
+}
+} finally {
+if (btnRemover) {
+btnRemover.disabled = false;
+btnRemover.textContent = textoOriginalBotao;
+btnRemover.style.opacity = '1';
+btnRemover.style.backgroundColor = '#ef4444';
+btnRemover.style.cursor = 'pointer';
+}
+if (selectKernel) {
+selectKernel.disabled = false;
+}
+completarProgresso('remover-kernel', true);
+}
+}
+
+// ============================================================
+// GRUB - CONFIGURAÇÃO
+// ============================================================
+
+async function executarConfigGrubRecomendado() {
+const idComando = 'grub-aplicar-recomendado';
+const logBox = _getLogBox(idComando);
+const btn = document.getElementById('btn-' + idComando);
+const statusDiv = document.getElementById('grub-status');
+
+if (!logBox) return;
+
+if (!confirm(_t('sessoes.07-manutencao.grub_confirmar_recomendado',
+'⚠️ Deseja aplicar a configuração recomendada do GRUB?\n\n• GRUB sempre aparecerá ao ligar\n• Tempo de exibição: 10 segundos'))) return;
+
+const nomeAcao = _t('sessoes.07-manutencao.btn_grub_recomendado', '⚙️ Aplicar Configuração Recomendada');
+
+if (btn) {
+btn.disabled = true;
+btn.textContent = '⏳ ' + nomeAcao.replace(/^[^\s]+\s/, '') + '...';
+btn.style.opacity = '0.6';
+}
+
+iniciarProgresso(idComando);
+
+logBox.style.display = 'block';
+_separadorLog(logBox, nomeAcao);
+
+const header = document.createElement('div');
+header.className = 'log-line info';
+header.textContent = _t('sessoes.07-manutencao.grub_log_aplicando', '⚙️ Aplicando configuração recomendada do GRUB...');
+logBox.appendChild(header);
+logBox.scrollTop = logBox.scrollHeight;
+
+conectarSSE(idComando, logBox);
+
+if (statusDiv) {
+statusDiv.style.display = 'block';
+statusDiv.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
+statusDiv.style.border = '1px solid #34d399';
+statusDiv.style.color = '#34d399';
+statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_aplicando', '⏳ Aplicando configuração...');
+}
+
+_bloquearSessao(idComando);
+
+try {
+const comando = 'sudo sed -i "s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=10/" /etc/default/grub && sudo sed -i "/^GRUB_HIDDEN_TIMEOUT=/d" /etc/default/grub && sudo grub2-mkconfig -o /boot/grub2/grub.cfg';
+
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ comando: comando, idComando: idComando })
+});
+
+if (!response.ok) throw new Error('Erro HTTP: ' + response.status);
+
+const sucesso = await aguardarConclusaoReal(idComando, 30000);
+
+if (!sucesso) {
+if (statusDiv) {
+statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+statusDiv.style.border = '1px solid #ef4444';
+statusDiv.style.color = '#ef4444';
+statusDiv.innerHTML = sucesso === null
+? _t('sessoes.07-manutencao.grub_msg_timeout_aplicar', '❌ Tempo esgotado aplicando a configuração.')
+: _t('sessoes.07-manutencao.grub_msg_falha_aplicar', '❌ Falha ao aplicar a configuração do GRUB.');
+}
+return;
+}
+
+if (statusDiv) {
+statusDiv.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
+statusDiv.style.border = '1px solid #34d399';
+statusDiv.style.color = '#34d399';
+statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_aplicado',
+'✅ <strong>Configuração aplicada!</strong><br>GRUB_TIMEOUT=10 (10 segundos)<br>GRUB_HIDDEN_TIMEOUT removido (GRUB sempre aparece)');
+}
+
+} catch (e) {
+console.error('Erro:', e);
+if (statusDiv) {
+statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+statusDiv.style.border = '1px solid #ef4444';
+statusDiv.style.color = '#ef4444';
+statusDiv.innerHTML = '❌ Erro: ' + e.message;
+}
+} finally {
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+}
+}
+}
+
+async function executarConfigGrubPadrao() {
+const idComando = 'grub-restaurar-padrao';
+const logBox = _getLogBox(idComando);
+const btn = document.getElementById('btn-' + idComando);
+const statusDiv = document.getElementById('grub-status');
+
+if (!logBox) return;
+
+if (!confirm(_t('sessoes.07-manutencao.grub_confirmar_padrao',
+'Deseja restaurar a configuração padrão do GRUB (timeout=5 segundos, oculto)?'))) return;
+
+const nomeAcao = _t('sessoes.07-manutencao.btn_grub_padrao', '↩️ Restaurar Padrão do Sistema');
+
+if (btn) {
+btn.disabled = true;
+btn.textContent = '⏳ ' + nomeAcao.replace(/^[^\s]+\s/, '') + '...';
+btn.style.opacity = '0.6';
+}
+
+iniciarProgresso(idComando);
+
+logBox.style.display = 'block';
+_separadorLog(logBox, nomeAcao);
+
+const header = document.createElement('div');
+header.className = 'log-line info';
+header.textContent = _t('sessoes.07-manutencao.grub_log_restaurando', '↩️ Restaurando configuração padrão do GRUB...');
+logBox.appendChild(header);
+logBox.scrollTop = logBox.scrollHeight;
+
+conectarSSE(idComando, logBox);
+
+if (statusDiv) {
+statusDiv.style.display = 'block';
+statusDiv.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+statusDiv.style.border = '1px solid #f59e0b';
+statusDiv.style.color = '#f59e0b';
+statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_restaurando', '⏳ Restaurando configuração...');
+}
+
+_bloquearSessao(idComando);
+
+try {
+const comando = 'sudo sed -i "s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/" /etc/default/grub && sudo sed -i "/^GRUB_HIDDEN_TIMEOUT=/d" /etc/default/grub && echo "GRUB_HIDDEN_TIMEOUT=0" | sudo tee -a /etc/default/grub > /dev/null && sudo grub2-mkconfig -o /boot/grub2/grub.cfg';
+
+const response = await fetch(API_URL + '/executar', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ comando: comando, idComando: idComando })
+});
+
+if (!response.ok) throw new Error('Erro HTTP: ' + response.status);
+
+const sucesso = await aguardarConclusaoReal(idComando, 30000);
+
+if (!sucesso) {
+if (statusDiv) {
+statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+statusDiv.style.border = '1px solid #ef4444';
+statusDiv.style.color = '#ef4444';
+statusDiv.innerHTML = sucesso === null
+? _t('sessoes.07-manutencao.grub_msg_timeout_restaurar', '❌ Tempo esgotado restaurando a configuração.')
+: _t('sessoes.07-manutencao.grub_msg_falha_restaurar', '❌ Falha ao restaurar a configuração do GRUB.');
+}
+return;
+}
+
+if (statusDiv) {
+statusDiv.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
+statusDiv.style.border = '1px solid #34d399';
+statusDiv.style.color = '#34d399';
+statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_restaurado',
+'✅ <strong>Configuração restaurada!</strong><br>GRUB_TIMEOUT=5 (5 segundos)<br>GRUB_HIDDEN_TIMEOUT=0 (GRUB oculto)');
+}
+
+} catch (e) {
+console.error('Erro:', e);
+if (statusDiv) {
+statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+statusDiv.style.border = '1px solid #ef4444';
+statusDiv.style.color = '#ef4444';
+statusDiv.innerHTML = '❌ Erro: ' + e.message;
+}
+} finally {
+if (btn) {
+btn.disabled = false;
+btn.textContent = nomeAcao;
+btn.style.opacity = '1';
+}
+}
+}
+
+// ===== RESTAURAR ESTADO DA SESSÃO =====
+function restaurarEstadoSessao() {
+['btn-grub-aplicar-recomendado', 'btn-grub-restaurar-padrao'].forEach(function(id) {
+const btn = document.getElementById(id);
+if (btn) {
+btn.disabled = false;
+btn.style.opacity = '1';
+btn.style.cursor = 'pointer';
+}
+});
+
+const btnLimpeza = document.getElementById('btn-limpeza-sistema');
+if (btnLimpeza) {
+btnLimpeza.disabled = false;
+btnLimpeza.textContent = _t('sessoes.07-manutencao.btn_limpeza', 'Executar Limpeza');
+btnLimpeza.style.backgroundColor = 'var(--accent, #3c67e3)';
+btnLimpeza.style.opacity = '1';
+btnLimpeza.style.cursor = 'pointer';
+}
+
+const btnRemoverKernel = document.getElementById('btn-remover-kernel');
+if (btnRemoverKernel) {
+const textoOriginal = btnRemoverKernel.getAttribute('data-texto-original') || btnRemoverKernel.textContent;
+btnRemoverKernel.textContent = textoOriginal;
+btnRemoverKernel.style.opacity = '1';
+btnRemoverKernel.style.backgroundColor = '#ef4444';
+btnRemoverKernel.style.cursor = 'pointer';
+}
+}
+
+// ===== INICIALIZAÇÃO =====
+// FIX #1 + #2: captura antes de restaurar; IIFE em vez de DOMContentLoaded.
+(function() {
+document.querySelectorAll('.btn-executar').forEach(function(btn) {
+if (!btn.hasAttribute('data-texto-original')) {
+btn.setAttribute('data-texto-original', btn.textContent);
+}
+});
+
+restaurarEstadoSessao();
+
+console.log('📦 Componente 90-manutencao carregado!');
+})();
+</script>
+</body>
+</html>

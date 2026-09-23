@@ -3,7 +3,7 @@
 **🌐 Idioma:** [Português (BR)](README.md) | [English](README.en.md) | Español
 
 ![Autor](https://img.shields.io/badge/Creador-Vit%C3%A3oTub-blue?style=flat-square)
-![Versión](https://img.shields.io/badge/Versi%C3%B3n-v1.0.0--rc.3-orange?style=flat-square)
+![Versión](https://img.shields.io/badge/Versi%C3%B3n-v1.0.0--09222026-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![Licencia](https://img.shields.io/badge/Licencia-GPL--3.0-green?style=flat-square)
 ![Idiomas](https://img.shields.io/badge/Idiomas-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
@@ -93,14 +93,14 @@ Sesiones de Configuración (en orden)
     5	🔤 Fuentes
         Instalación de fuentes de Microsoft para compatibilidad (Arial, Times, Calibri, etc.)
         
-    6	🎮 Launchers
-        Instalación de Steam, Heroic Games, Lutris, y herramientas de compatibilidad Wine/Proton (Wine, Winetricks, Bottles, GameMode, MangoHud)
-        
-    7	🎬 Producción Multimedia
-        Instalación de OBS Studio (Flatpak), activación de cámara virtual y EasyEffects (procesador de audio para PipeWire)
-        
-    8	🖥️ Hardware
+    6	🖥️ Hardware
         Controladores y herramientas específicas de GPU (AMD y NVIDIA), control de ventiladores (CoreCtrl, LACT, CoolerControl) y soporte para mandos (grupo input). Incluye Vulkan completo, Mesa 3D/RADV y VA-API/VDPAU para AMD, controlador propietario + NVENC/NVDEC + modesetting para NVIDIA, y ajuste de overclocking (amdgpu.ppfeaturemask)
+        
+    7	🎮 Gaming
+        Sesión dedicada a juegos: launchers (Steam, Heroic, Lutris), herramientas de compatibilidad (Wine, Winetricks, Bottles, NTSYNC), rendimiento y monitoreo (GameMode, MangoHud, Goverlay, Gamescope) y consejos listos para optimizar la experiencia de juego
+        
+    8	🎬 Producción Multimedia
+        Instalación de OBS Studio (Flatpak), activación de cámara virtual y EasyEffects (procesador de audio para PipeWire)
         
     9	📱 Waydroid
         Instalación de Waydroid (Android en Linux) vía COPR yanqiyu/waydroid, con GApps (Google Play Store), traducción ARM (libndk/libhoudini), Magisk, Widevine DRM, Logitech SmartDock y waydroid-helper (vía el COPR oficial cuteneko/waydroid-helper). Requiere GPU AMD o Intel — no funciona con NVIDIA
@@ -125,6 +125,7 @@ Sesiones de Mantenimiento (sin orden — página aparte)
     🌐 Multilingüe - Interfaz en Portugués (BR), Inglés y Español, con cambio en tiempo real
     📡 Registros en tiempo real - Sigue la ejecución vía Server-Sent Events (SSE)
     📋 Registro único por sesión - Cada sesión comparte un registro unificado, en orden cronológico, con separadores entre ejecuciones
+    🔓 Registro expandido por defecto - El registro de cada sesión comienza expandido; el usuario puede contraerlo haciendo clic en el encabezado
     🔒 Bloqueo de sesión - Durante una instalación, los otros botones de la misma sesión se desactivan para evitar ejecuciones simultáneas
     📊 Barra de progreso - Visualiza el avance de las tareas
     🔐 Autenticación segura - Usa pkexec/kdesu (sin exponer contraseñas)
@@ -278,13 +279,13 @@ Fedora-Only-Fans/
 ├── 📄 02-otimizacao.html      # Sesión 3 (HTML + JS específico)
 ├── 📄 03-repositorios.html    # Sesión 4 (HTML + JS específico)
 ├── 📄 04-fontes.html          # Sesión 5 (HTML + JS específico)
-├── 📄 05-launchers.html       # Sesión 6 (HTML + JS específico)
-├── 📄 06-loja.html            # Sesión 7 (HTML + JS específico)
-├── 📄 10-hardware.html        # Sesión 8 — Hardware (AMD, NVIDIA y Mandos)
-├── 📄 11-waydroid.html        # Sesión 9 — Waydroid
+├── 📄 05-hardware.html        # Sesión 6 — Hardware (AMD, NVIDIA y Mandos)
+├── 📄 06-gaming.html          # Sesión 7 — Gaming (launchers, Wine/Proton, rendimiento)
+├── 📄 07-loja.html            # Sesión 8 — Producción Multimedia
+├── 📄 08-waydroid.html        # Sesión 9 — Waydroid (Android en Linux)
 ├── 📄 09-softwares-uteis.html # Sesión 10 — Aplicaciones Recomendadas
-├── 📄 07-manutencao.html      # Mantenimiento — kernels, limpieza, GRUB (sin orden)
-├── 📄 08-fof-manutencao.html  # Mantenimiento FOF — actualizar/desinstalar (sin orden)
+├── 📄 90-manutencao.html      # Mantenimiento — kernels, limpieza, GRUB (sin orden)
+├── 📄 91-fof-manutencao.html  # Mantenimiento FOF — actualizar/desinstalar (sin orden)
 ├── 📄 template-sessao.html    # Plantilla para crear una sesión nueva
 ├── 📄 iniciar_fof.sh          # Script de inicio
 ├── 📄 iniciar_fof_compat.sh   # Modo compatibilidad (GPUs antiguas)
@@ -328,18 +329,18 @@ tail -f /tmp/fof-*.log
 
 🎯 Roadmap
 
-v1.0.0-rc.3 (Actual) 🚧
+v1.0.0-09222026 (Actual) 🚧
 
-    ✅ Sesión Waydroid: waydroid-helper ahora usa el COPR oficial cuteneko/waydroid-helper (recomendado por upstream) en lugar de descargar AppImage
-    ✅ Sesión Waydroid: botón de waydroid-helper dividido en dos (Instalar / Abrir), siguiendo el patrón CoreCtrl/LACT/Rclone
-    ✅ Sesión Waydroid: acordeón renombrado a "Configuraciones Avanzadas" y bloque de preajustes a "Ajustes Recomendados"
-    ✅ Sesión Bienvenida: tema claro corregido (la tarjeta ya no se oscurece)
-    ✅ Tema claro: nuevas variables CSS (--accent-soft, --warning-soft, --success-soft) garantizan contraste adecuado en porcentajes, badges y textos de progreso
-    ✅ Servidor: regex de strip de sudo corregido para preservar flags (-E, -u, -H)
-    ✅ Servidor: outputTemp ya no se elimina tras el timeout de 60s (comandos largos no pierden el final del registro)
-    ✅ Sesiones: migración de DOMContentLoaded a IIFE (el listener nunca se disparaba por la carga vía eval)
-    ✅ Guiado/Mantenimiento: captura de data-texto-original movida antes de restaurarEstadoSessao()
-    ✅ Correcciones menores en script.js (clave muerta eliminada, botón Revertir oculto tras desinstalación, simetría textContent/innerHTML)
+    ✅ Archivos de sesión renombrados para reflejar el orden de la UI (00-09 + 90-91)
+    ✅ Nueva sesión dedicada a Gaming (Sesión 7), con launchers, compatibilidad, rendimiento y consejos
+    ✅ Hardware movido antes de Gaming (primero drivers, luego juegos)
+    ✅ NTSYNC, Goverlay y Gamescope añadidos a la sesión Gaming
+    ✅ Versionado del proyecto migrado a formato basado en fecha (MMDDYYYY)
+    ✅ Registros expandidos por defecto en todas las sesiones
+    ✅ Corrección del tema claro en la sesión Bienvenida
+    ✅ Aviso de reinicio tras actualizar FOF (el contenedor en ejecución mantiene el binario antiguo hasta cerrar y reabrir)
+    ✅ Corrección del regex de strip de `sudo` (preserva flags como -E, -u, -H)
+    ✅ Instalador: compilación del contenedor con registro detallado en $LOG_FILE
 
 v1.0.0 (Futuro) 🔮
 
@@ -357,7 +358,7 @@ FOF tiene un registro central de sesiones (SESSOES, al inicio de script.js) — 
 
 Listo — no necesitas editar guiado.html, manutencao.html, index.html ni server.js. La posición de tu entrada en el array SESSOES ya define el orden de visualización y el número "Sesión N" (calculado automáticamente) de las sesiones principales, y la ruta del servidor acepta cualquier sesión nombrada en ese patrón.
 
-El template-sessao.html tiene comentarios que apuntan a sesiones existentes que sirven como ejemplos para patrones más específicos (botón siempre clicable, varios botones lado a lado, dropdown, flujo con confirmación doble, etc.). Importante: FOF no tiene botones de "deshacer" genéricos — si una acción tiene un "deshacer" con sentido, modela un segundo botón independiente, también siempre clicable (ver grub-aplicar-recomendado/grub-restaurar-padrao en 07-manutencao.html y el par amdgpu-overclock en 10-hardware.html).
+El template-sessao.html tiene comentarios que apuntan a sesiones existentes que sirven como ejemplos para patrones más específicos (botón siempre clicable, varios botones lado a lado, dropdown, flujo con confirmación doble, etc.). Importante: FOF no tiene botones de "deshacer" genéricos — si una acción tiene un "deshacer" con sentido, modela un segundo botón independiente, también siempre clicable (ver grub-aplicar-recomendado/grub-restaurar-padrao en 90-manutencao.html y el par amdgpu-overclock en 05-hardware.html).
 
 🌐 Cómo añadir un idioma nuevo
 
