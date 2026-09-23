@@ -347,7 +347,7 @@ Exec=$BIN_DIR/fof
 Icon=fof-container
 Terminal=false
 Categories=System;Settings;
-StartupNotify=true
+StartupNotify=false
 StartupWMClass=fof-container
 X-GNOME-Autostart-enabled=true
 EOF
@@ -367,7 +367,7 @@ Exec=$BIN_DIR/fof-compat
 Icon=fof-container
 Terminal=false
 Categories=System;Settings;
-StartupNotify=true
+StartupNotify=false
 StartupWMClass=fof-container
 X-GNOME-Autostart-enabled=true
 EOF
