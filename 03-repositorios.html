@@ -143,7 +143,24 @@ await executarComandoGenerico(idComando, comando, _t('sessoes.03-repositorios.bt
 
 async function executarCodecs() {
 const idComando = 'codecs-essenciais';
-const comando = 'sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y && sudo dnf install --setopt=\'install_weak_deps=False\' gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-plugin-openh264 gstreamer1-plugin-libav --exclude=PackageKit-gstreamer-plugin -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1';
+
+// O `dnf swap ffmpeg-free ffmpeg --allowerasing` pressupõe que
+// ffmpeg-free está instalado. Se não estiver (instalação mínima,
+// remoção prévia), o swap falha e a cadeia `&&` inteira para —
+// os codecs gstreamer e o OpenH264 nunca são instalados.
+//
+// Solução: verificar se ffmpeg-free existe; se sim, faz swap; se
+// não, instala ffmpeg direto com --allowerasing (que já resolve
+// conflitos). Nos dois casos, o resultado final é o mesmo.
+const comando =
+'if rpm -q ffmpeg-free > /dev/null 2>&1; then ' +
+'sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y; ' +
+'else ' +
+'sudo dnf install ffmpeg --allowerasing -y; ' +
+'fi && ' +
+'sudo dnf install --setopt=\'install_weak_deps=False\' gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-plugin-openh264 gstreamer1-plugin-libav --exclude=PackageKit-gstreamer-plugin -y && ' +
+'sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1';
+
 await executarComandoGenerico(idComando, comando, _t('sessoes.03-repositorios.btn_instalar_codecs', 'Instalar Codecs'));
 }
 
