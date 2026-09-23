@@ -1,6 +1,5 @@
 /* ============================================
  * Fedora Only Fans (FOF) - Estilos Compartilhados
- * Versão: 1.0.0-rc.3
  * ============================================ */
 
 :root {
@@ -354,7 +353,7 @@ body {
 }
 
 /* ============================================================
- * ACORDEÃO (para sessões com muitos blocos — Sessões 8 e 9)
+ * ACORDEÃO (usado em 05-hardware, 06-gaming e 08-waydroid)
  * ============================================================
  * Usa <details>/<summary> nativos. Zero JS adicional. O WebKitGTK
  * suporta há anos. O visual respeita o tema via variáveis.
@@ -869,7 +868,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 1rem;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
@@ -888,17 +887,13 @@ body {
 
 .header-guide .titulo h1,
 .header-avancado .titulo h1 {
+    font-size: 1.5rem;
+    color: var(--text-main);
+    margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
-}
-
-.header-guide .titulo h1,
-.header-avancado .titulo h1 {
-    font-size: 1.5rem;
-    color: var(--text-main);
-    margin: 0;
 }
 
 .header-guide .titulo .badge-modo {
@@ -909,6 +904,7 @@ body {
     border-radius: 12px;
     font-size: 0.7rem;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 .header-avancado .titulo .badge-modo {
@@ -919,45 +915,35 @@ body {
     border-radius: 12px;
     font-size: 0.7rem;
     font-weight: 600;
-}
-
-.header-guide .voltar,
-.header-avancado .voltar {
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    transition: color 0.2s ease;
-    white-space: nowrap;
-}
-
-.header-guide .voltar:hover,
-.header-avancado .voltar:hover {
-    color: var(--text-main);
+    flex-shrink: 0;
 }
 
 /* ============================================================
  * HEADER-DIREITA
- * ============================================================ */
+ * ============================================================
+ * Contém o .header-controles (seletor i18n + botão de tema +
+ * botão "voltar ao início"). Deve ficar sempre na mesma linha
+ * do título — por isso nowrap + flex-shrink: 0. O título é quem
+ * cede espaço (com text-overflow: ellipsis em .titulo h1).
+ */
 
 .header-direita {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
 }
 
 /* ============================================================
- * HEADER-CONTROLES (wrapper do seletor i18n + botão de tema)
+ * HEADER-CONTROLES (wrapper do seletor i18n + botão de tema + voltar)
  * ============================================================ */
 
 .header-controles {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 /* ============================================================
@@ -1011,17 +997,6 @@ body {
     color: var(--text-main);
 }
 
-@media (max-width: 768px) {
-    .i18n-seletor-container {
-        width: 100%;
-    }
-
-    .i18n-seletor-container select.i18n-seletor {
-        flex: 1;
-        max-width: 200px;
-    }
-}
-
 /* ============================================================
  * TEMA: BOTÃO DE ALTERNÂNCIA
  * ============================================================ */
@@ -1046,6 +1021,7 @@ body {
     transition: all 0.2s ease;
     padding: 0;
     line-height: 1;
+    flex-shrink: 0;
 }
 
 .btn-tema:hover {
@@ -1360,11 +1336,6 @@ body {
         width: 44px;
         height: 44px;
         font-size: 1.2rem;
-    }
-
-    .header-direita {
-        width: 100%;
-        justify-content: space-between;
     }
 }
 
