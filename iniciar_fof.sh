@@ -71,23 +71,19 @@ echo ""
 # FUNÇÕES DE TERMINAL
 # ============================================================
 #
-# Estratégia:
+# Estratégia para não travar o KDE:
 #
-# 1. KDE (Plasma): usa `kstart --iconify` (parte do kde-cli-tools,
-#    já instalado por padrão). O kstart pede ao KWin para abrir o
-#    konsole já minimizado, e sai em seguida.
+# 1. NUNCA usar `exec` para chamar o terminal. `exec` substitui o
+#    processo rastreado pelo KDE, e como o script é um bash (não
+#    envia o sinal de "startup complete"), o KDE mata o processo
+#    filho após o timeout do StartupNotify (~10s).
 #
-# 2. Outros ambientes: terminal abre normal, sem minimização.
-#    Não tentamos instalar ferramentas externas (xdotool/wmctrl).
+# 2. Usar `setsid ... &` + `disown` + `exit 0`. Isso cria uma
+#    sessão independente para o terminal, remove do job control
+#    e sai limpo, deixando o terminal sobreviver.
 #
-# DETALHE CRÍTICO sobre o KDE:
-# - Não usar `exec kstart` — o exec substitui o processo rastreado
-#   pelo KDE, e o gerenciador de sessão mata o konsole filho ao ver
-#   o processo pai sair.
-# - Em vez disso, usamos `setsid kstart … &` + `disown` + `exit 0`.
-#   O `setsid` cria uma nova sessão para o kstart, desanexando-o do
-#   grupo de processos do script. Assim, quando o script sai, o
-#   SIGHUP do KDE não atinge o konsole.
+# 3. KDE: `kstart --iconify` faz o konsole nascer minimizado,
+#    sem precisar de xdotool/wmctrl.
 
 abrir_no_terminal_nativo() {
 local script_path="$1"
@@ -95,25 +91,28 @@ local titulo="Fedora Only Fans - Servidor"
 
 log_debug "Tentando abrir no terminal nativo..."
 
-# ─── KDE: konsole em sessão independente (sem exec) ─────────
-#
-# Não usamos `exec konsole` porque isso substitui o processo
-# rastreado pelo KDE, que então mata o processo filho após o
-# timeout do StartupNotify (o script bash não envia o sinal de
-# "startup complete").
-#
-# Em vez disso: `setsid` isola o konsole numa nova sessão, `&`
-# coloca em background, `disown` remove do job control, e o
-# `exit 0` deixa o script sair sem derrubar o konsole.
+# ─── KDE: kstart --iconify (janela nasce minimizada) ────────
+if [ "$NO_MINIMIZE" != true ] \
+&& command -v kstart &> /dev/null \
+&& command -v konsole &> /dev/null; then
+log_debug "Usando kstart --iconify + konsole (KDE, minimizado)"
+setsid kstart --iconify konsole --title "$titulo" \
+-e bash "$script_path" --no-fork \
+> /dev/null 2>&1 &
+disown 2>/dev/null || true
+exit 0
+fi
+
+# ─── KDE: konsole sem minimização (fallback) ────────────────
 if command -v konsole &> /dev/null; then
-log_debug "Usando konsole (KDE) em sessão independente"
+log_debug "Usando konsole (KDE, sem minimização)"
 setsid konsole --title "$titulo" -e bash "$script_path" --no-fork \
 > /dev/null 2>&1 &
 disown 2>/dev/null || true
 exit 0
 fi
 
-# ─── Demais terminais (fallback) ─────────────────────────────
+# ─── GNOME / genéricos ──────────────────────────────────────
 if command -v xdg-terminal-exec &> /dev/null; then
 log_debug "Usando xdg-terminal-exec"
 setsid xdg-terminal-exec bash "$script_path" --no-fork > /dev/null 2>&1 &
@@ -538,6 +537,17 @@ return 1
 # ============================================================
 
 criar_atalho() {
+# O nome do arquivo .desktop DEVE ser igual ao app_id definido em
+# g_set_prgname() no C (fof-container). O KDE Plasma em Wayland é
+# rigoroso com isso: se o nome do .desktop não bater com o app_id
+# da janela, o ícone não é associado e o toolkit mostra o ícone
+# genérico ("W" do WebKitGTK).
+#
+# StartupNotify=false: o processo é um script bash, que não envia o
+# sinal de "startup complete" que o KDE espera. Com StartupNotify=true,
+# o KDE fica aguardando, desiste após ~10s e mata o processo inteiro
+# (incluindo o konsole filho). Com false, o KDE considera o launch
+# concluído de imediato.
 local desktop_file="$HOME/.local/share/applications/fof-container.desktop"
 local icone="$DIR/icone_app.png"
 
@@ -550,6 +560,7 @@ icone="applications-utilities"
 log_warning "Ícone não encontrado, usando ícone genérico"
 fi
 
+# Ícone no tema hicolor com o MESMO nome do app_id
 if [ -f "$DIR/icone_app.png" ]; then
 mkdir -p "$HOME/.local/share/icons/hicolor/256x256/apps"
 cp "$DIR/icone_app.png" "$HOME/.local/share/icons/hicolor/256x256/apps/fof-container.png"
@@ -557,6 +568,7 @@ gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || tr
 log_success "Ícone do container instalado em hicolor"
 fi
 
+# Remove .desktop antigo com nome errado, se existir
 rm -f "$HOME/.local/share/applications/fedora-only-fans.desktop" 2>/dev/null
 
 cat > "$desktop_file" <<EOF
@@ -602,8 +614,7 @@ Ele detecta automaticamente seu ambiente desktop e
 abre o terminal e navegador apropriados.
 
 No KDE Plasma, o terminal do servidor é automaticamente
-minimizado ao abrir (via kstart --iconify, que já faz parte
-do kde-cli-tools e vem instalado por padrão).
+minimizado ao abrir (via kstart --iconify).
 
 Arquivos:
 server.js Servidor Node.js
