@@ -7,23 +7,23 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="sessao-container" id="sessao-07-manutencao">
-<div class="sessao-titulo" data-i18n="sessoes.07-manutencao.titulo">
+<div class="sessao-container" id="sessao-90-manutencao">
+<div class="sessao-titulo" data-i18n="sessoes.90-manutencao.titulo">
 🛠️ Manutenção e Tarefas Avançadas
 </div>
 
 <!-- Limpeza -->
 <div class="bloco-comando">
 <div class="comando-info">
-<h3 data-i18n="sessoes.07-manutencao.limpeza_titulo">Limpar Arquivos Temporários e Resíduos</h3>
-<p data-i18n="sessoes.07-manutencao.limpeza_desc">Limpa o cache do DNF, dependências órfãs e runtimes de flatpak não utilizados.</p>
+<h3 data-i18n="sessoes.90-manutencao.limpeza_titulo">Limpar Arquivos Temporários e Resíduos</h3>
+<p data-i18n="sessoes.90-manutencao.limpeza_desc">Limpa o cache do DNF, dependências órfãs e runtimes de flatpak não utilizados.</p>
 <div class="grupo-botoes">
 <button class="btn-executar"
 onclick="executarLimpeza()"
 data-comando="limpeza-sistema"
 data-logbox="log-sessao-07-manutencao"
 id="btn-limpeza-sistema"
-data-i18n="sessoes.07-manutencao.btn_limpeza">
+data-i18n="sessoes.90-manutencao.btn_limpeza">
 Executar Limpeza
 </button>
 </div>
@@ -38,9 +38,9 @@ Executar Limpeza
 <!-- Kernels -->
 <div class="bloco-comando">
 <div class="comando-info">
-<h3 data-i18n="sessoes.07-manutencao.kernel_titulo">Gerenciamento de Kernels</h3>
-<p data-i18n="sessoes.07-manutencao.kernel_desc">Gerencie os kernels instalados no seu sistema.</p>
-<div class="aviso-caixa" data-i18n="sessoes.07-manutencao.kernel_aviso">⚠️ IMPORTANTE: Não é recomendado remover nenhuma versão anterior do kernel pois o Fedora mantém apenas os 3 últimos kernels.</div>
+<h3 data-i18n="sessoes.90-manutencao.kernel_titulo">Gerenciamento de Kernels</h3>
+<p data-i18n="sessoes.90-manutencao.kernel_desc">Gerencie os kernels instalados no seu sistema.</p>
+<div class="aviso-caixa" data-i18n="sessoes.90-manutencao.kernel_aviso">⚠️ IMPORTANTE: Não é recomendado remover nenhuma versão anterior do kernel pois o Fedora mantém apenas os 3 últimos kernels.</div>
 
 <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
 <button class="btn-executar"
@@ -48,13 +48,13 @@ onclick="listarKernels()"
 data-comando="listar-kernels"
 data-logbox="log-sessao-07-manutencao"
 id="btn-listar-kernels"
-data-i18n="sessoes.07-manutencao.btn_verificar_kernels">
+data-i18n="sessoes.90-manutencao.btn_verificar_kernels">
 📋 Verificar Kernels
 </button>
 <div style="display: flex; align-items: center; gap: 0.75rem;">
-<label for="kernel-select" style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="sessoes.07-manutencao.kernel_label_selecionar">Selecionar:</label>
+<label for="kernel-select" style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="sessoes.90-manutencao.kernel_label_selecionar">Selecionar:</label>
 <select id="kernel-select" class="kernel-dropdown" disabled>
-<option value="" data-i18n="sessoes.07-manutencao.kernel_option_nenhum">Nenhum kernel detectado</option>
+<option value="" data-i18n="sessoes.90-manutencao.kernel_option_nenhum">Nenhum kernel detectado</option>
 </select>
 </div>
 <button class="btn-executar"
@@ -64,7 +64,7 @@ data-comando="remover-kernel"
 data-logbox="log-sessao-07-manutencao"
 id="btn-remover-kernel"
 disabled
-data-i18n="sessoes.07-manutencao.btn_remover_kernel">
+data-i18n="sessoes.90-manutencao.btn_remover_kernel">
 🗑️ Remover
 </button>
 </div>
@@ -79,10 +79,10 @@ data-i18n="sessoes.07-manutencao.btn_remover_kernel">
 <!-- ===== GRUB ===== -->
 <div class="bloco-comando">
 <div class="comando-info">
-<h3 data-i18n="sessoes.07-manutencao.grub_titulo">🖥️ Configuração do GRUB</h3>
-<p data-i18n="sessoes.07-manutencao.grub_desc">Configure o GRUB para sempre aparecer ao ligar o computador e defina o tempo de exibição para 10 segundos.</p>
+<h3 data-i18n="sessoes.90-manutencao.grub_titulo">🖥️ Configuração do GRUB</h3>
+<p data-i18n="sessoes.90-manutencao.grub_desc">Configure o GRUB para sempre aparecer ao ligar o computador e defina o tempo de exibição para 10 segundos.</p>
 
-<div class="aviso-caixa" data-i18n="sessoes.07-manutencao.grub_aviso">
+<div class="aviso-caixa" data-i18n="sessoes.90-manutencao.grub_aviso">
 ⚠️ Esta alteração afeta o boot do sistema. Certifique-se de que o GRUB está instalado corretamente.
 </div>
 
@@ -92,7 +92,7 @@ onclick="executarConfigGrubRecomendado()"
 data-comando="grub-aplicar-recomendado"
 data-logbox="log-sessao-07-manutencao"
 id="btn-grub-aplicar-recomendado"
-data-i18n="sessoes.07-manutencao.btn_grub_recomendado">
+data-i18n="sessoes.90-manutencao.btn_grub_recomendado">
 ⚙️ Aplicar Configuração Recomendada
 </button>
 <button class="btn-executar"
@@ -101,7 +101,7 @@ onclick="executarConfigGrubPadrao()"
 data-comando="grub-restaurar-padrao"
 data-logbox="log-sessao-07-manutencao"
 id="btn-grub-restaurar-padrao"
-data-i18n="sessoes.07-manutencao.btn_grub_padrao">
+data-i18n="sessoes.90-manutencao.btn_grub_padrao">
 ↩️ Restaurar Padrão do Sistema
 </button>
 </div>
@@ -150,12 +150,12 @@ iniciarProgresso(idComando);
 
 logBox.style.display = 'block';
 
-const nomeAcao = _t('sessoes.07-manutencao.btn_limpeza', 'Executar Limpeza');
+const nomeAcao = _t('sessoes.90-manutencao.btn_limpeza', 'Executar Limpeza');
 _separadorLog(logBox, nomeAcao);
 
 const header = document.createElement('div');
 header.className = 'log-line info';
-header.textContent = _t('sessoes.07-manutencao.log_executando_limpeza', '🧹 Executando limpeza do sistema...');
+header.textContent = _t('sessoes.90-manutencao.log_executando_limpeza', '🧹 Executando limpeza do sistema...');
 logBox.appendChild(header);
 logBox.scrollTop = logBox.scrollHeight;
 
@@ -230,12 +230,12 @@ iniciarProgresso(idComando);
 
 logBox.style.display = 'block';
 
-const nomeAcao = _t('sessoes.07-manutencao.btn_verificar_kernels', '📋 Verificar Kernels');
+const nomeAcao = _t('sessoes.90-manutencao.btn_verificar_kernels', '📋 Verificar Kernels');
 _separadorLog(logBox, nomeAcao);
 
 const header = document.createElement('div');
 header.className = 'log-line info';
-header.textContent = _t('sessoes.07-manutencao.log_verificando_kernels', '📋 Verificando kernels instalados...');
+header.textContent = _t('sessoes.90-manutencao.log_verificando_kernels', '📋 Verificando kernels instalados...');
 logBox.appendChild(header);
 logBox.scrollTop = logBox.scrollHeight;
 
@@ -298,9 +298,9 @@ btnRemover.disabled = false;
 const successLine = document.createElement('div');
 successLine.className = 'log-line success';
 if (kernels.length === 1) {
-successLine.textContent = _tVars('sessoes.07-manutencao.kernel_singular_encontrado', '✅ ' + kernels.length + ' kernel encontrado', { n: kernels.length });
+successLine.textContent = _tVars('sessoes.90-manutencao.kernel_singular_encontrado', '✅ ' + kernels.length + ' kernel encontrado', { n: kernels.length });
 } else {
-successLine.textContent = _tVars('sessoes.07-manutencao.kernel_plural_encontrado', '✅ ' + kernels.length + ' kernels encontrados', { n: kernels.length });
+successLine.textContent = _tVars('sessoes.90-manutencao.kernel_plural_encontrado', '✅ ' + kernels.length + ' kernels encontrados', { n: kernels.length });
 }
 logBox.appendChild(successLine);
 logBox.scrollTop = logBox.scrollHeight;
@@ -369,13 +369,13 @@ btnRemover.disabled = false;
 
 const successLine = document.createElement('div');
 successLine.className = 'log-line success';
-successLine.textContent = _tVars('sessoes.07-manutencao.kernel_atual_singular', '✅ Kernel atual encontrado: ' + currentKernel, { kernel: currentKernel });
+successLine.textContent = _tVars('sessoes.90-manutencao.kernel_atual_singular', '✅ Kernel atual encontrado: ' + currentKernel, { kernel: currentKernel });
 logBox.appendChild(successLine);
 logBox.scrollTop = logBox.scrollHeight;
 } else {
 const optNenhum = document.createElement('option');
 optNenhum.value = '';
-optNenhum.textContent = _t('sessoes.07-manutencao.kernel_option_nenhum_short', 'Nenhum kernel encontrado');
+optNenhum.textContent = _t('sessoes.90-manutencao.kernel_option_nenhum_short', 'Nenhum kernel encontrado');
 select.innerHTML = '';
 select.appendChild(optNenhum);
 select.disabled = true;
@@ -392,7 +392,7 @@ const select = document.getElementById('kernel-select');
 const kernel = select.value;
 
 if (!kernel) {
-alert(_t('sessoes.07-manutencao.kernel_msg_selecione', 'Selecione um kernel para remover.'));
+alert(_t('sessoes.90-manutencao.kernel_msg_selecione', 'Selecione um kernel para remover.'));
 return;
 }
 
@@ -427,7 +427,7 @@ currentKernel = text;
 });
 
 if (currentKernel && kernel.includes(currentKernel)) {
-alert(_tVars('sessoes.07-manutencao.kernel_msg_atual_nao_removivel',
+alert(_tVars('sessoes.90-manutencao.kernel_msg_atual_nao_removivel',
 '❌ Não é possível remover o kernel que você está usando atualmente (' + currentKernel + ').\n\nReinicie o computador com outro kernel antes de remover este.',
 { kernel: currentKernel }));
 return;
@@ -438,7 +438,7 @@ return;
 console.error('Erro ao verificar kernel atual:', e);
 }
 
-const confirmacao = confirm(_tVars('sessoes.07-manutencao.kernel_confirmar_remocao',
+const confirmacao = confirm(_tVars('sessoes.90-manutencao.kernel_confirmar_remocao',
 '⚠️ ATENÇÃO!\n\nVocê está prestes a remover o kernel:\n' + kernel + '\n\nTem certeza que deseja continuar?',
 { kernel: kernel }));
 
@@ -452,14 +452,14 @@ _separadorLog(logBox, '🗑️ Remover kernel ' + kernel);
 
 const infoLine = document.createElement('div');
 infoLine.className = 'log-line info';
-infoLine.textContent = _tVars('sessoes.07-manutencao.kernel_log_removendo', '🗑️ Removendo kernel: ' + kernel + '...', { kernel: kernel });
+infoLine.textContent = _tVars('sessoes.90-manutencao.kernel_log_removendo', '🗑️ Removendo kernel: ' + kernel + '...', { kernel: kernel });
 logBox.appendChild(infoLine);
 logBox.scrollTop = logBox.scrollHeight;
 }
 
 if (btnRemover) {
 btnRemover.disabled = true;
-btnRemover.textContent = '⏳ ' + _t('sessoes.07-manutencao.btn_remover_kernel', '🗑️ Remover').replace(/^[^\s]+\s/, '') + '...';
+btnRemover.textContent = '⏳ ' + _t('sessoes.90-manutencao.btn_remover_kernel', '🗑️ Remover').replace(/^[^\s]+\s/, '') + '...';
 btnRemover.style.opacity = '0.6';
 }
 if (selectKernel) {
@@ -487,7 +487,7 @@ if (sucesso) {
 if (logBox) {
 const successLine = document.createElement('div');
 successLine.className = 'log-line success';
-successLine.textContent = _tVars('sessoes.07-manutencao.kernel_log_sucesso', '✅ Kernel ' + kernel + ' removido com sucesso!', { kernel: kernel });
+successLine.textContent = _tVars('sessoes.90-manutencao.kernel_log_sucesso', '✅ Kernel ' + kernel + ' removido com sucesso!', { kernel: kernel });
 logBox.appendChild(successLine);
 logBox.scrollTop = logBox.scrollHeight;
 }
@@ -500,8 +500,8 @@ if (logBox) {
 const errorLine = document.createElement('div');
 errorLine.className = 'log-line error';
 errorLine.textContent = sucesso === null
-? _t('sessoes.07-manutencao.kernel_log_timeout', '❌ Tempo esgotado esperando a remoção.')
-: _t('sessoes.07-manutencao.kernel_log_falha', '❌ Falha ao remover kernel.');
+? _t('sessoes.90-manutencao.kernel_log_timeout', '❌ Tempo esgotado esperando a remoção.')
+: _t('sessoes.90-manutencao.kernel_log_falha', '❌ Falha ao remover kernel.');
 logBox.appendChild(errorLine);
 logBox.scrollTop = logBox.scrollHeight;
 }
@@ -512,7 +512,7 @@ console.error('Erro ao remover kernel:', e);
 if (logBox) {
 const errorLine = document.createElement('div');
 errorLine.className = 'log-line error';
-errorLine.textContent = _tVars('sessoes.07-manutencao.kernel_log_erro', '❌ Erro ao remover kernel: ' + e.message, { msg: e.message });
+errorLine.textContent = _tVars('sessoes.90-manutencao.kernel_log_erro', '❌ Erro ao remover kernel: ' + e.message, { msg: e.message });
 logBox.appendChild(errorLine);
 logBox.scrollTop = logBox.scrollHeight;
 }
@@ -543,10 +543,10 @@ const statusDiv = document.getElementById('grub-status');
 
 if (!logBox) return;
 
-if (!confirm(_t('sessoes.07-manutencao.grub_confirmar_recomendado',
+if (!confirm(_t('sessoes.90-manutencao.grub_confirmar_recomendado',
 '⚠️ Deseja aplicar a configuração recomendada do GRUB?\n\n• GRUB sempre aparecerá ao ligar\n• Tempo de exibição: 10 segundos'))) return;
 
-const nomeAcao = _t('sessoes.07-manutencao.btn_grub_recomendado', '⚙️ Aplicar Configuração Recomendada');
+const nomeAcao = _t('sessoes.90-manutencao.btn_grub_recomendado', '⚙️ Aplicar Configuração Recomendada');
 
 if (btn) {
 btn.disabled = true;
@@ -561,7 +561,7 @@ _separadorLog(logBox, nomeAcao);
 
 const header = document.createElement('div');
 header.className = 'log-line info';
-header.textContent = _t('sessoes.07-manutencao.grub_log_aplicando', '⚙️ Aplicando configuração recomendada do GRUB...');
+header.textContent = _t('sessoes.90-manutencao.grub_log_aplicando', '⚙️ Aplicando configuração recomendada do GRUB...');
 logBox.appendChild(header);
 logBox.scrollTop = logBox.scrollHeight;
 
@@ -572,7 +572,7 @@ statusDiv.style.display = 'block';
 statusDiv.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
 statusDiv.style.border = '1px solid #34d399';
 statusDiv.style.color = '#34d399';
-statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_aplicando', '⏳ Aplicando configuração...');
+statusDiv.innerHTML = _t('sessoes.90-manutencao.grub_msg_aplicando', '⏳ Aplicando configuração...');
 }
 
 _bloquearSessao(idComando);
@@ -596,8 +596,8 @@ statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
 statusDiv.style.border = '1px solid #ef4444';
 statusDiv.style.color = '#ef4444';
 statusDiv.innerHTML = sucesso === null
-? _t('sessoes.07-manutencao.grub_msg_timeout_aplicar', '❌ Tempo esgotado aplicando a configuração.')
-: _t('sessoes.07-manutencao.grub_msg_falha_aplicar', '❌ Falha ao aplicar a configuração do GRUB.');
+? _t('sessoes.90-manutencao.grub_msg_timeout_aplicar', '❌ Tempo esgotado aplicando a configuração.')
+: _t('sessoes.90-manutencao.grub_msg_falha_aplicar', '❌ Falha ao aplicar a configuração do GRUB.');
 }
 return;
 }
@@ -606,7 +606,7 @@ if (statusDiv) {
 statusDiv.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
 statusDiv.style.border = '1px solid #34d399';
 statusDiv.style.color = '#34d399';
-statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_aplicado',
+statusDiv.innerHTML = _t('sessoes.90-manutencao.grub_msg_aplicado',
 '✅ <strong>Configuração aplicada!</strong><br>GRUB_TIMEOUT=10 (10 segundos)<br>GRUB_HIDDEN_TIMEOUT removido (GRUB sempre aparece)');
 }
 
@@ -635,10 +635,10 @@ const statusDiv = document.getElementById('grub-status');
 
 if (!logBox) return;
 
-if (!confirm(_t('sessoes.07-manutencao.grub_confirmar_padrao',
+if (!confirm(_t('sessoes.90-manutencao.grub_confirmar_padrao',
 'Deseja restaurar a configuração padrão do GRUB (timeout=5 segundos, oculto)?'))) return;
 
-const nomeAcao = _t('sessoes.07-manutencao.btn_grub_padrao', '↩️ Restaurar Padrão do Sistema');
+const nomeAcao = _t('sessoes.90-manutencao.btn_grub_padrao', '↩️ Restaurar Padrão do Sistema');
 
 if (btn) {
 btn.disabled = true;
@@ -653,7 +653,7 @@ _separadorLog(logBox, nomeAcao);
 
 const header = document.createElement('div');
 header.className = 'log-line info';
-header.textContent = _t('sessoes.07-manutencao.grub_log_restaurando', '↩️ Restaurando configuração padrão do GRUB...');
+header.textContent = _t('sessoes.90-manutencao.grub_log_restaurando', '↩️ Restaurando configuração padrão do GRUB...');
 logBox.appendChild(header);
 logBox.scrollTop = logBox.scrollHeight;
 
@@ -664,7 +664,7 @@ statusDiv.style.display = 'block';
 statusDiv.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
 statusDiv.style.border = '1px solid #f59e0b';
 statusDiv.style.color = '#f59e0b';
-statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_restaurando', '⏳ Restaurando configuração...');
+statusDiv.innerHTML = _t('sessoes.90-manutencao.grub_msg_restaurando', '⏳ Restaurando configuração...');
 }
 
 _bloquearSessao(idComando);
@@ -688,8 +688,8 @@ statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
 statusDiv.style.border = '1px solid #ef4444';
 statusDiv.style.color = '#ef4444';
 statusDiv.innerHTML = sucesso === null
-? _t('sessoes.07-manutencao.grub_msg_timeout_restaurar', '❌ Tempo esgotado restaurando a configuração.')
-: _t('sessoes.07-manutencao.grub_msg_falha_restaurar', '❌ Falha ao restaurar a configuração do GRUB.');
+? _t('sessoes.90-manutencao.grub_msg_timeout_restaurar', '❌ Tempo esgotado restaurando a configuração.')
+: _t('sessoes.90-manutencao.grub_msg_falha_restaurar', '❌ Falha ao restaurar a configuração do GRUB.');
 }
 return;
 }
@@ -698,7 +698,7 @@ if (statusDiv) {
 statusDiv.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
 statusDiv.style.border = '1px solid #34d399';
 statusDiv.style.color = '#34d399';
-statusDiv.innerHTML = _t('sessoes.07-manutencao.grub_msg_restaurado',
+statusDiv.innerHTML = _t('sessoes.90-manutencao.grub_msg_restaurado',
 '✅ <strong>Configuração restaurada!</strong><br>GRUB_TIMEOUT=5 (5 segundos)<br>GRUB_HIDDEN_TIMEOUT=0 (GRUB oculto)');
 }
 
@@ -733,7 +733,7 @@ btn.style.cursor = 'pointer';
 const btnLimpeza = document.getElementById('btn-limpeza-sistema');
 if (btnLimpeza) {
 btnLimpeza.disabled = false;
-btnLimpeza.textContent = _t('sessoes.07-manutencao.btn_limpeza', 'Executar Limpeza');
+btnLimpeza.textContent = _t('sessoes.90-manutencao.btn_limpeza', 'Executar Limpeza');
 btnLimpeza.style.backgroundColor = 'var(--accent, #3c67e3)';
 btnLimpeza.style.opacity = '1';
 btnLimpeza.style.cursor = 'pointer';
