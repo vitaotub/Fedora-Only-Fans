@@ -11,6 +11,7 @@
 # Opções:
 # --debug, -d Modo debug (logs detalhados)
 # --no-clean Não limpar perfis do navegador
+# --no-minimize Não minimizar o terminal do servidor
 # --help, -h Mostra esta ajuda
 # ============================================================
 
@@ -37,10 +38,10 @@ export WEBKIT_DISABLE_ACCELERATED_2D_CANVAS=1
 # ============================================================
 
 # Seguir link simbólico para encontrar o diretório real
-if [ -L "${BASH_SOURCE}" ]; then
-DIR="$(cd "$(dirname "$(readlink "${BASH_SOURCE}")")" && pwd)"
+if [ -L "${BASH_SOURCE[0]}" ]; then
+DIR="$(cd "$(dirname "$(readlink "${BASH_SOURCE[0]}")")" && pwd)"
 else
-DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 cd "$DIR"
 
@@ -81,6 +82,7 @@ echo ""
 echo "Opções:"
 echo " --debug, -d Modo debug (logs detalhados)"
 echo " --no-clean Não limpar perfis do navegador"
+echo " --no-minimize Não minimizar o terminal do servidor"
 echo " --help, -h Mostra esta ajuda"
 echo ""
 echo "Este modo força renderização por software para"
@@ -110,5 +112,7 @@ fi
 echo "🔄 Iniciando o FOF em modo compatível..."
 echo ""
 
-# Executar o script normal com as variáveis de ambiente já exportadas
+# Executar o script normal com as variáveis de ambiente já exportadas.
+# Todas as opções (incluindo --no-minimize) são repassadas via "$@" e
+# tratadas pelo iniciar_fof.sh.
 ./iniciar_fof.sh "$@"
