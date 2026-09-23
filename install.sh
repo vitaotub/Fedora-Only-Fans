@@ -376,7 +376,8 @@ chmod +x "$DESKTOP_FILE_COMPAT"
 print_success "Atalho de compatibilidade criado: $DESKTOP_FILE_COMPAT"
 fi
 
-update-desktop-database ~/.local/share/applications/ 2>/dev/null
+update-desktop-database ~/.local/share/applications/ 2>/dev/null || true
+kbuildsycoca6 --noincremental 2>/dev/null || kbuildsycoca5 --noincremental 2>/dev/null || true
 }
 
 fixar_na_barra() {
