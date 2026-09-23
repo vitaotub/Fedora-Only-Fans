@@ -309,7 +309,7 @@ window_height = atoi(argv[++i]);
 } else if (strcmp(argv[i], "--debug") == 0) {
 debug_mode = 1;
 } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-printf("🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-09222026\n");
+printf("🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-09232026\n");
 printf("\nUso: %s [opções]\n", argv[0]);
 printf("\nOpções:\n");
 printf(" --url URL URL do servidor (padrão: http://localhost:3000)\n");
