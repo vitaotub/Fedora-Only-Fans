@@ -90,7 +90,7 @@ data-i18n="sessoes.02-otimizacao.btn_idioma_hunspell">
 2. Corretor Ortográfico
 </button>
 <button class="btn-executar verde"
-onclick="executarComandoGenerico('idioma-localectl', 'sudo localectl set-locale LANG=pt_BR', 'Configurando localidade PT-BR')"
+onclick="executarComandoGenerico('idioma-localectl', 'sudo localectl set-locale LANG=pt_BR.UTF-8', 'Configurando localidade PT-BR')"
 data-comando="idioma-localectl"
 data-logbox="log-sessao-02-otimizacao"
 id="btn-idioma-localectl"
@@ -128,7 +128,7 @@ data-i18n="sessoes.02-otimizacao.btn_idioma_localectl">
 
 <div class="grupo-botoes">
 <button class="btn-executar laranja"
-onclick="executarComandoGenerico('dual-boot-time', 'sudo timedatectl set-local-rtc 1 --adjust-system-clock', 'Corrigindo relógio para dual-boot')"
+onclick="executarDualBootTime()"
 data-comando="dual-boot-time"
 data-logbox="log-sessao-02-otimizacao"
 id="btn-dual-boot"
@@ -238,6 +238,28 @@ btn.style.backgroundColor = 'var(--accent, #3c67e3)';
 }
 }, 3000);
 }
+}
+
+// ============================================================
+// DUAL-BOOT TIME — com confirmação
+// ============================================================
+// O comando `timedatectl set-local-rtc 1 --adjust-system-clock` reajusta
+// o relógio do hardware, o que pode causar um "salto" visível de algumas
+// horas na tela. Não é destrutivo, mas surpreende quem não está esperando.
+// Uma confirmação simples evita o susto.
+async function executarDualBootTime() {
+const confirmado = confirm(_t('sessoes.02-otimizacao.dual_boot_confirmar',
+'⚠️ Ajustar o relógio para horário local?\n\n' +
+'Isso fará o Fedora usar horário local (como o Windows). ' +
+'A mudança pode causar um salto temporário de algumas horas no relógio.\n\n' +
+'Continuar?'));
+if (!confirmado) return;
+
+await executarComandoGenerico(
+'dual-boot-time',
+'sudo timedatectl set-local-rtc 1 --adjust-system-clock',
+_t('sessoes.02-otimizacao.btn_dual_boot', 'Corrigir Relógio')
+);
 }
 
 // ===== RESTAURAR ESTADO DA SESSÃO =====
