@@ -142,6 +142,9 @@ async function verificarAtualizacoes() {
  */
 async function verificarAtualizacoesForcado() {
     try {
+        // Query param `?_=<timestamp>` força URL única, driblando
+        // qualquer cache HTTP residual do WebKitGTK. Combinado com
+        // `cache: 'no-store'`, é à prova de cache.
         var url = 'https://api.github.com/repos/' + GITHUB_REPO +
                   '/releases/latest?_=' + Date.now();
         var resp = await fetch(url, { cache: 'no-store' });
