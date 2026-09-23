@@ -612,18 +612,6 @@ body {
     opacity: 0;
 }
 
-/* Logs compartilhados (sessões com múltiplos botões) ganham mais
-   altura. O comportamento colapsado é o mesmo. */
-.terminal-log.sessao-compartilhado {
-    min-height: 200px;
-    max-height: 400px;
-}
-
-.terminal-log.sessao-compartilhado:not(.expandido) {
-    min-height: 0;
-    max-height: 0;
-}
-
 .terminal-log .log-line {
     display: block;
     padding: 1px 0;
