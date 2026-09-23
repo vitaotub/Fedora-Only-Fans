@@ -68,59 +68,26 @@ echo ""
 }
 
 # ============================================================
-# MINIMIZAÇÃO DO TERMINAL
-# ============================================================
-#
-# O servidor roda num terminal separado. Para não poluir a área
-# de trabalho, tentamos minimizar esse terminal logo após ele
-# abrir.
-#
-# Estratégia única: abrir o terminal normalmente (com o script
-# como filho direto, rastreado pelo gerenciador de sessão) e, em
-# paralelo, um processo desanexado procura a janela do terminal
-# por título e a minimiza.
-#
-# NÃO usamos `kstart --iconify` porque `kstart` substitui o
-# processo rastreado pelo KDE via exec, o que faz o gerenciador
-# de sessão considerar o lançamento encerrado antes da hora — e
-# pode matar o terminal (e o script) junto.
-#
-# O `nohup` desanexa o minimizador do terminal, para que ele
-# sobreviva ao `exec` do terminal.
-
-_minimizar_janela_bg() {
-local titulo="$1"
-
-# Se não temos nenhuma ferramenta de minimização disponível, não
-# faz nada — o terminal abre normal (fallback gracioso).
-if ! command -v xdotool &> /dev/null && ! command -v wmctrl &> /dev/null; then
-return 0
-fi
-
-nohup bash -c "
-    titulo='$titulo'
-    for i in \$(seq 1 30); do
-        sleep 0.2
-
-        if command -v xdotool >/dev/null 2>&1; then
-            wid=\$(xdotool search --name \"\$titulo\" 2>/dev/null | head -1)
-            if [ -n \"\$wid\" ]; then
-                xdotool windowminimize \"\$wid\" 2>/dev/null && exit 0
-            fi
-        fi
-
-        if command -v wmctrl >/dev/null 2>&1; then
-            if wmctrl -l 2>/dev/null | grep -qF \"\$titulo\"; then
-                wmctrl -r \"\$titulo\" -b add,hidden 2>/dev/null && exit 0
-            fi
-        fi
-    done
-" > /dev/null 2>&1 &
-}
-
-# ============================================================
 # FUNÇÕES DE TERMINAL
 # ============================================================
+#
+# Estratégia:
+#
+# 1. KDE (Plasma): usa `kstart --iconify` (parte do kde-cli-tools,
+#    já instalado por padrão). O kstart pede ao KWin para abrir o
+#    konsole já minimizado, e sai em seguida.
+#
+# 2. Outros ambientes: terminal abre normal, sem minimização.
+#    Não tentamos instalar ferramentas externas (xdotool/wmctrl).
+#
+# DETALHE CRÍTICO sobre o KDE:
+# - Não usar `exec kstart` — o exec substitui o processo rastreado
+#   pelo KDE, e o gerenciador de sessão mata o konsole filho ao ver
+#   o processo pai sair.
+# - Em vez disso, usamos `setsid kstart … &` + `disown` + `exit 0`.
+#   O `setsid` cria uma nova sessão para o kstart, desanexando-o do
+#   grupo de processos do script. Assim, quando o script sai, o
+#   SIGHUP do KDE não atinge o konsole.
 
 abrir_no_terminal_nativo() {
 local script_path="$1"
@@ -128,45 +95,44 @@ local titulo="Fedora Only Fans - Servidor"
 
 log_debug "Tentando abrir no terminal nativo..."
 
-# Dispara o minimizador em background antes de abrir o terminal.
-# Ele vai procurar a janela pelo título e minimizá-la assim que
-# ela aparecer.
-if [ "$NO_MINIMIZE" != true ]; then
-log_debug "Agendando minimização do terminal (título: '$titulo')"
-_minimizar_janela_bg "$titulo"
+# ─── KDE: kstart --iconify (sem precisar instalar nada) ────
+if [ "$NO_MINIMIZE" != true ] \
+&& command -v kstart &> /dev/null \
+&& command -v konsole &> /dev/null; then
+log_debug "Usando kstart --iconify + konsole (KDE, minimizado)"
+setsid kstart --iconify konsole --title "$titulo" \
+-e bash "$script_path" --no-fork \
+> /dev/null 2>&1 &
+disown 2>/dev/null || true
+exit 0
 fi
 
-# ─── xdg-terminal-exec (genérico) ────────────────────────────
+# ─── Demais terminais: abrem sem minimização (fallback) ────
 if command -v xdg-terminal-exec &> /dev/null; then
 log_debug "Usando xdg-terminal-exec"
 exec xdg-terminal-exec bash "$script_path" --no-fork
 fi
 
-# ─── konsole (KDE) ──────────────────────────────────────────
 if command -v konsole &> /dev/null; then
-log_debug "Usando konsole (KDE)"
+log_debug "Usando konsole (KDE, sem minimização)"
 exec konsole --title "$titulo" -e bash "$script_path" --no-fork
 fi
 
-# ─── ptyxis (GNOME novo) ────────────────────────────────────
 if command -v ptyxis &> /dev/null; then
 log_debug "Usando ptyxis (GNOME)"
 exec ptyxis --title "$titulo" -- bash "$script_path" --no-fork
 fi
 
-# ─── gnome-terminal ─────────────────────────────────────────
 if command -v gnome-terminal &> /dev/null; then
 log_debug "Usando gnome-terminal (GNOME)"
 exec gnome-terminal --title="$titulo" -- bash "$script_path" --no-fork
 fi
 
-# ─── xfce4-terminal ─────────────────────────────────────────
 if command -v xfce4-terminal &> /dev/null; then
 log_debug "Usando xfce4-terminal (XFCE)"
 exec xfce4-terminal --title="$titulo" -e "bash \"$script_path\" --no-fork"
 fi
 
-# ─── Fallback genérico ──────────────────────────────────────
 for term in tilix alacritty kitty xterm x-terminal-emulator; do
 if command -v $term &> /dev/null; then
 log_debug "Usando $term (fallback)"
@@ -202,9 +168,6 @@ local url="$1"
 local icone="$DIR/icone_app.png"
 local extra_args=""
 
-# Propaga --debug para o container. Isso habilita o WebKit
-# Inspector (Ctrl+Shift+I dentro do container), essencial para
-# debugar o script.js que roda no WebKitGTK.
 if [ "$DEBUG" = true ]; then
 extra_args="--debug"
 fi
@@ -564,11 +527,6 @@ return 1
 # ============================================================
 
 criar_atalho() {
-# O nome do arquivo .desktop DEVE ser igual ao app_id definido em
-# g_set_prgname() no C (fof-container). O KDE Plasma em Wayland é
-# rigoroso com isso: se o nome do .desktop não bater com o app_id
-# da janela, o ícone não é associado e o toolkit mostra o ícone
-# genérico ("W" do WebKitGTK).
 local desktop_file="$HOME/.local/share/applications/fof-container.desktop"
 local icone="$DIR/icone_app.png"
 
@@ -581,7 +539,6 @@ icone="applications-utilities"
 log_warning "Ícone não encontrado, usando ícone genérico"
 fi
 
-# Ícone no tema hicolor com o MESMO nome do app_id
 if [ -f "$DIR/icone_app.png" ]; then
 mkdir -p "$HOME/.local/share/icons/hicolor/256x256/apps"
 cp "$DIR/icone_app.png" "$HOME/.local/share/icons/hicolor/256x256/apps/fof-container.png"
@@ -589,7 +546,6 @@ gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || tr
 log_success "Ícone do container instalado em hicolor"
 fi
 
-# Remove .desktop antigo com nome errado, se existir
 rm -f "$HOME/.local/share/applications/fedora-only-fans.desktop" 2>/dev/null
 
 cat > "$desktop_file" <<EOF
@@ -634,8 +590,9 @@ Este script inicia o servidor e abre a interface do FOF.
 Ele detecta automaticamente seu ambiente desktop e
 abre o terminal e navegador apropriados.
 
-O terminal do servidor é automaticamente minimizado
-quando possível (via xdotool ou wmctrl).
+No KDE Plasma, o terminal do servidor é automaticamente
+minimizado ao abrir (via kstart --iconify, que já faz parte
+do kde-cli-tools e vem instalado por padrão).
 
 Arquivos:
 server.js Servidor Node.js
