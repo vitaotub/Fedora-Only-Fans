@@ -1,6 +1,6 @@
 # ============================================================
 # Fedora Only Fans (FOF) - Makefile
-# Versão: 1.0.0-rc.2
+# Versão: 1.0.0-09232026
 # ============================================================
 
 PREFIX ?= /usr/local
@@ -12,14 +12,16 @@ CC = gcc
 CFLAGS = -Wall -O2
 LDFLAGS = -lm
 
-# Detecção de WebKitGTK 4.1 (GTK3). Se não achar, tenta 4.0 (legado).
+# Detecção de WebKitGTK 4.1 (base GTK3). Este é o único pacote
+# válido em qualquer Fedora suportado por este projeto (40+).
+# O pacote 4.0 (API antiga, webkit2gtk2.0) foi removido da
+# distribuição e não é mais uma opção — o build-container.sh
+# segue a mesma decisão, para manter os dois caminhos de build
+# consistentes.
 WEBKIT_PKG := $(shell pkg-config --exists webkit2gtk-4.1 && echo webkit2gtk-4.1)
-ifeq ($(WEBKIT_PKG),)
-WEBKIT_PKG := $(shell pkg-config --exists webkit2gtk-4.0 && echo webkit2gtk-4.0)
-endif
 
 ifeq ($(WEBKIT_PKG),)
-$(error WebKitGTK não encontrado. Instale: sudo dnf install webkit2gtk4.1-devel gtk3-devel)
+$(error WebKitGTK 4.1 não encontrado. Instale: sudo dnf install webkit2gtk4.1-devel gtk3-devel)
 endif
 
 PKG_CFLAGS := $(shell pkg-config --cflags $(WEBKIT_PKG) gtk+-3.0)
