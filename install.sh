@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-VERSION="1.0.0-09222026"
+VERSION="1.0.0-09232026"
 INSTALL_DIR="$HOME/.local/share/fedora-only-fans"
 BIN_DIR="$HOME/.local/bin"
 
