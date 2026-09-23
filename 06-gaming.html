@@ -312,7 +312,16 @@ return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 
 async function executarSteam() {
 const idComando = 'steam-install';
-const comando = 'flatpak install flathub com.valvesoftware.Steam -y && (sudo dnf install -y steam-devices 2>/dev/null || true)';
+
+// O comando original tinha `(... || true)` em volta do dnf install
+// do steam-devices, o que mascarava falhas reais: se o dnf falhasse
+// (repo offline, conflito, etc.), o exit code global continuava 0 e
+// o FOF marcava como sucesso — mas o usuário ficava sem steam-devices,
+// que é o que faz o Steam Input reconhecer controles de videogame.
+//
+// Correção: só roda o dnf se o pacote não estiver instalado, e deixa
+// erros reais propagarem. Se já estiver instalado, pula (silencioso).
+const comando = 'flatpak install flathub com.valvesoftware.Steam -y && (rpm -q steam-devices > /dev/null 2>&1 || sudo dnf install -y steam-devices)';
 await executarComandoGenerico(idComando, comando, _t('sessoes.06-gaming.btn_steam', '🎮 Steam'), mostrarBotaoDesinstalar);
 }
 
