@@ -417,7 +417,18 @@ console.error('[softwares-uteis] App não mapeado:', idComando);
 return;
 }
 var comando = 'flatpak install flathub ' + info.appId + ' -y';
-var nomeAcao = _t('sessoes.09-softwares-uteis.btn_' + idComando.replace('instalar-', ''), info.fallback);
+
+// Chave i18n: assumimos o padrão "instalar-<nome>". Se o id não
+// seguir esse padrão, a chave fica "btn_<id-completo>" — que
+// simplesmente não existe nos JSONs e cai no fallback, sem quebrar
+// nada. O `indexOf(0)` + `substring` é mais explícito que o
+// `.replace('instalar-', '')` anterior, que substituiria QUALQUER
+// ocorrência de "instalar-" (não só o prefixo).
+var chaveI18n = 'sessoes.09-softwares-uteis.btn_' +
+(idComando.indexOf('instalar-') === 0
+? idComando.substring('instalar-'.length)
+: idComando);
+var nomeAcao = _t(chaveI18n, info.fallback);
 await executarComandoGenerico(idComando, comando, nomeAcao, mostrarBotaoDesinstalar);
 }
 
@@ -436,10 +447,20 @@ atualizarBotaoAbrirRclone();
 }
 
 async function instalarRcloneManager() {
+// Verifica se o $RPM_URL foi extraído corretamente antes de tentar
+// instalar. Sem isso, se a release mais recente do rclone-manager
+// não publicar um .x86_64.rpm (mudança de padrão, release quebrada),
+// o `dnf install "$RPM_URL"` recebia string vazia e falhava com
+// mensagem obscura.
 var comando =
 'RPM_URL=$(curl -s https://api.github.com/repos/Zarestia-Dev/rclone-manager/releases/latest ' +
 '| grep -oP \'"browser_download_url":\\s*"\\K[^"]*\\.x86_64\\.rpm\' ' +
 '| head -1) && ' +
+'if [ -z "$RPM_URL" ]; then ' +
+'echo "❌ Nenhum RPM .x86_64 encontrado na release mais recente do rclone-manager"; ' +
+'echo "Verifique manualmente: https://github.com/Zarestia-Dev/rclone-manager/releases/latest"; ' +
+'exit 1; ' +
+'fi && ' +
 'echo "URL do RPM: $RPM_URL" && ' +
 'sudo dnf install --setopt=localpkg_gpgcheck=0 -y "$RPM_URL"';
 
@@ -478,10 +499,28 @@ btn.textContent = _t('sessoes.09-softwares-uteis.log_preparando', '⏳ Preparand
 btn.style.opacity = '0.6';
 }
 
-const comando = 'mkdir -p /tmp/fof-affinity && ' +
-'rpm -q python3-pyqt6 > /dev/null 2>&1 || sudo dnf install -y python3-pyqt6 && ' +
+// Precedência de && / || em bash: `a && b || c && d` é interpretado
+// como `((a && b) || c) && d`. O comando anterior dependia dessa
+// precedência sem agrupamento explícito — frágil e difícil de ler.
+// Agora usamos `{ ...; }` para deixar claro que o bloco
+// `rpm -q || dnf install` é uma unidade.
+//
+// Também adicionamos `chown -R $USER:$USER` no fim: o script roda
+// como root via pkexec/kdesu, então o arquivo baixado e o diretório
+// /tmp/fof-affinity ficariam com owner root. Com o chown, o usuário
+// consegue inspecionar os arquivos depois (log, .py).
+//
+// NOTA: o `nohup python3 ... &` abaixo ainda roda como root, o que
+// pode falhar em Wayland (o instalador da Affinity é PyQt6 e precisa
+// de acesso ao compositor). A correção completa depende de exportar
+// WAYLAND_DISPLAY / XDG_RUNTIME_DIR pelo server.js — será tratado
+// quando o server.js for revisado.
+const comando =
+'mkdir -p /tmp/fof-affinity && ' +
+'{ rpm -q python3-pyqt6 > /dev/null 2>&1 || sudo dnf install -y python3-pyqt6; } && ' +
 'curl -sSL https://raw.githubusercontent.com/ryzendew/Linux-Affinity-Installer/refs/heads/main/AffinityScripts/AffinityLinuxInstaller.py -o /tmp/fof-affinity/AffinityLinuxInstaller.py && ' +
 'chmod +x /tmp/fof-affinity/AffinityLinuxInstaller.py && ' +
+'chown -R $USER:$USER /tmp/fof-affinity && ' +
 'nohup python3 /tmp/fof-affinity/AffinityLinuxInstaller.py > /tmp/fof-affinity/installer.log 2>&1 &';
 
 try {
