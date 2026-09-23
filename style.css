@@ -137,6 +137,22 @@ body {
     line-height: 1.5;
 }
 
+.lista-nao-faz {
+    margin: 0.5rem 0 0 0;
+    padding-left: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.lista-nao-faz li {
+    margin-bottom: 0.35rem;
+}
+
+.lista-nao-faz li:last-child {
+    margin-bottom: 0;
+}
+
 /* ============================================================
  * AVISOS E INFO EXTRA
  * ============================================================ */
