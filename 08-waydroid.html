@@ -349,10 +349,15 @@ data-i18n="sessoes.11-waydroid.btn_prefs">
 // confirmar que está rodando.
 //
 // CORREÇÕES ADICIONAIS:
-// - `_waydroidExtra`: removido `sudo -E` (o server.js removia
-// `sudo ` via regex e deixava `-E` órfão, quebrando os extras).
-// - `waydroid-extras-prep`: recolocado o `chown -R $USER:$USER`
-// para não deixar arquivos root-owned no $HOME após rodar via
+// - `_waydroidExtra`: removido `sudo -E`. O `-E` foi um resquício
+// de quando o server.js removia `sudo ` via regex simples
+// (`/sudo\s+/g`) e deixava a flag órfã quebrando o comando. Hoje o
+// server.js usa `/sudo\s+(?!-)/g`, que preserva `sudo -E` — mas o
+// venv do waydroid_script tem shebang próprio e roda direto, então
+// nem precisamos de `sudo` ali. Remover `-E` continua sendo a
+// decisão correta, só o motivo é outro.
+// - `waydroid-extras-prep`: recolocado o `chown -R $USER:$USER` para
+// não deixar arquivos root-owned no $HOME após rodar via
 // pkexec/kdesu.
 // - `waydroid-prefs`: revertido de `&&` para `;`.
 // - `waydroid-helper`: dividido em DOIS botões (install + open),
@@ -531,10 +536,14 @@ adicionarLinha('❌ ' + _tVars('sessoes.11-waydroid.container_dispatch_error',
 'Erro ao disparar comando: {msg}', { msg: e.message }), 'error');
 }
 
+// Timeout aumentado de 60s para 180s. Em máquinas lentas, o primeiro
+// boot do container (que precisa montar imagens de ~1,4 GB) pode
+// levar bem mais que um minuto. 3 minutos é uma margem confortável,
+// e o polling continua a cada 3s — se ficar pronto antes, libera.
 adicionarLinha('⏳ ' + _t('sessoes.11-waydroid.container_waiting',
-'Aguardando o container subir (até 60 segundos)...'), 'info');
+'Aguardando o container subir (até 3 minutos)...'), 'info');
 
-var timeoutMs = 60000;
+var timeoutMs = 180000;
 var inicio = Date.now();
 var ok = false;
 
@@ -557,7 +566,7 @@ adicionarLinha('✅ ' + _t('sessoes.11-waydroid.container_ready',
 'Container do Waydroid está rodando!'), 'success');
 } else {
 adicionarLinha('⚠️ ' + _t('sessoes.11-waydroid.container_timeout',
-'Container não respondeu em 60s. Verifique /tmp/fof-waydroid-ui.log para mais detalhes.'), 'warning');
+'Container não respondeu em 3 minutos. Verifique /tmp/fof-waydroid-ui.log para mais detalhes.'), 'warning');
 }
 
 if (btn) {
@@ -605,10 +614,12 @@ alert(_t('sessoes.11-waydroid.container_guard_alert',
 await _atualizarBloqueioExtrasWaydroid();
 return;
 }
-// IMPORTANTE: NÃO usar `sudo` aqui. O server.js remove "sudo " via
-// regex antes de montar o script, e o script é executado como root
-// via pkexec/kdesu. Adicionar `sudo -E` deixa "-E" órfão e quebra
-// TODO o comando. O venv tem seu próprio shebang e roda direto.
+// IMPORTANTE: NÃO usar `sudo` aqui. O venv tem seu próprio shebang
+// e roda direto como o usuário atual (o server.js é quem decide se
+// escala via pkexec/kdesu, com base na whitelist de comandos).
+// Adicionar `sudo` desnecessariamente só complicaria: o script
+// resultante herdaria HOME=/root e o venv procuraria arquivos no
+// lugar errado.
 var comando = 'cd $HOME/.local/share/fof-waydroid/waydroid_script && ./venv/bin/python3 main.py install ' + componente;
 await executarComandoGenerico(idComando, comando, nomeBotao);
 }
