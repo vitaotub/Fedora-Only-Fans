@@ -162,11 +162,19 @@ console.error('Erro ao executar script:', e);
 }
 
 if (typeof restaurarEstadoSessao === 'function') {
-try {
-restaurarEstadoSessao();
-} catch (e) {
-console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
+    try {
+        restaurarEstadoSessao();
+    } catch (e) {
+        console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
+    }
 }
+
+if (typeof inicializarLogsDaSessao === 'function') {
+    try {
+        inicializarLogsDaSessao(container);
+    } catch (e) {
+        console.error('Erro ao inicializar logs da sessão ' + nomeSessao + ':', e);
+    }
 }
 
 numerarSessao(nomeSessao, container);
