@@ -3,7 +3,7 @@
 **🌐 Idioma:** Português (BR) | [English](README.en.md) | [Español](README.es.md)
 
 ![Autor](https://img.shields.io/badge/Criador-Vit%C3%A3oTub-blue?style=flat-square)
-![Versão](https://img.shields.io/badge/Vers%C3%A3o-v1.0.0--09222026-orange?style=flat-square)
+![Versão](https://img.shields.io/badge/Vers%C3%A3o-v1.0.0--09232026-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![Licença](https://img.shields.io/badge/Licen%C3%A7a-GPL--3.0-green?style=flat-square)
 ![Idiomas](https://img.shields.io/badge/Idiomas-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
@@ -79,7 +79,7 @@ Cada botão lembra seu próprio estado (executado ou pendente), então fechar e 
 Sessões da Configuração (em ordem)
 
     1	👋 Boas-vindas
-        Atualização completa do sistema Fedora (dnf upgrade --refresh)
+        Apresentação do FOF (o que é, para que foi criado, o que você ganha e o que ele não faz) + atualização completa do sistema Fedora (dnf upgrade --refresh)
         
     2	💾 Restauração
         Instalação do Btrfs-Assistant para gerenciamento de snapshots do sistema
@@ -115,7 +115,7 @@ Sessões de Manutenção (sem ordem — página à parte)
         Limpeza de cache, gerenciamento de kernels (listar/remover, com bloqueio do kernel em uso) e configuração do GRUB (timeout e visibilidade do menu)
         
         🔧 Manutenção FOF
-        Atualização ou desinstalação completa do Fedora Only Fans
+        Verificação automática de atualizações (com badge ⬆️ no header quando há nova versão), atualização com popup de confirmação pós-update e desinstalação completa do Fedora Only Fans
 
 
 🎨 Características Técnicas
@@ -126,6 +126,9 @@ Sessões de Manutenção (sem ordem — página à parte)
     📡 Logs em tempo real - Acompanhe a execução via Server-Sent Events (SSE)
     📋 Log único por sessão - Cada sessão compartilha um log unificado, em ordem cronológica, com separadores entre execuções
     🔓 Log expandido por padrão - Os logs de cada sessão já nascem abertos; o usuário pode recolher clicando no cabeçalho
+    📏 Altura uniforme dos logs - Todas as sessões usam a mesma altura de log, mantendo a interface consistente
+    🔔 Verificação automática de atualizações - O FOF consulta o GitHub Releases ao iniciar e mostra um badge ⬆️ quando há nova versão disponível
+    ✅ Popup pós-atualização - Após atualizar o FOF, um alerta avisa para reiniciar o app e aplicar as mudanças
     🔒 Bloqueio de sessão - Durante uma instalação, os outros botões da mesma sessão ficam desabilitados para evitar execuções simultâneas
     📊 Barra de progresso - Visualize o andamento das tarefas
     🔐 Autenticação segura - Usa pkexec/kdesu (sem expor senhas)
@@ -173,6 +176,8 @@ Com o FOF você:
     Executa as tarefas diretamente através da interface web integrada, digitando sua senha de administrador apenas quando solicitado pelo sistema.
     
     Acompanha o progresso em tempo real com logs e barra de progresso.
+    
+    Recebe aviso automático quando há uma nova versão do FOF disponível.
 
 
 💻 Como Rodar o FOF localmente?
@@ -242,7 +247,7 @@ firefox http://localhost:3000
     Interface responsiva e moderna
 
     JavaScript
-    Lógica de requisições à API local + internacionalização (PT-BR, EN, ES)
+    Lógica de requisições à API local + internacionalização (PT-BR, EN, ES) + verificação de atualizações via GitHub Releases API
 
     Node.js
     Servidor backend local para execução segura de processos
@@ -268,17 +273,17 @@ Fedora-Only-Fans/
 ├── 📄 guiado.html             # Configuração passo a passo (sessões principais, em ordem)
 ├── 📄 manutencao.html         # Manutenção (kernels, limpeza, GRUB, FOF — sem ordem)
 ├── 📄 style.css               # CSS compartilhado (global)
-├── 📄 script.js               # JS compartilhado (funções globais)
+├── 📄 script.js               # JS compartilhado (funções globais + verificação de atualizações)
 ├── 📄 i18n.js                 # Módulo de internacionalização (PT-BR/EN/ES)
 ├── 📂 locales/                # Arquivos de tradução
 │   ├── 📄 pt-BR.json          # Português (padrão)
 │   ├── 📄 en.json             # Inglês
 │   └── 📄 es.json             # Espanhol
-├── 📄 00-boas-vindas.html     # Sessão 1 (HTML + JS específico)
-├── 📄 01-restauracao.html     # Sessão 2 (HTML + JS específico)
-├── 📄 02-otimizacao.html      # Sessão 3 (HTML + JS específico)
-├── 📄 03-repositorios.html    # Sessão 4 (HTML + JS específico)
-├── 📄 04-fontes.html          # Sessão 5 (HTML + JS específico)
+├── 📄 00-boas-vindas.html     # Sessão 1 — Boas-vindas + Atualização (em acordeões)
+├── 📄 01-restauracao.html     # Sessão 2 — Restauração de sistema
+├── 📄 02-otimizacao.html      # Sessão 3 — Otimização do sistema e idioma
+├── 📄 03-repositorios.html    # Sessão 4 — Repositórios, codecs e aceleração gráfica
+├── 📄 04-fontes.html          # Sessão 5 — Fontes para compatibilidade
 ├── 📄 05-hardware.html        # Sessão 6 — Hardware (AMD, NVIDIA e Controles)
 ├── 📄 06-gaming.html          # Sessão 7 — Gaming (launchers, Wine/Proton, performance)
 ├── 📄 07-loja.html            # Sessão 8 — Produção Multimídia
@@ -329,18 +334,18 @@ tail -f /tmp/fof-*.log
 
 🎯 Roadmap
 
-v1.0.0-09222026 (Atual) 🚧
+v1.0.0-09232026 (Atual) 🚧
 
-    ✅ Renomeação dos arquivos de sessão para refletir a ordem da UI (00-09 + 90-91)
-    ✅ Nova sessão dedicada a Gaming (Sessão 7), com launchers, compatibilidade, desempenho e dicas
-    ✅ Hardware movido para antes de Gaming (primeiro drivers, depois jogos)
-    ✅ NTSYNC, Goverlay e Gamescope adicionados à sessão Gaming
-    ✅ Versionamento do projeto migrado para formato baseado em data (MMDDYYYY)
-    ✅ Logs expandidos por padrão em todas as sessões
-    ✅ Correção do tema claro na sessão Boas-vindas
-    ✅ Aviso de reinicialização após atualizar o FOF (o container em execução continua com o binário antigo até fechar e reabrir)
-    ✅ Correção do regex de strip do `sudo` (preserva flags como -E, -u, -H)
-    ✅ Installer: compilação do container com log detalhado em $LOG_FILE
+    ✅ Verificação automática de atualizações via GitHub Releases API (badge ⬆️ no header)
+    ✅ Popup de confirmação pós-atualização (avisa para reiniciar o FOF)
+    ✅ Sessão 00 reformulada em 2 acordeões (Boas-Vindas + Atualizações de Sistema)
+    ✅ Sessão 00 explica claramente: o que é o FOF, por que foi criado, o que você ganha e o que ele não faz
+    ✅ Sessão Gaming com aviso detalhado sobre NTSYNC (o que é, para que serve, se é seguro, como ativar)
+    ✅ Logs de sessão expandidos por padrão (sem exigir clique prévio)
+    ✅ Altura uniforme dos logs em todas as sessões (120–200px)
+    ✅ Header com controles inline ao título (idioma, tema e voltar ao início na mesma linha)
+    ✅ Botão "Voltar ao início" com ícone SVG de casa
+    ✅ Ajustes de layout e limpeza de CSS (regras órfãs removidas, duplicatas fundidas)
 
 v1.0.0 (Futuro) 🔮
 
