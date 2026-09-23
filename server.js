@@ -730,30 +730,36 @@ console.error(`[ERRO] ${idComando}:`, error.message);
 }
 
 function servirArquivoEstatico(req, res, filePath) {
-const fullPath = path.join(__dirname, filePath);
+    const fullPath = path.join(__dirname, filePath);
 
-if (fs.existsSync(fullPath)) {
-const ext = path.extname(fullPath).toLowerCase();
-const mimeTypes = {
-'.html': 'text/html; charset=utf-8',
-'.css': 'text/css; charset=utf-8',
-'.js': 'application/javascript; charset=utf-8',
-'.json': 'application/json; charset=utf-8',
-'.png': 'image/png',
-'.jpg': 'image/jpeg',
-'.jpeg': 'image/jpeg',
-'.gif': 'image/gif',
-'.svg': 'image/svg+xml',
-'.ico': 'image/x-icon'
-};
+    if (fs.existsSync(fullPath)) {
+        const ext = path.extname(fullPath).toLowerCase();
+        const mimeTypes = {
+            '.html': 'text/html; charset=utf-8',
+            '.css': 'text/css; charset=utf-8',
+            '.js': 'application/javascript; charset=utf-8',
+            '.json': 'application/json; charset=utf-8',
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.ico': 'image/x-icon'
+        };
 
-const mimeType = mimeTypes[ext] || 'application/octet-stream';
-res.writeHead(200, { 'Content-Type': mimeType });
-fs.createReadStream(fullPath).pipe(res);
-} else {
-res.writeHead(404);
-res.end('Arquivo não encontrado');
-}
+        const mimeType = mimeTypes[ext] || 'application/octet-stream';
+
+        res.writeHead(200, {
+            'Content-Type': mimeType,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        fs.createReadStream(fullPath).pipe(res);
+    } else {
+        res.writeHead(404);
+        res.end('Arquivo não encontrado');
+    }
 }
 
 function servirLocale(req, res, lang) {
@@ -946,18 +952,21 @@ return;
 }
 
 if (req.method === 'GET' && url === '/info') {
-const desktop = detectarDesktop();
-const metodo = obterMetodoAutenticacao();
-res.writeHead(200, { 'Content-Type': 'application/json' });
-res.end(JSON.stringify({
-desktop: desktop,
-autenticacao: metodo.descricao,
-nodeVersion: process.version,
-platform: process.platform,
-version: FOF_VERSION,
-langsSuportados: LANGS_SUPORTADOS
-}));
-return;
+    const desktop = detectarDesktop();
+    const metodo = obterMetodoAutenticacao();
+    res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+    });
+    res.end(JSON.stringify({
+        desktop: desktop,
+        autenticacao: metodo.descricao,
+        nodeVersion: process.version,
+        platform: process.platform,
+        version: FOF_VERSION,
+        langsSuportados: LANGS_SUPORTADOS
+    }));
+    return;
 }
 
 if (req.method === 'GET' && url === '/waydroid-status') {
