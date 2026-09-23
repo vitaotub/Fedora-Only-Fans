@@ -194,8 +194,16 @@ btn.style.backgroundColor = '#d97706';
 function restaurarEstadoSessao() {
 const btn = document.getElementById('btn-atualizar-fedora');
 if (btn) {
+// Sincroniza data-texto-original com o idioma atual. Sem isso, em
+// EN/ES o botão voltaria ao PT-BR após a execução, porque
+// restaurarBotaoAposExecucao (em script.js) restaura o texto de
+// botões sempre-clicáveis a partir de data-texto-original — que a
+// IIFE capturou antes de a tradução ser aplicada.
+const textoAtual = _t('sessoes.00-boas-vindas.btn_atualizar', '🔄 Atualizar Fedora');
+btn.setAttribute('data-texto-original', textoAtual);
+
 btn.disabled = false;
-btn.textContent = _t('sessoes.00-boas-vindas.btn_atualizar', '🔄 Atualizar Fedora');
+btn.textContent = textoAtual;
 btn.style.opacity = '1';
 btn.style.backgroundColor = '#d97706';
 }
