@@ -314,8 +314,13 @@ async function verificarEExibirAvisoAtualizacao() {
         return;
     }
 
-  var tentativas = 0;
-    while (!window.FOF_VERSION_UI18N && tentativas < 30) {
+    // Espera até 10 segundos (100 × 100ms) pelo FOF_VERSION_UI18N ser
+    // populado por carregarVersaoServidor() do script.js. O timeout
+    // anterior (3s) podia ser insuficiente em máquinas lentas ou com
+    // o servidor respondendo devagar — o aviso de atualização
+    // simplesmente não aparecia, mesmo havendo versão nova.
+    var tentativas = 0;
+    while (!window.FOF_VERSION_UI18N && tentativas < 100) {
         await new Promise(function(res) { setTimeout(res, 100); });
         tentativas++;
     }
