@@ -100,8 +100,9 @@ done
 
 local links_para_permissoes=("fof" "fof-compat" "fof-container")
 for link in "${links_para_permissoes[@]}"; do
-if [ -f "$BIN_DIR/$link" ]; then
-chmod +x "$BIN_DIR/$link"
+# -L cobre symlinks (mesmo quebrados); -e cobre arquivos regulares.
+if [ -L "$BIN_DIR/$link" ] || [ -e "$BIN_DIR/$link" ]; then
+chmod +x "$BIN_DIR/$link" 2>/dev/null || true
 print_info "Permissão aplicada: $link (link)"
 fi
 done
@@ -469,21 +470,25 @@ fi
 
 print_step "Removendo arquivos..."
 
+# ─── 1. Diretório de instalação ─────────────────────────────
 if [ -d "$INSTALL_DIR" ]; then
 rm -rf "$INSTALL_DIR"
 print_success "Diretório removido: $INSTALL_DIR"
 fi
 
+# ─── 2. Symlinks em ~/.local/bin ────────────────────────────
+# NOTA: usamos `-L` (testa symlink) em vez de `-f` (segue o
+# symlink). Como o INSTALL_DIR foi removido acima, os symlinks
+# ficam "quebrados" e `-f` retorna false — pulando a remoção.
 local links=("fof" "fof-compat" "fof-container")
 for link in "${links[@]}"; do
-if [ -f "$BIN_DIR/$link" ]; then
+if [ -L "$BIN_DIR/$link" ] || [ -e "$BIN_DIR/$link" ]; then
 rm -f "$BIN_DIR/$link"
 print_success "Link removido: $BIN_DIR/$link"
 fi
 done
 
-# Remove TODOS os nomes possíveis de .desktop (novo e antigo)
-# para garantir limpeza completa em qualquer instalação.
+# ─── 3. Atalhos .desktop ────────────────────────────────────
 local atalhos=(
 "$DESKTOP_FILE"
 "$DESKTOP_FILE_COMPAT"
@@ -491,30 +496,65 @@ local atalhos=(
 "$DESKTOP_FILE_COMPAT_OLD"
 )
 for atalho in "${atalhos[@]}"; do
-if [ -f "$atalho" ]; then
+if [ -L "$atalho" ] || [ -e "$atalho" ]; then
 rm -f "$atalho"
 print_success "Atalho removido: $atalho"
 fi
 done
 
-# Ícone hicolor
+# ─── 4. Ícone hicolor ──────────────────────────────────────
 if [ -f "$HOME/.local/share/icons/hicolor/256x256/apps/fof-container.png" ]; then
 rm -f "$HOME/.local/share/icons/hicolor/256x256/apps/fof-container.png"
 gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 print_success "Ícone removido do hicolor"
 fi
 
-rm -f /tmp/fof-*.log
-print_success "Logs removidos"
-
-local arquivos_estado=(".fof.pid" ".progresso.json" ".estado.json" ".historico.json")
-for arquivo in "${arquivos_estado[@]}"; do
-if [ -f "$INSTALL_DIR/$arquivo" ]; then
-rm -f "$INSTALL_DIR/$arquivo"
-print_success "Arquivo removido: $arquivo"
+# ─── 5. Dados e cache do WebKitGTK ──────────────────────────
+# O fof-container (WebKitGTK) cria esses dois diretórios em
+# runtime. Sem removê-los, o cache HTTP e o localStorage ficam
+# órfãos no sistema (incluindo o badge de atualização).
+if [ -d "$HOME/.cache/fof-container" ]; then
+rm -rf "$HOME/.cache/fof-container"
+print_success "Cache do WebKitGTK removido: ~/.cache/fof-container"
 fi
-done
 
+if [ -d "$HOME/.local/share/fof-container" ]; then
+rm -rf "$HOME/.local/share/fof-container"
+print_success "Dados do WebKitGTK removidos: ~/.local/share/fof-container"
+fi
+
+if [ -d "$HOME/.config/fof-container" ]; then
+rm -rf "$HOME/.config/fof-container"
+print_success "Configurações do FOF removidas: ~/.config/fof-container"
+fi
+
+# ─── 6. Logs temporários ────────────────────────────────────
+# Os arquivos /tmp/fof-out-*.log são criados pelo kdesu/pkexec
+# (que rodam como root) e ficam com owner root. O `rm -f` como
+# usuário comum falha com "Operação não permitida", o que faz o
+# `set -e` abortar o script inteiro. Solução: tentar como user
+# primeiro, e escalar para sudo apenas se sobrar algo.
+print_step "Removendo logs temporários..."
+
+# Logs do usuário (sempre removíveis)
+rm -f /tmp/fof-install-*.log 2>/dev/null || true
+rm -f /tmp/fof-waydroid-ui.log 2>/dev/null || true
+
+# Logs de comandos autenticados — podem pertencer ao root
+if ls /tmp/fof-out-*.log >/dev/null 2>&1; then
+if ! rm -f /tmp/fof-out-*.log 2>/dev/null; then
+print_info "Alguns logs pertencem ao root (kdesu/pkexec). Removendo com sudo..."
+sudo rm -f /tmp/fof-out-*.log 2>/dev/null || true
+fi
+fi
+
+# Logs genéricos (rede de segurança)
+rm -f /tmp/fof-*.log 2>/dev/null || true
+sudo rm -f /tmp/fof-*.log 2>/dev/null || true
+
+print_success "Logs temporários removidos"
+
+# ─── 7. Limpeza de PATH nos rc files ────────────────────────
 remover_linha_path() {
 local arquivo="$1"
 local backup="${arquivo}.fof-backup"
@@ -537,7 +577,8 @@ rm -f "$HOME/.bashrc.fof-backup" \
 "$HOME/.profile.fof-backup"
 print_success "Backups de PATH removidos"
 
-update-desktop-database ~/.local/share/applications/ 2>/dev/null
+# ─── 8. Reindexação do menu ─────────────────────────────────
+update-desktop-database ~/.local/share/applications/ 2>/dev/null || true
 kbuildsycoca6 --noincremental 2>/dev/null || kbuildsycoca5 --noincremental 2>/dev/null || true
 
 echo ""
@@ -559,14 +600,14 @@ cd "$INSTALL_DIR"
 # git stash push -m é o substituto moderno do git stash save (que foi
 # deprecado no Git 2.13+, 2017). O -m define a mensagem, preservando o
 # comportamento do save.
-git stash push -m "Backup automático antes da atualização" 2>/dev/null
+git stash push -m "Backup automático antes da atualização" 2>/dev/null || true
 
 if ! git pull origin main; then
 print_error "Falha ao atualizar"
 exit 1
 fi
 
-git stash pop 2>/dev/null
+git stash pop 2>/dev/null || true
 
 print_step "Atualizando dependências do Node.js..."
 if ! npm install --no-audit --no-fund --silent; then
@@ -576,11 +617,6 @@ fi
 # Recompila o container nativo. O install.sh --update é chamado pelo
 # botão "Atualizar FOF" na sessão 91, então essa recompilação roda
 # automaticamente em cada atualização.
-#
-# A função compilar_container_install captura stdout+stderr no
-# LOG_FILE. Se falhar, o motivo fica disponível para diagnóstico.
-# Como essa função retorna 1 em caso de falha, usamos `|| true` para
-# não abortar o script (o container antigo continua funcionando).
 compilar_container_install || true
 
 print_step "Recriando symlinks dos comandos..."
@@ -617,17 +653,6 @@ print_success "✅ FOF atualizado para a versão mais recente!"
 # Solução: encerrar o servidor antigo automaticamente ao fim do
 # update. O usuário só precisa reabrir o FOF com `fof`, e o novo
 # servidor sobe com a versão nova.
-#
-# Detalhes técnicos:
-# - `nohup` + `&` desanexam o processo de kill do bash atual, para
-#   que ele sobreviva ao fim deste script (que pode ser filho do
-#   próprio servidor que estamos matando).
-# - `sleep 3` dá tempo do FOF UI receber a última mensagem do log
-#   via SSE e exibir o popup de confirmação antes que a conexão
-#   caia.
-# - `pgrep -f "node server.js"` verifica se o servidor está mesmo
-#   rodando antes de agendar o kill (evita mensagem desnecessária
-#   se o usuário rodou `--update` sem o FOF aberto).
 
 if pgrep -f "node server.js" > /dev/null 2>&1; then
 print_info "🔄 Encerrando o servidor antigo em 3 segundos..."
