@@ -6,6 +6,7 @@
 },
 
 "comum": {
+"atualizacao_disponivel_titulo": "New version available! Click to update.",
 "voltar_inicio": "← Back to start",
 "btn_instalar": "Install",
 "btn_desinstalar": "↩️ Uninstall",
@@ -94,6 +95,8 @@
 },
 
 "sessoes": {
+"atualizacao_disponivel": "⬆️ A new version of FOF is available. Click \"Update FOF\" below to install.",
+"atualizar_popup_concluido": "✅ Update completed successfully!\n\nPlease close and reopen FOF for the new changes to take effect.",
 "00-boas-vindas": {
 "nome": "Welcome",
 "titulo": "👋 Welcome and Update",
