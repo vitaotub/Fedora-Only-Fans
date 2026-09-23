@@ -36,6 +36,23 @@
 // CONSTANTES E CONFIGURAÇÕES
 // ============================================================
 
+// API_URL derivado do origin atual, com fallback. Isso permite que
+// o FOF funcione mesmo se a PORT for mudada por env var: o frontend
+// carrega de http://localhost:<porta>, e usa essa mesma origem para
+// as chamadas de API. Em cenários exóticos (file://, origin vazio),
+// cai no fallback padrão.
+var API_URL = (function() {
+    try {
+        var origin = window.location && window.location.origin;
+        if (origin && origin !== 'null' && origin.indexOf('file://') !== 0) {
+            return origin;
+        }
+    } catch (e) { /* ignore */ }
+    return 'http://localhost:3000';
+})();
+
+var STORAGE_KEY = 'fof_progress';
+
 let FOF_VERSION = '';
 
 window.FOF_VERSION_UI18N = '';
@@ -64,9 +81,6 @@ async function carregarVersaoServidor() {
 
     console.log('🚀 Fedora Only Fans v' + (FOF_VERSION || '?') + ' - Script compartilhado carregado!');
 }
-
-var STORAGE_KEY = 'fof_progress';
-var API_URL = 'http://localhost:3000';
 
 // ============================================================
 // VERIFICAÇÃO DE ATUALIZAÇÕES (GitHub Releases API)
@@ -242,6 +256,28 @@ function _t(chave, fallback) {
 }
 function _tVars(chave, fallback, vars) {
     return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
+}
+
+/**
+ * Retorna o texto "original" (não-executado) de um botão, priorizando
+ * a tradução atual.
+ *
+ * Motivo: o `data-texto-original` é capturado pela IIFE (ou pelo
+ * guiado.html/manutencao.html) ANTES de o i18n rodar — então ele
+ * sempre contém o texto PT-BR bruto. Restaurar a partir dele em EN/ES
+ * faria o botão voltar para PT-BR após a execução.
+ *
+ * Preferimos `data-i18n` (chave de tradução), quando presente. Se o
+ * botão não tiver `data-i18n`, caímos no `data-texto-original`.
+ */
+function _textoOriginalTraduzido(btn) {
+    if (!btn) return '';
+    const chave = btn.getAttribute('data-i18n');
+    const fallback = btn.getAttribute('data-texto-original') || btn.textContent || '';
+    if (chave) {
+        return _t(chave, fallback);
+    }
+    return fallback;
 }
 
 // ============================================================
@@ -581,7 +617,12 @@ function _bloquearSessao(idComando) {
     var sessaoContainer = btn.closest('.sessao-container');
     if (!sessaoContainer) return;
 
-    var botoes = sessaoContainer.querySelectorAll('.btn-executar');
+    // Bloqueia .btn-executar E .btn-reverter. Os .btn-reverter também
+    // disparam comandos (desinstalação) — não devem estar clicáveis
+    // enquanto um comando da mesma sessão está rodando, senão o
+    // usuário pode disparar operações concorrentes (ex.: instalar
+    // driver enquanto tenta desinstalar o antigo).
+    var botoes = sessaoContainer.querySelectorAll('.btn-executar, .btn-reverter');
     botoes.forEach(function(b) {
         if (b.id === 'btn-' + idComando) return;
         if (b.hasAttribute('data-sessao-bloqueado')) return;
@@ -599,7 +640,10 @@ function _liberarSessao(idComando) {
     var sessaoContainer = btn.closest('.sessao-container');
     if (!sessaoContainer) return;
 
-    var botoes = sessaoContainer.querySelectorAll('.btn-executar[data-sessao-bloqueado="1"]');
+    // Recupera todos os botões que foram bloqueados (independente do
+    // tipo). O seletor por atributo já cobre .btn-executar e
+    // .btn-reverter de uma vez.
+    var botoes = sessaoContainer.querySelectorAll('[data-sessao-bloqueado="1"]');
     botoes.forEach(function(b) {
         var wasDisabled = b.getAttribute('data-was-disabled') === '1';
         b.removeAttribute('data-sessao-bloqueado');
@@ -934,8 +978,11 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
     const corOriginal = _corOriginalDoBotao(btnExecutar);
 
     if (SEMPRE_CLICAVEIS.includes(idComando)) {
-        const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
-        btnExecutar.textContent = original;
+        // Botão sempre-clicável: restaura texto + visual de "pronto
+        // para clicar de novo". Usa _textoOriginalTraduzido para que,
+        // em EN/ES, o texto volte no idioma certo (e não no PT-BR
+        // capturado pela IIFE antes do i18n rodar).
+        btnExecutar.textContent = _textoOriginalTraduzido(btnExecutar);
         btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
         btnExecutar.disabled = false;
@@ -958,8 +1005,8 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
 
         marcarComoExecutado(idComando);
     } else {
-        const original = btnExecutar.getAttribute('data-texto-original') || btnExecutar.textContent;
-        btnExecutar.textContent = original;
+        // Em falha, restauramos também via _textoOriginalTraduzido.
+        btnExecutar.textContent = _textoOriginalTraduzido(btnExecutar);
         btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
         btnExecutar.disabled = false;
@@ -1320,7 +1367,7 @@ async function desinstalarPacote(idComando, comandoRemover, nomeExibicao) {
         desmarcarComoExecutado(idComando);
 
         if (btn) {
-            btn.textContent = btn.getAttribute('data-texto-original') || nomeExibicao;
+            btn.textContent = _textoOriginalTraduzido(btn) || nomeExibicao;
             btn.style.backgroundColor = _corOriginalDoBotao(btn);
             btn.style.cursor = 'pointer';
             btn.style.opacity = '1';
