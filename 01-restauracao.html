@@ -24,7 +24,7 @@
 onclick="instalarBtrfsAssistant()"
 data-comando="btrfs-install"
 data-logbox="log-sessao-01-restauracao"
-id="btn-btrfs"
+id="btn-btrfs-install"
 data-i18n="sessoes.01-restauracao.btn_instalar">
 📦 Instalar Btrfs-Assistant
 </button>
@@ -73,7 +73,7 @@ return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 async function instalarBtrfsAssistant() {
 const comando = 'sudo dnf install btrfs-assistant -y';
 const logBox = _getLogBox(ID_COMANDO);
-const btn = document.getElementById('btn-btrfs');
+const btn = document.getElementById('btn-btrfs-install');
 
 if (!logBox) return;
 
@@ -147,7 +147,7 @@ abrirFerramentaExterna('gtk-launch btrfs-assistant 2>/dev/null &', ID_COMANDO, '
 // ===== RESTAURAR ESTADO DA SESSÃO =====
 function restaurarEstadoSessao() {
 if (isExecutado(ID_COMANDO)) {
-const btn = document.getElementById('btn-btrfs');
+const btn = document.getElementById('btn-btrfs-install');
 if (btn) {
 btn.textContent = getTextoAposExecucao(ID_COMANDO);
 btn.style.backgroundColor = '#4b5563';
