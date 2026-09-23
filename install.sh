@@ -172,7 +172,7 @@ fi
 
 chmod +x "$INSTALL_DIR/build-container.sh"
 
-# Melhoria: capturar stdout+stderr do build-container.sh no LOG_FILE.
+# Captura stdout+stderr do build-container.sh no LOG_FILE.
 # Assim, se a compilação falhar (pkg-config sem webkit2gtk4.1, gcc
 # reclamando, etc.), o motivo fica visível para diagnóstico — em vez
 # de um simples "não foi possível recompilar o container".
@@ -574,7 +574,7 @@ print_warning "Falha ao atualizar dependências, continuando..."
 fi
 
 # Recompila o container nativo. O install.sh --update é chamado pelo
-# botão "Atualizar FOF" na sessão 08, então essa recompilação roda
+# botão "Atualizar FOF" na sessão 91, então essa recompilação roda
 # automaticamente em cada atualização.
 #
 # A função compilar_container_install captura stdout+stderr no
@@ -603,6 +603,38 @@ criar_atalhos
 fixar_na_barra
 
 print_success "✅ FOF atualizado para a versão mais recente!"
+
+# ============================================================
+# ENCERRA O SERVIDOR ANTIGO APÓS A ATUALIZAÇÃO
+# ============================================================
+#
+# O processo `node server.js` carrega FOF_VERSION uma única vez, no
+# boot. Se ele continuar rodando após o update, o endpoint /info
+# segue retornando a versão antiga — e o badge de "atualização
+# disponível" continua aparecendo, mesmo com o FOF já atualizado
+# no disco.
+#
+# Solução: encerrar o servidor antigo automaticamente ao fim do
+# update. O usuário só precisa reabrir o FOF com `fof`, e o novo
+# servidor sobe com a versão nova.
+#
+# Detalhes técnicos:
+# - `nohup` + `&` desanexam o processo de kill do bash atual, para
+#   que ele sobreviva ao fim deste script (que pode ser filho do
+#   próprio servidor que estamos matando).
+# - `sleep 3` dá tempo do FOF UI receber a última mensagem do log
+#   via SSE e exibir o popup de confirmação antes que a conexão
+#   caia.
+# - `pgrep -f "node server.js"` verifica se o servidor está mesmo
+#   rodando antes de agendar o kill (evita mensagem desnecessária
+#   se o usuário rodou `--update` sem o FOF aberto).
+
+if pgrep -f "node server.js" > /dev/null 2>&1; then
+print_info "🔄 Encerrando o servidor antigo em 3 segundos..."
+print_info "💡 Reabra o FOF com o comando 'fof' para usar a versão nova."
+
+nohup bash -c 'sleep 3 && pkill -f "node server.js" 2>/dev/null' > /dev/null 2>&1 &
+fi
 }
 
 mostrar_ajuda() {
