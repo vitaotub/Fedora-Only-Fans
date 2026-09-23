@@ -348,10 +348,22 @@ instalar_nodejs() {
     if ! command -v node &> /dev/null; then
         log_warning "Node.js não encontrado. Instalando..."
 
-        if sudo dnf install -y nodejs npm 2>&1 | while read -r line; do log_debug "dnf: $line"; done; then
+        # NOTA: `if cmd | while ...` avalia o exit code do `while`, não
+        # do `cmd`. O `while` sempre retorna 0, então a checagem antiga
+        # nunca detectava falha do dnf. Solução: redirecionar a saída
+        # do dnf para um arquivo temporário, checar o $? real, e só
+        # então ler o arquivo para o log de debug.
+        if sudo dnf install -y nodejs npm > /tmp/fof-dnf-nodejs.log 2>&1; then
+            if [ "$DEBUG" = true ]; then
+                while read -r line; do log_debug "dnf: $line"; done < /tmp/fof-dnf-nodejs.log
+            fi
+            rm -f /tmp/fof-dnf-nodejs.log
             log_success "Node.js instalado"
         else
             log_error "Falha ao instalar Node.js"
+            log_error "Saída do dnf:"
+            cat /tmp/fof-dnf-nodejs.log >> "$LOG_FILE"
+            rm -f /tmp/fof-dnf-nodejs.log
             log_error "Tente instalar manualmente: sudo dnf install nodejs npm"
             exit 1
         fi
@@ -379,10 +391,20 @@ instalar_dependencias_npm() {
         if [ ! -d "$DIR/node_modules" ]; then
             log_info "Instalando dependências do Node.js..."
 
-            if npm install --no-audit --no-fund --silent 2>&1 | while read -r line; do log_debug "npm: $line"; done; then
+            # Mesmo bug do dnf: `npm ... | while` avalia o `while`, não
+            # o exit code do npm. Capturamos o código real via arquivo
+            # temporário.
+            if npm install --no-audit --no-fund --silent > /tmp/fof-npm-install.log 2>&1; then
+                if [ "$DEBUG" = true ]; then
+                    while read -r line; do log_debug "npm: $line"; done < /tmp/fof-npm-install.log
+                fi
+                rm -f /tmp/fof-npm-install.log
                 log_success "Dependências instaladas"
             else
                 log_error "Falha ao instalar dependências"
+                log_error "Saída do npm:"
+                cat /tmp/fof-npm-install.log >> "$LOG_FILE"
+                rm -f /tmp/fof-npm-install.log
                 log_error "Tente instalar manualmente: npm install"
                 exit 1
             fi
