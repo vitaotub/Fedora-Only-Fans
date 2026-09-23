@@ -11,14 +11,14 @@
 <div class="sessao-container" id="sessao-07-loja">
 <div class="sessao-titulo">
 <span class="sessao-label">Sessão</span>
-<span data-i18n="sessoes.06-loja.titulo">🎬 Produção Multimídia</span>
+<span data-i18n="sessoes.07-loja.titulo">🎬 Produção Multimídia</span>
 </div>
 
 <!-- OBS Studio -->
 <div class="bloco-comando destaque">
 <div class="comando-info">
-<h3 data-i18n="sessoes.06-loja.obs_titulo">🎬 OBS Studio - Instalação e Câmera Virtual</h3>
-<p data-i18n="sessoes.06-loja.obs_desc">Instale o OBS Studio para gravação/streaming e ative a câmera virtual para chamadas de vídeo.</p>
+<h3 data-i18n="sessoes.07-loja.obs_titulo">🎬 OBS Studio - Instalação e Câmera Virtual</h3>
+<p data-i18n="sessoes.07-loja.obs_desc">Instale o OBS Studio para gravação/streaming e ative a câmera virtual para chamadas de vídeo.</p>
 
 <div class="botoes-flex">
 <button class="btn-executar verde-escuro"
@@ -26,7 +26,7 @@ onclick="executarOBSStudio()"
 data-comando="instalar-obs-studio"
 data-logbox="log-sessao-06-loja"
 id="btn-instalar-obs-studio"
-data-i18n="sessoes.06-loja.btn_instalar_obs">
+data-i18n="sessoes.07-loja.btn_instalar_obs">
 📹 Instalar OBS Studio
 </button>
 
@@ -35,12 +35,12 @@ onclick="executarOBSCam()"
 data-comando="obs-cam"
 data-logbox="log-sessao-06-loja"
 id="btn-obs-cam"
-data-i18n="sessoes.06-loja.btn_ativar_cam">
+data-i18n="sessoes.07-loja.btn_ativar_cam">
 🎥 Ativar Câmera Virtual
 </button>
 </div>
 
-<div class="aviso-caixa" style="margin-top: 0.5rem; font-size: 0.85rem;" data-i18n="sessoes.06-loja.obs_aviso">
+<div class="aviso-caixa" style="margin-top: 0.5rem; font-size: 0.85rem;" data-i18n="sessoes.07-loja.obs_aviso">
 ⚠️ A câmera virtual exige que o Secure Boot esteja configurado corretamente ou desativado.
 </div>
 </div>
@@ -59,15 +59,15 @@ data-i18n="sessoes.06-loja.btn_ativar_cam">
 <!-- EasyEffects -->
 <div class="bloco-comando">
 <div class="comando-info">
-<h3 data-i18n="sessoes.06-loja.easyeffects_titulo">🎵 Melhoria de Áudio com EasyEffects</h3>
-<p data-i18n="sessoes.06-loja.easyeffects_desc">Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
+<h3 data-i18n="sessoes.07-loja.easyeffects_titulo">🎵 Melhoria de Áudio com EasyEffects</h3>
+<p data-i18n="sessoes.07-loja.easyeffects_desc">Processador de efeitos de som para PipeWire para aplicar redução de ruídos e equalizações.</p>
 <div class="grupo-botoes">
 <button class="btn-executar"
 onclick="executarEasyEffects()"
 data-comando="instalar-easyeffects"
 data-logbox="log-sessao-06-loja"
 id="btn-instalar-easyeffects"
-data-i18n="sessoes.06-loja.btn_instalar_easyeffects">
+data-i18n="sessoes.07-loja.btn_instalar_easyeffects">
 Instalar EasyEffects (Flatpak)
 </button>
 </div>
@@ -96,19 +96,19 @@ return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 async function executarOBSStudio() {
 const idComando = 'instalar-obs-studio';
 const comando = 'flatpak install flathub com.obsproject.Studio -y';
-await executarComandoGenerico(idComando, comando, _t('sessoes.06-loja.btn_instalar_obs', '📹 Instalar OBS Studio'), mostrarBotaoDesinstalar);
+await executarComandoGenerico(idComando, comando, _t('sessoes.07-loja.btn_instalar_obs', '📹 Instalar OBS Studio'), mostrarBotaoDesinstalar);
 }
 
 async function executarOBSCam() {
 const idComando = 'obs-cam';
 const comando = 'sudo dnf install akmod-v4l2loopback v4l-utils -y 2>/dev/null || sudo dnf install v4l2loopback v4l-utils -y';
-await executarComandoGenerico(idComando, comando, _t('sessoes.06-loja.btn_ativar_cam', '🎥 Ativar Câmera Virtual'), mostrarBotaoDesinstalar);
+await executarComandoGenerico(idComando, comando, _t('sessoes.07-loja.btn_ativar_cam', '🎥 Ativar Câmera Virtual'), mostrarBotaoDesinstalar);
 }
 
 async function executarEasyEffects() {
 const idComando = 'instalar-easyeffects';
 const comando = 'flatpak install flathub com.github.wwmm.easyeffects -y';
-await executarComandoGenerico(idComando, comando, _t('sessoes.06-loja.btn_instalar_easyeffects', 'Instalar EasyEffects (Flatpak)'), mostrarBotaoDesinstalar);
+await executarComandoGenerico(idComando, comando, _t('sessoes.07-loja.btn_instalar_easyeffects', 'Instalar EasyEffects (Flatpak)'), mostrarBotaoDesinstalar);
 }
 
 // ===== RESTAURAR ESTADO DA SESSÃO =====
