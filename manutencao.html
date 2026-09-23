@@ -129,15 +129,23 @@ console.error('Erro ao executar script da sessão ' + nomeSessao + ':', e);
 }
 
 if (typeof restaurarEstadoSessao === 'function') {
-try {
-restaurarEstadoSessao();
-} catch (e) {
-console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
+    try {
+        restaurarEstadoSessao();
+    } catch (e) {
+        console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
+    }
 }
+
+if (typeof inicializarLogsDaSessao === 'function') {
+    try {
+        inicializarLogsDaSessao(wrapper);
+    } catch (e) {
+        console.error('Erro ao inicializar logs da sessão ' + nomeSessao + ':', e);
+    }
 }
 
 if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
-I18N.aplicarTraducoes(wrapper);
+    I18N.aplicarTraducoes(wrapper);
 }
 
 sessoesCarregadas[nomeSessao] = true;
