@@ -23,7 +23,9 @@
  * badge "⬆️" aparece ao lado do número da versão em todas as páginas
  * (index.html, guiado.html, manutencao.html), linkando para a página
  * de manutenção. A consulta é cacheada por 6h em localStorage para não
- * estourar o rate limit da API.
+ * estourar o rate limit da API. Antes de exibir o badge, uma segunda
+ * consulta fresca confirma que a release realmente existe (evita badge
+ * fantasma por cache obsoleto).
  *
  * TEMA: claro/escuro alternável via botão na UI. Persistência em localStorage
  * sob a chave 'fof_tema'. O atributo `data-tema` no <html> controla qual
@@ -129,12 +131,20 @@ async function verificarAtualizacoes() {
     }
 }
 
+/**
+ * Consulta fresca à API do GitHub, ignorando o cache. Usa duas
+ * camadas de proteção:
+ *  1. `cache: 'no-store'` — instrui o WebKit a não usar cache HTTP.
+ *  2. Query param `?_=<timestamp>` — força URL única, contornando
+ *     qualquer cache heurístico residual.
+ *
+ * Se a consulta falhar (offline, 404, rate limit), retorna null.
+ */
 async function verificarAtualizacoesForcado() {
     try {
-        var resp = await fetch(
-            'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest',
-            { cache: 'no-store' }
-        );
+        var url = 'https://api.github.com/repos/' + GITHUB_REPO +
+                  '/releases/latest?_=' + Date.now();
+        var resp = await fetch(url, { cache: 'no-store' });
         if (!resp.ok) return null;
         var data = await resp.json();
         var tag = data.tag_name || '';
@@ -152,10 +162,13 @@ async function verificarAtualizacoesForcado() {
  * Compara a versão local com a remota. Retorna true se a remota for
  * mais nova. A comparação lexicográfica funciona porque MMDDYYYY em
  * 1.0.0-09232026 ordena naturalmente como string.
+ *
+ * Aceita prefixo 'v' ou 'V' (a API do GitHub pode retornar qualquer
+ * um dos dois, dependendo da tag publicada).
  */
 function temAtualizacao(versaoLocal, versaoRemota) {
-    var local = (versaoLocal || '').replace(/^v/, '').trim();
-    var remota = (versaoRemota || '').replace(/^v/, '').trim();
+    var local = (versaoLocal || '').replace(/^[vV]/, '').trim();
+    var remota = (versaoRemota || '').replace(/^[vV]/, '').trim();
     if (!local || !remota) return false;
     // Se a versão local for o fallback '?', significa que carregarVersaoServidor()
     // ainda não terminou (ou falhou). Não dá para comparar com segurança.
@@ -169,6 +182,13 @@ function temAtualizacao(versaoLocal, versaoRemota) {
  * onde o usuário pode atualizar.
  *
  * É idempotente: se o badge já existe, não duplica.
+ *
+ * Fluxo:
+ *  1. Consulta via cache (rápida, mas pode estar obsoleta).
+ *  2. Se o cache indica atualização, reconfirma com uma consulta
+ *     fresca à API. Só mostra o badge se a API confirmar AGORA.
+ *  3. Se o cache estava obsoleto (release deletada, tag renomeada),
+ *     limpa o cache e não mostra o badge.
  */
 async function mostrarBadgeSeHouverAtualizacao() {
     var versaoRemota = await verificarAtualizacoes();
