@@ -95,48 +95,59 @@ local titulo="Fedora Only Fans - Servidor"
 
 log_debug "Tentando abrir no terminal nativo..."
 
-# ─── KDE: kstart --iconify (sem precisar instalar nada) ────
-if [ "$NO_MINIMIZE" != true ] \
-&& command -v kstart &> /dev/null \
-&& command -v konsole &> /dev/null; then
-log_debug "Usando kstart --iconify + konsole (KDE, minimizado)"
-setsid kstart --iconify konsole --title "$titulo" \
--e bash "$script_path" --no-fork \
+# ─── KDE: konsole em sessão independente (sem exec) ─────────
+#
+# Não usamos `exec konsole` porque isso substitui o processo
+# rastreado pelo KDE, que então mata o processo filho após o
+# timeout do StartupNotify (o script bash não envia o sinal de
+# "startup complete").
+#
+# Em vez disso: `setsid` isola o konsole numa nova sessão, `&`
+# coloca em background, `disown` remove do job control, e o
+# `exit 0` deixa o script sair sem derrubar o konsole.
+if command -v konsole &> /dev/null; then
+log_debug "Usando konsole (KDE) em sessão independente"
+setsid konsole --title "$titulo" -e bash "$script_path" --no-fork \
 > /dev/null 2>&1 &
 disown 2>/dev/null || true
 exit 0
 fi
 
-# ─── Demais terminais: abrem sem minimização (fallback) ────
+# ─── Demais terminais (fallback) ─────────────────────────────
 if command -v xdg-terminal-exec &> /dev/null; then
 log_debug "Usando xdg-terminal-exec"
-exec xdg-terminal-exec bash "$script_path" --no-fork
-fi
-
-if command -v konsole &> /dev/null; then
-log_debug "Usando konsole (KDE, sem minimização)"
-exec konsole --title "$titulo" -e bash "$script_path" --no-fork
+setsid xdg-terminal-exec bash "$script_path" --no-fork > /dev/null 2>&1 &
+disown 2>/dev/null || true
+exit 0
 fi
 
 if command -v ptyxis &> /dev/null; then
 log_debug "Usando ptyxis (GNOME)"
-exec ptyxis --title "$titulo" -- bash "$script_path" --no-fork
+setsid ptyxis --title "$titulo" -- bash "$script_path" --no-fork > /dev/null 2>&1 &
+disown 2>/dev/null || true
+exit 0
 fi
 
 if command -v gnome-terminal &> /dev/null; then
 log_debug "Usando gnome-terminal (GNOME)"
-exec gnome-terminal --title="$titulo" -- bash "$script_path" --no-fork
+setsid gnome-terminal --title="$titulo" -- bash "$script_path" --no-fork > /dev/null 2>&1 &
+disown 2>/dev/null || true
+exit 0
 fi
 
 if command -v xfce4-terminal &> /dev/null; then
 log_debug "Usando xfce4-terminal (XFCE)"
-exec xfce4-terminal --title="$titulo" -e "bash \"$script_path\" --no-fork"
+setsid xfce4-terminal --title="$titulo" -e "bash \"$script_path\" --no-fork" > /dev/null 2>&1 &
+disown 2>/dev/null || true
+exit 0
 fi
 
 for term in tilix alacritty kitty xterm x-terminal-emulator; do
 if command -v $term &> /dev/null; then
 log_debug "Usando $term (fallback)"
-exec $term -e bash "$script_path" --no-fork
+setsid $term -e bash "$script_path" --no-fork > /dev/null 2>&1 &
+disown 2>/dev/null || true
+exit 0
 fi
 done
 
