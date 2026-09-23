@@ -138,6 +138,9 @@ function temAtualizacao(versaoLocal, versaoRemota) {
     var local = (versaoLocal || '').replace(/^v/, '').trim();
     var remota = (versaoRemota || '').replace(/^v/, '').trim();
     if (!local || !remota) return false;
+    // Se a versão local for o fallback '?', significa que carregarVersaoServidor()
+    // ainda não terminou (ou falhou). Não dá para comparar com segurança.
+    if (local === '?' || remota === '?') return false;
     return remota > local;
 }
 
@@ -1400,7 +1403,6 @@ function initCustomSelects() {
 
 document.addEventListener('DOMContentLoaded', function() {
     carregarProgressoInicial();
-    carregarVersaoServidor();
     setTimeout(initCustomSelects, 300);
     criarBotaoTema();
 
@@ -1408,8 +1410,12 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 50);
     }
 
-    // Verifica atualizações no GitHub (silencioso se falhar)
-    mostrarBadgeSeHouverAtualizacao();
+    // Aguarda carregarVersaoServidor() terminar ANTES de verificar
+    // atualizações, senão FOF_VERSION ainda está vazio e o badge
+    // apareceria sempre.
+    carregarVersaoServidor().then(function() {
+        mostrarBadgeSeHouverAtualizacao();
+    });
 });
 
 document.addEventListener('sessao-carregada', function() {
