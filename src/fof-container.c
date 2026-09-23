@@ -103,14 +103,16 @@ break;
 }
 }
 
-void on_webview_load_progress(WebKitWebView *webview, gint progress, gpointer user_data) {
-AppData *data = (AppData*)user_data;
-if (data->progress_bar) {
-gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->progress_bar), progress / 100.0);
-char buffer[16];
-snprintf(buffer, sizeof(buffer), "%d%%", progress);
-gtk_progress_bar_set_text(GTK_PROGRESS_BAR(data->progress_bar), buffer);
-}
+void on_webview_load_progress(WebKitWebView *webview, GParamSpec *pspec, gpointer user_data) {
+    (void)pspec;
+    AppData *data = (AppData*)user_data;
+    if (data->progress_bar) {
+        gdouble progress = webkit_web_view_get_estimated_load_progress(webview);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(data->progress_bar), progress);
+        char buffer[16];
+        snprintf(buffer, sizeof(buffer), "%d%%", (int)(progress * 100));
+        gtk_progress_bar_set_text(GTK_PROGRESS_BAR(data->progress_bar), buffer);
+    }
 }
 
 gboolean on_webview_decide_policy(WebKitWebView *webview, WebKitPolicyDecision *decision,
@@ -390,7 +392,7 @@ g_object_unref(settings);
 
 g_signal_connect(data.webview, "load-changed",
 G_CALLBACK(on_webview_load_changed), &data);
-g_signal_connect(data.webview, "load-progress",
+g_signal_connect(data.webview, "notify::estimated-load-progress",
 G_CALLBACK(on_webview_load_progress), &data);
 g_signal_connect(data.webview, "decide-policy",
 G_CALLBACK(on_webview_decide_policy), &data);
