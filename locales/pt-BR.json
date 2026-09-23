@@ -6,6 +6,7 @@
 },
 
 "comum": {
+"atualizacao_disponivel_titulo": "Nova versão disponível! Clique para atualizar.",
 "voltar_inicio": "← Voltar ao início",
 "btn_instalar": "Instalar",
 "btn_desinstalar": "↩️ Desinstalar",
@@ -94,6 +95,8 @@
 },
 
 "sessoes": {
+"atualizacao_disponivel": "⬆️ Uma nova versão do FOF está disponível. Clique em \"Atualizar FOF\" abaixo para instalar.",
+"atualizar_popup_concluido": "✅ Atualização concluída com sucesso!\n\nPor favor, feche e reabra o FOF para que as novas alterações entrem em vigor.",
 "00-boas-vindas": {
 "nome": "Boas-vindas",
 "titulo": "👋 Boas-vindas e Atualização",
