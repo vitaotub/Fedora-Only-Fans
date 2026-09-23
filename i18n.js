@@ -1,28 +1,27 @@
 /**
  * Fedora Only Fans (FOF) - Módulo de Internacionalização (i18n)
- * Versão: 1.0.0-rc.2
  *
  * Suporta: pt-BR (padrão), en, es
  *
  * Estratégia (Opção B1):
  * - HTML tem PT-BR como texto padrão dentro de cada elemento traduzível.
  * - Elementos traduzíveis carregam `data-i18n="chave"` (textContent)
- * ou `data-i18n-html="chave"` (innerHTML).
+ *   ou `data-i18n-html="chave"` (innerHTML).
  * - Emojis ficam FORA das strings (em <span class="i18n-emoji">),
- * para não migrarem entre idiomas.
+ *   para não migrarem entre idiomas.
  * - i18n.js NÃO toca no DOM quando lang === 'pt-BR' (HTML já está certo).
  * - Quando lang !== 'pt-BR', carrega o JSON correspondente e substitui.
  *
  * API pública:
- * t(chave, vars?) - retorna string traduzida (com interpolação)
- * setLang(lang) - troca o idioma (recarrega a página)
- * getLang() - retorna o idioma atual
- * aplicarTraducoes(root?) - aplica data-i18n em um subtree (opcional)
- * initI18n() - inicializa (chamado automaticamente)
- * criarSeletorIdioma() - injeta o seletor nos containers marcados
+ *   t(chave, vars?)              - retorna string traduzida (com interpolação)
+ *   setLang(lang)                - troca o idioma (recarrega a página)
+ *   getLang()                    - retorna o idioma atual
+ *   aplicarTraducoes(root?)      - aplica data-i18n em um subtree (opcional)
+ *   initI18n()                   - inicializa (chamado automaticamente)
+ *   criarSeletorIdioma()         - injeta o seletor nos containers marcados
  *
  * Eventos:
- * 'i18n-pronto' - disparado após o JSON ser carregado e aplicado
+ *   'i18n-pronto' - disparado após o JSON ser carregado e aplicado
  */
 
 (function() {
@@ -48,6 +47,13 @@
         carregando: null
     };
 
+    // Guard: impede que criarSeletorIdioma() rode múltiplas vezes.
+    // Era chamado por i18n.js (initI18n), script.js (DOMContentLoaded,
+    // sessao-carregada, todas-sessoes-carregadas) e pelos HTMLs das
+    // páginas. A função era idempotente por container, mas varria o
+    // DOM inteiro a cada chamada.
+    var _seletorCriado = false;
+
     // ============================================================
     // DETECÇÃO / SELEÇÃO DE IDIOMA
     // ============================================================
@@ -72,12 +78,39 @@
     }
 
     // ============================================================
+    // VERSÃO DO FOF (para cache-busting e invalidação de cache)
+    // ============================================================
+    //
+    // `window.FOF_VERSION_UI18N` é populado por carregarVersaoServidor()
+    // do script.js, que roda DEPOIS do i18n.js na primeira carga. Por
+    // isso não podemos depender dele para o cache-buster. Usamos como
+    // fallback um timestamp atual — que sempre dribla o cache HTTP,
+    // ao custo de uma requisição a mais na primeira carga.
+    function _versaoParaCacheBuster() {
+        var v = window.FOF_VERSION_UI18N;
+        if (v && typeof v === 'string' && v.length > 0) {
+            return v;
+        }
+        return 't' + Date.now();
+    }
+
+    function _chaveCache(lang) {
+        // O cache inclui a versão do FOF para que atualizações de
+        // strings sejam refletidas automaticamente. Sem isso, um cache
+        // antigo podia servir strings desatualizadas por tempo
+        // indefinido (o cache-buster HTTP só atua na requisição, não
+        // no localStorage).
+        var v = window.FOF_VERSION_UI18N || 'dev';
+        return CACHE_PREFIX + lang + '_' + v;
+    }
+
+    // ============================================================
     // CARREGAMENTO DO JSON
     // ============================================================
 
     function carregarDoCache(lang) {
         try {
-            var raw = localStorage.getItem(CACHE_PREFIX + lang);
+            var raw = localStorage.getItem(_chaveCache(lang));
             if (!raw) return null;
             return JSON.parse(raw);
         } catch (e) {
@@ -87,13 +120,13 @@
 
     function salvarNoCache(lang, dados) {
         try {
-            localStorage.setItem(CACHE_PREFIX + lang, JSON.stringify(dados));
+            localStorage.setItem(_chaveCache(lang), JSON.stringify(dados));
         } catch (e) { /* quota cheia ou localStorage desabilitado */ }
     }
 
     function carregarDoServidor(lang) {
-        // Versão do FOF como cache-buster para garantir atualização
-        var versao = (window.FOF_VERSION_UI18N || 'dev');
+        // Versão do FOF (ou timestamp de fallback) como cache-buster.
+        var versao = _versaoParaCacheBuster();
         var url = '/locales/' + encodeURIComponent(lang) + '.json?v=' + encodeURIComponent(versao);
 
         return fetch(url).then(function(resp) {
@@ -280,6 +313,12 @@
      * Se já existir um seletor no container, não duplica.
      */
     function criarSeletorIdioma() {
+        // Guard: se já criamos o seletor nesta sessão, retorna cedo.
+        // A função era chamada de 3-4 lugares diferentes; sem o guard,
+        // varria o DOM inteiro a cada chamada (inofensivo mas
+        // desnecessário).
+        if (_seletorCriado) return;
+
         var containers = document.querySelectorAll('.i18n-seletor-container, #i18n-seletor');
         if (!containers.length) return;
 
@@ -316,6 +355,8 @@
             container.appendChild(label);
             container.appendChild(select);
         }
+
+        _seletorCriado = true;
     }
 
     // ============================================================
