@@ -851,6 +851,21 @@ function criarToggleParaLog(logBox, labelKey) {
     });
 }
 
+function inicializarLogsDaSessao(root) {
+    if (!root) root = document;
+
+    var logs = root.querySelectorAll('.terminal-log');
+
+    logs.forEach(function(logBox) {
+        // Detecta se é log de sessão (compartilhado) ou log individual
+        var labelKey = (logBox.id && logBox.id.indexOf('log-sessao-') === 0)
+            ? 'comum.log_sessao'
+            : 'comum.log_execucao';
+
+        criarToggleParaLog(logBox, labelKey);
+    });
+}
+
 function conectarSSE(idComando, logBox) {
     if (!logBox) return;
 
