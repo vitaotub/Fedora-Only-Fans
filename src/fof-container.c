@@ -422,7 +422,7 @@ sigaction(SIGINT, &sa, NULL);
 sigaction(SIGTERM, &sa, NULL);
 
 g_print("============================================================\n");
-g_print(" 🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-rc.3\n");
+g_print(" 🐧 Fedora Only Fans - Container WebKitGTK 1.0.0-09232026\n");
 g_print("============================================================\n");
 g_print(" 🌐 URL: %s\n", url);
 g_print(" 📐 Janela: %dx%d\n", window_width, window_height);
