@@ -307,20 +307,26 @@ verificarEExibirAvisoAtualizacao();
 
 // ===== AVISO DE ATUALIZAÇÃO DISPONÍVEL =====
 async function verificarEExibirAvisoAtualizacao() {
-var aviso = document.getElementById('aviso-atualizacao-disponivel');
-if (!aviso) return;
+    var aviso = document.getElementById('aviso-atualizacao-disponivel');
+    if (!aviso) return;
 
-if (typeof verificarAtualizacoes !== 'function' || typeof temAtualizacao !== 'function') {
-return;
-}
+    if (typeof verificarAtualizacoes !== 'function' || typeof temAtualizacao !== 'function') {
+        return;
+    }
 
-var versaoRemota = await verificarAtualizacoes();
-if (!versaoRemota) return;
+  var tentativas = 0;
+    while (!window.FOF_VERSION_UI18N && tentativas < 30) {
+        await new Promise(function(res) { setTimeout(res, 100); });
+        tentativas++;
+    }
 
-var versaoLocal = (window.FOF_VERSION_UI18N || '').replace(/^v/, '').trim();
-if (!temAtualizacao(versaoLocal, versaoRemota)) return;
+    var versaoRemota = await verificarAtualizacoes();
+    if (!versaoRemota) return;
 
-aviso.style.display = 'block';
+    var versaoLocal = (window.FOF_VERSION_UI18N || '').replace(/^v/, '').trim();
+    if (!temAtualizacao(versaoLocal, versaoRemota)) return;
+
+    aviso.style.display = 'block';
 }
 
 // ===== INICIALIZAÇÃO =====
