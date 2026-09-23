@@ -565,11 +565,11 @@ Version=1.0
 Type=Application
 Name=Fedora Only Fans
 Comment=Painel de Automação do Fedora
-Exec=$DIR/iniciar_fof.sh --no-fork
+Exec=$DIR/iniciar_fof.sh
 Icon=fof-container
 Terminal=false
 Categories=System;Settings;
-StartupNotify=true
+StartupNotify=false
 StartupWMClass=fof-container
 X-GNOME-Autostart-enabled=true
 EOF
