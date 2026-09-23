@@ -369,7 +369,7 @@ body {
 }
 
 /* ============================================================
- * ACORDEÃO (usado em 05-hardware, 06-gaming e 08-waydroid)
+ * ACORDEÃO (usado em 00-boas-vindas, 05-hardware, 06-gaming e 08-waydroid)
  * ============================================================
  * Usa <details>/<summary> nativos. Zero JS adicional. O WebKitGTK
  * suporta há anos. O visual respeita o tema via variáveis.
@@ -1088,6 +1088,41 @@ body {
 }
 
 /* ============================================================
+ * BADGE "ATUALIZAÇÃO DISPONÍVEL"
+ * ============================================================
+ * Ícone "⬆️" exibido ao lado da versão quando há uma nova release
+ * publicada no GitHub. Clicável, leva para a página de manutenção.
+ */
+
+.badge-atualizacao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.4rem;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    font-size: 0.75rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    animation: pulse-badge 2s infinite ease-in-out;
+    vertical-align: middle;
+}
+
+.badge-atualizacao:hover {
+    background-color: var(--warning-border);
+    transform: scale(1.15);
+}
+
+@keyframes pulse-badge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+/* ============================================================
  * BARRA DE PROGRESSO GUIADA
  * ============================================================ */
 
@@ -1309,41 +1344,6 @@ body {
 @keyframes fadeInCard {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-/* ============================================================
- * BADGE "ATUALIZAÇÃO DISPONÍVEL"
- * ============================================================
- * Ícone "⬆️" exibido ao lado da versão quando há uma nova release
- * publicada no GitHub. Clicável, leva para a página de manutenção.
- */
-
-.badge-atualizacao {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 0.4rem;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background-color: var(--warning-bg);
-    border: 1px solid var(--warning-border);
-    font-size: 0.75rem;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    animation: pulse-badge 2s infinite ease-in-out;
-    vertical-align: middle;
-}
-
-.badge-atualizacao:hover {
-    background-color: var(--warning-border);
-    transform: scale(1.15);
-}
-
-@keyframes pulse-badge {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
 }
 
 /* ============================================================
