@@ -320,6 +320,13 @@ print_step "Criando atalhos no menu de aplicativos..."
 #
 # O nome exibido no menu (Name=Fedora Only Fans) não depende do
 # nome do arquivo — pode ser qualquer coisa.
+#
+# O Exec aponta para o caminho REAL do script (dentro do
+# INSTALL_DIR), não para o symlink em ~/.local/bin. Isso é
+# ligeiramente mais robusto: se algo remover o symlink, o
+# atalho continua funcionando. Também dispensa a resolução de
+# symlink que o iniciar_fof.sh faz no topo (embora essa resolução
+# continue existindo para o caso de invocação via linha de comando).
 # ============================================================
 
 # Ícone no tema hicolor com o MESMO nome do app_id, para o KDE
@@ -343,7 +350,7 @@ Version=1.0
 Type=Application
 Name=Fedora Only Fans
 Comment=Painel de Automação do Fedora
-Exec=$BIN_DIR/fof
+Exec=$INSTALL_DIR/iniciar_fof.sh
 Icon=fof-container
 Terminal=false
 Categories=System;Settings;
@@ -363,7 +370,7 @@ Version=1.0
 Type=Application
 Name=Fedora Only Fans (Modo Compatibilidade)
 Comment=Painel de Automação do Fedora - Modo compatível com GPUs antigas
-Exec=$BIN_DIR/fof-compat
+Exec=$INSTALL_DIR/iniciar_fof_compat.sh
 Icon=fof-container
 Terminal=false
 Categories=System;Settings;
