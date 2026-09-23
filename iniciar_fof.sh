@@ -10,7 +10,6 @@
 # Opções:
 #   --debug, -d      Modo debug (logs detalhados)
 #   --no-clean       Não limpar perfis do navegador
-#   --no-minimize    Não minimizar o terminal do servidor
 #   --help, -h       Mostra esta ajuda
 # ============================================================
 
@@ -40,7 +39,6 @@ cd "$DIR"
 VERSION="1.0.0-09232026"
 DEBUG=false
 NO_CLEAN=false
-NO_MINIMIZE=false
 
 # FOF_LOG_FILE é herdado do processo pai durante a reinvocação, para
 # que pai e filho escrevam no mesmo arquivo de log. Sem isso, cada
@@ -106,14 +104,6 @@ log_header() {
 # 2. Usar `setsid ... &` + `disown` + `exit 0`. Isso cria uma
 #    sessão independente para o terminal, remove do job control
 #    e sai limpo, deixando o terminal sobreviver.
-#
-# 3. KDE: `kstart --iconify` faz o konsole nascer minimizado,
-#    sem precisar de xdotool/wmctrl.
-#
-# 4. Plasma 6 renomeou o binário para kstart6; Plasma 5 usa kstart5;
-#    algumas instalações ainda mantêm o nome antigo kstart. Testamos
-#    os três, e verificamos se o binário encontrado realmente suporta
-#    a opção --iconify antes de confiar nele.
 
 abrir_no_terminal_nativo() {
     local script_path="$1"
@@ -121,41 +111,10 @@ abrir_no_terminal_nativo() {
 
     log_debug "Tentando abrir no terminal nativo..."
 
-    # ─── Descobre qual binário kstart está disponível ──────────
-    #
-    # Ordem: kstart6 (Plasma 6) → kstart5 (Plasma 5) → kstart (legado).
-    # Paramos no primeiro que existir. Em seguida, verificamos se ele
-    # suporta --iconify consultando o --help. Sem essa checagem, um
-    # kstart que não reconhece --iconify sai com erro, o konsole nunca
-    # abre, e como redirecionamos tudo para /dev/null + exit 0, a falha
-    # é completamente silenciosa (era o bug relatado).
-    local KSTART_BIN=""
-    if [ "$NO_MINIMIZE" != true ]; then
-        for cand in kstart6 kstart5 kstart; do
-            if command -v "$cand" &> /dev/null; then
-                if "$cand" --help 2>&1 | grep -q -- "--iconify"; then
-                    KSTART_BIN="$cand"
-                else
-                    log_debug "$cand existe mas não suporta --iconify"
-                fi
-                break  # para no primeiro binário kstart encontrado
-            fi
-        done
-    fi
-
-    # ─── KDE: konsole (com kstart --iconify se disponível) ─────
+    # ─── KDE: konsole ──────────────────────────────────────────
     if command -v konsole &> /dev/null; then
-        if [ -n "$KSTART_BIN" ]; then
-            log_debug "Usando $KSTART_BIN --iconify + konsole (minimizado)"
-            # stderr vai para o log (não /dev/null) para diagnóstico.
-            setsid "$KSTART_BIN" --iconify konsole --title "$titulo" \
-                -e bash "$script_path" --no-fork \
-                >> "$LOG_FILE" 2>&1 &
-            disown 2>/dev/null || true
-            exit 0
-        fi
-
-        log_debug "Usando konsole (KDE, sem minimização)"
+        log_debug "Usando konsole (KDE)"
+        # stderr vai para o log (não /dev/null) para diagnóstico.
         setsid konsole --title "$titulo" \
             -e bash "$script_path" --no-fork \
             >> "$LOG_FILE" 2>&1 &
@@ -190,11 +149,10 @@ abrir_no_terminal_nativo() {
 
     # ─── XFCE ──────────────────────────────────────────────────
     #
-    # CORREÇÃO: xfce4-terminal -e espera comando e argumentos como
-    # argumentos separados (não uma única string). A versão anterior
-    # passava "-e \"bash \\\"$script_path\\\" --no-fork\"", o que fazia
-    # o terminal tentar executar um programa literalmente chamado
-    # 'bash "/caminho/script.sh" --no-fork' — falha garantida.
+    # xfce4-terminal -e espera comando e argumentos como argumentos
+    # separados (não uma única string). Passar "-e \"bash ...\""
+    # fazia o terminal tentar executar um programa literalmente
+    # chamado 'bash "/caminho/script.sh" --no-fork'.
     if command -v xfce4-terminal &> /dev/null; then
         log_debug "Usando xfce4-terminal (XFCE)"
         setsid xfce4-terminal --title="$titulo" \
@@ -225,12 +183,12 @@ abrir_no_terminal_nativo() {
 #
 # Se o usuário não passou --no-fork, reabrimos o script num terminal
 # próprio. Isso permite que o servidor fique rodando em uma janela
-# dedicada (minimizada no KDE), enquanto o processo pai sai limpo.
+# dedicada, enquanto o processo pai sai limpo.
 
 PRECISA_REINVOCAR=true
 for arg in "$@"; do
     case "$arg" in
-        --no-fork|--debug|-d|--no-clean|--no-minimize|--help|-h)
+        --no-fork|--debug|-d|--no-clean|--help|-h)
             PRECISA_REINVOCAR=false
             ;;
     esac
@@ -680,16 +638,12 @@ Uso: $(basename "$0") [opções]
 Opções:
   --debug, -d      Modo debug (logs detalhados no terminal)
   --no-clean       Não limpar perfis do navegador
-  --no-minimize    Não minimizar o terminal do servidor
   --help, -h       Mostra esta ajuda
 
 Descrição:
   Este script inicia o servidor e abre a interface do FOF.
   Ele detecta automaticamente seu ambiente desktop e
-  abre o terminal e navegador apropriados.
-
-  No KDE Plasma, o terminal do servidor é automaticamente
-  minimizado ao abrir (via kstart --iconify).
+  abre o terminal apropriado.
 
 Arquivos:
   server.js         Servidor Node.js
@@ -705,7 +659,6 @@ Exemplos:
   ./iniciar_fof.sh                 # Inicialização normal
   ./iniciar_fof.sh --debug         # Modo debug
   ./iniciar_fof.sh --no-clean      # Manter perfis do navegador
-  ./iniciar_fof.sh --no-minimize   # Não minimizar o terminal
 
 EOF
     exit 0
@@ -727,9 +680,6 @@ main() {
             --no-clean)
                 NO_CLEAN=true
                 ;;
-            --no-minimize)
-                NO_MINIMIZE=true
-                ;;
         esac
     done
 
@@ -742,10 +692,6 @@ main() {
 
     if [ "$NO_CLEAN" = true ]; then
         log_info "🧹 Limpeza de perfis desabilitada"
-    fi
-
-    if [ "$NO_MINIMIZE" = true ]; then
-        log_info "🪟 Minimização do terminal desabilitada"
     fi
 
     verificar_arquivos
