@@ -1,6 +1,5 @@
 /**
  * Fedora Only Fans (FOF) - Script Compartilhado
- * Versão: 1.0.0-09222026
  *
  * Este arquivo contém as funções GLOBAIS compartilhadas entre todas as sessões.
  * Cada sessão (NN-*.html) tem seu próprio JS específico que usa estas funções.
@@ -80,7 +79,7 @@ var API_URL = 'http://localhost:3000';
 // falha silenciosamente — o FOF continua funcionando normalmente.
 //
 // A comparação de versões é lexicográfica direta: o formato
-// MMDDYYYY em 1.0.0-09222026 ordena naturalmente como string.
+// MMDDYYYY em 1.0.0-09232026 ordena naturalmente como string.
 
 var GITHUB_REPO = 'vitaotek/Fedora-Only-Fans';
 var ULTIMA_VERIFICACAO_KEY = 'fof_ultima_verificacao';
@@ -133,7 +132,7 @@ async function verificarAtualizacoes() {
 /**
  * Compara a versão local com a remota. Retorna true se a remota for
  * mais nova. A comparação lexicográfica funciona porque MMDDYYYY em
- * 1.0.0-09222026 ordena naturalmente como string.
+ * 1.0.0-09232026 ordena naturalmente como string.
  */
 function temAtualizacao(versaoLocal, versaoRemota) {
     var local = (versaoLocal || '').replace(/^v/, '').trim();
