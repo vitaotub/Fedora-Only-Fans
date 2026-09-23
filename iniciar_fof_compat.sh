@@ -38,9 +38,9 @@ export WEBKIT_DISABLE_ACCELERATED_2D_CANVAS=1
 
 # Seguir link simbólico para encontrar o diretório real
 if [ -L "${BASH_SOURCE[0]}" ]; then
-DIR="$(cd "$(dirname "$(readlink "${BASH_SOURCE[0]}")")" && pwd)"
+    DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 else
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 cd "$DIR"
 
