@@ -129,6 +129,25 @@ async function verificarAtualizacoes() {
     }
 }
 
+async function verificarAtualizacoesForcado() {
+    try {
+        var resp = await fetch(
+            'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest',
+            { cache: 'no-store' }
+        );
+        if (!resp.ok) return null;
+        var data = await resp.json();
+        var tag = data.tag_name || '';
+        try {
+            localStorage.setItem(ULTIMA_VERIFICACAO_KEY, String(Date.now()));
+            localStorage.setItem(VERSAO_REMOTA_KEY, tag);
+        } catch (e) { /* ignore */ }
+        return tag;
+    } catch (e) {
+        return null;
+    }
+}
+
 /**
  * Compara a versão local com a remota. Retorna true se a remota for
  * mais nova. A comparação lexicográfica funciona porque MMDDYYYY em
@@ -156,22 +175,18 @@ async function mostrarBadgeSeHouverAtualizacao() {
     if (!versaoRemota) return;
 
     var versaoLocal = FOF_VERSION || '?';
+    if (!temAtualizacao(versaoLocal, versaoRemota)) return;
 
-    if (!temAtualizacao(versaoLocal, versaoRemota)) {
-        // FOF já está atualizado. Invalida o cache para forçar uma
-        // consulta fresca na próxima inicialização — evita que um
-        // cache obsoleto fique preso por 6h mostrando badge errado.
+    // Reconfirma com uma consulta fresca à API, ignorando o cache.
+    // Se o cache estava obsoleto (ex.: release deletada), a consulta
+    // fresca retorna 404 e não mostramos o badge.
+    var versaoRemotaFresca = await verificarAtualizacoesForcado();
+    if (!versaoRemotaFresca || !temAtualizacao(versaoLocal, versaoRemotaFresca)) {
         try {
-            var cacheRemoto = (localStorage.getItem(VERSAO_REMOTA_KEY) || '')
-                .replace(/^[vV]/, '').trim();
-            var localLimpo = (versaoLocal || '').replace(/^[vV]/, '').trim();
-
-            if (cacheRemoto && cacheRemoto === localLimpo) {
-                localStorage.removeItem(ULTIMA_VERIFICACAO_KEY);
-                localStorage.removeItem(VERSAO_REMOTA_KEY);
-                console.log('[Atualização] FOF atualizado — cache invalidado.');
-            }
+            localStorage.removeItem(ULTIMA_VERIFICACAO_KEY);
+            localStorage.removeItem(VERSAO_REMOTA_KEY);
         } catch (e) { /* ignore */ }
+        console.log('[Atualização] Cache obsoleto invalidado após verificação fresca.');
         return;
     }
 
