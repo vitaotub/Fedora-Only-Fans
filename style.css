@@ -882,6 +882,16 @@ body {
     align-items: center;
     gap: 0.75rem;
     min-width: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+.header-guide .titulo h1,
+.header-avancado .titulo h1 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .header-guide .titulo h1,
@@ -1047,6 +1057,54 @@ body {
 .btn-tema:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
+}
+
+/* ============================================================
+ * BOTÃO "VOLTAR AO INÍCIO"
+ * ============================================================
+ * Substitui o antigo link textual "<- Voltar ao início" por um
+ * botão compacto com ícone SVG de casa. Mantém o mesmo visual
+ * do botão de tema (.btn-tema) para consistência.
+ */
+
+.btn-voltar-inicio {
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.btn-voltar-inicio:hover {
+    border-color: var(--accent-hover);
+    background-color: var(--bg-secondary);
+    transform: translateY(-1px);
+}
+
+.btn-voltar-inicio:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.3);
+}
+
+.btn-voltar-inicio svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 /* ============================================================
