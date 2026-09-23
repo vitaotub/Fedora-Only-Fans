@@ -156,7 +156,24 @@ async function mostrarBadgeSeHouverAtualizacao() {
     if (!versaoRemota) return;
 
     var versaoLocal = FOF_VERSION || '?';
-    if (!temAtualizacao(versaoLocal, versaoRemota)) return;
+
+    if (!temAtualizacao(versaoLocal, versaoRemota)) {
+        // FOF já está atualizado. Invalida o cache para forçar uma
+        // consulta fresca na próxima inicialização — evita que um
+        // cache obsoleto fique preso por 6h mostrando badge errado.
+        try {
+            var cacheRemoto = (localStorage.getItem(VERSAO_REMOTA_KEY) || '')
+                .replace(/^[vV]/, '').trim();
+            var localLimpo = (versaoLocal || '').replace(/^[vV]/, '').trim();
+
+            if (cacheRemoto && cacheRemoto === localLimpo) {
+                localStorage.removeItem(ULTIMA_VERIFICACAO_KEY);
+                localStorage.removeItem(VERSAO_REMOTA_KEY);
+                console.log('[Atualização] FOF atualizado — cache invalidado.');
+            }
+        } catch (e) { /* ignore */ }
+        return;
+    }
 
     // Insere o badge ao lado de cada .fof-version na página
     document.querySelectorAll('.fof-version').forEach(function(el) {
