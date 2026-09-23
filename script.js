@@ -19,6 +19,13 @@
  * é adiada um frame via requestAnimationFrame para evitar o flash de
  * abertura na primeira renderização.
  *
+ * VERIFICAÇÃO DE ATUALIZAÇÕES: no boot, o FOF consulta a API do GitHub
+ * para saber se há uma versão mais recente publicada. Se houver, um
+ * badge "⬆️" aparece ao lado do número da versão em todas as páginas
+ * (index.html, guiado.html, manutencao.html), linkando para a página
+ * de manutenção. A consulta é cacheada por 6h em localStorage para não
+ * estourar o rate limit da API.
+ *
  * TEMA: claro/escuro alternável via botão na UI. Persistência em localStorage
  * sob a chave 'fof_tema'. O atributo `data-tema` no <html> controla qual
  * conjunto de variáveis CSS é aplicado (ver style.css).
@@ -59,6 +66,116 @@ async function carregarVersaoServidor() {
 
 var STORAGE_KEY = 'fof_progress';
 var API_URL = 'http://localhost:3000';
+
+// ============================================================
+// VERIFICAÇÃO DE ATUALIZAÇÕES (GitHub Releases API)
+// ============================================================
+//
+// Consulta o endpoint /releases/latest do GitHub para saber se há
+// versão mais recente publicada. Cacheia o resultado em localStorage
+// por 6h, para não estourar o rate limit da API do GitHub (60
+// requisições/hora sem autenticação).
+//
+// Se a consulta falhar (offline, GitHub fora do ar, rate limit),
+// falha silenciosamente — o FOF continua funcionando normalmente.
+//
+// A comparação de versões é lexicográfica direta: o formato
+// MMDDYYYY em 1.0.0-09222026 ordena naturalmente como string.
+
+var GITHUB_REPO = 'vitaotek/Fedora-Only-Fans';
+var ULTIMA_VERIFICACAO_KEY = 'fof_ultima_verificacao';
+var VERSAO_REMOTA_KEY = 'fof_versao_remota';
+var TTL_VERIFICACAO_MS = 6 * 60 * 60 * 1000; // 6 horas
+
+/**
+ * Retorna a versão mais recente do FOF publicada no GitHub, ou null
+ * se não foi possível consultar. Usa cache de 6h.
+ */
+async function verificarAtualizacoes() {
+    var agora = Date.now();
+    var ultima = 0;
+    try {
+        ultima = parseInt(localStorage.getItem(ULTIMA_VERIFICACAO_KEY) || '0', 10) || 0;
+    } catch (e) {
+        ultima = 0;
+    }
+
+    // Se consultou nas últimas 6h, usa o cache
+    if (agora - ultima < TTL_VERIFICACAO_MS) {
+        try {
+            var cache = localStorage.getItem(VERSAO_REMOTA_KEY);
+            if (cache) return cache;
+        } catch (e) { /* ignore */ }
+        return null;
+    }
+
+    try {
+        var resp = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest');
+        if (!resp.ok) {
+            console.warn('[Atualização] GitHub retornou HTTP', resp.status);
+            return null;
+        }
+        var data = await resp.json();
+        var tagRemota = data.tag_name || '';
+
+        try {
+            localStorage.setItem(ULTIMA_VERIFICACAO_KEY, String(agora));
+            localStorage.setItem(VERSAO_REMOTA_KEY, tagRemota);
+        } catch (e) { /* ignore */ }
+
+        return tagRemota;
+    } catch (e) {
+        console.warn('[Atualização] Não foi possível verificar:', e.message);
+        return null;
+    }
+}
+
+/**
+ * Compara a versão local com a remota. Retorna true se a remota for
+ * mais nova. A comparação lexicográfica funciona porque MMDDYYYY em
+ * 1.0.0-09222026 ordena naturalmente como string.
+ */
+function temAtualizacao(versaoLocal, versaoRemota) {
+    var local = (versaoLocal || '').replace(/^v/, '').trim();
+    var remota = (versaoRemota || '').replace(/^v/, '').trim();
+    if (!local || !remota) return false;
+    return remota > local;
+}
+
+/**
+ * Verifica atualizações e, se houver, insere um badge "⬆️" ao lado
+ * do span .fof-version. O badge é um link para manutencao.html,
+ * onde o usuário pode atualizar.
+ *
+ * É idempotente: se o badge já existe, não duplica.
+ */
+async function mostrarBadgeSeHouverAtualizacao() {
+    var versaoRemota = await verificarAtualizacoes();
+    if (!versaoRemota) return;
+
+    var versaoLocal = FOF_VERSION || '?';
+    if (!temAtualizacao(versaoLocal, versaoRemota)) return;
+
+    // Insere o badge ao lado de cada .fof-version na página
+    document.querySelectorAll('.fof-version').forEach(function(el) {
+        var parent = el.parentElement;
+        if (!parent) return;
+        if (parent.querySelector('.badge-atualizacao')) return;
+
+        var badge = document.createElement('a');
+        badge.className = 'badge-atualizacao';
+        badge.href = 'manutencao.html';
+        badge.setAttribute('data-i18n-title', 'comum.atualizacao_disponivel_titulo');
+        badge.setAttribute('data-i18n-aria-label', 'comum.atualizacao_disponivel_titulo');
+        badge.title = _t('comum.atualizacao_disponivel_titulo', 'Nova versão disponível! Clique para atualizar.');
+        badge.setAttribute('aria-label', badge.title);
+        badge.textContent = '⬆️';
+
+        parent.insertBefore(badge, el.nextSibling);
+    });
+
+    console.log('⬆️ Atualização disponível: ' + versaoLocal + ' → ' + versaoRemota);
+}
 
 // ============================================================
 // i18n HELPER LOCAL
@@ -140,14 +257,14 @@ function criarBotaoTema() {
 // e aparecem em manutencao.html, sem numeração.
 
 var SESSOES = [
-    {
-        id: '00-boas-vindas',
-        nome: 'Boas-vindas',
-        nomeKey: 'sessoes.00-boas-vindas.nome',
-        comandos: {
-            'atualizacao-inicial': { sempreClicavel: true }
-        }
-    },
+{
+    id: '00-boas-vindas',
+    nome: 'Boas-vindas',
+    nomeKey: 'sessoes.00-boas-vindas.nome',
+    comandos: {
+        'atualizacao-inicial': { sempreClicavel: true }
+    }
+},
 {
     id: '01-restauracao',
     nome: 'Restauração',
@@ -350,7 +467,7 @@ var SEMPRE_CLICAVEIS = SESSOES.reduce(function(lista, sessao) {
     Object.keys(sessao.comandos || {}).forEach(function(id) {
         if (sessao.comandos[id].sempreClicavel) lista.push(id);
     });
-        return lista;
+    return lista;
 }, []);
 
 function numerarSessao(sessaoId, container) {
@@ -835,15 +952,6 @@ function criarToggleParaLog(logBox, labelKey) {
     wrapper.appendChild(toggle);
     wrapper.appendChild(logBox);
 
-    // EXPANDIDO POR PADRÃO: adiciona a classe 'expandido' no toggle
-    // e no logBox. O CSS trata o estado SEM a classe como colapsado
-    // (via :not(.expandido)), então isto inverte o default — o usuário
-    // vê o log aberto e clica para recolher, se quiser.
-    //
-    // O requestAnimationFrame adia a adição um frame para evitar o
-    // flash de transição de altura (0 → auto) que o navegador
-    // dispararia se a classe fosse aplicada no mesmo tick da inserção
-    // no DOM.
     logBox.style.display = 'block';
     requestAnimationFrame(function() {
         toggle.classList.add('expandido');
@@ -851,13 +959,25 @@ function criarToggleParaLog(logBox, labelKey) {
     });
 }
 
+/**
+ * Varre todos os .terminal-log dentro de um subtree (root) e garante
+ * que cada um tenha o wrapper + toggle criados, com a classe 'expandido'
+ * aplicada por padrão.
+ *
+ * Essa função resolve o bug de "log de sessão só aparece após o primeiro
+ * clique": antes, o toggle só era criado dentro de conectarSSE(), que só
+ * rodava quando um botão era clicado. Agora, guiado.html e manutencao.html
+ * chamam esta função logo após o eval e restaurarEstadoSessao(), fazendo
+ * com que todos os logs nasçam expandidos.
+ *
+ * É idempotente: se o toggle já existe, criarToggleParaLog() retorna cedo.
+ */
 function inicializarLogsDaSessao(root) {
     if (!root) root = document;
 
     var logs = root.querySelectorAll('.terminal-log');
 
     logs.forEach(function(logBox) {
-        // Detecta se é log de sessão (compartilhado) ou log individual
         var labelKey = (logBox.id && logBox.id.indexOf('log-sessao-') === 0)
             ? 'comum.log_sessao'
             : 'comum.log_execucao';
@@ -950,116 +1070,6 @@ function conectarSSE(idComando, logBox) {
         logBox.appendChild(errorLine);
         logBox.scrollTop = logBox.scrollHeight;
     }
-}
-
-// ============================================================
-// VERIFICAÇÃO DE ATUALIZAÇÕES (GitHub Releases API)
-// ============================================================
-//
-// Consulta o endpoint /releases/latest do GitHub para saber se há
-// versão mais recente publicada. Cacheia o resultado em localStorage
-// por 6h, para não estourar o rate limit da API do GitHub (60
-// requisições/hora sem autenticação).
-//
-// Se a consulta falhar (offline, GitHub fora do ar, rate limit),
-// falha silenciosamente — o FOF continua funcionando normalmente.
-//
-// A comparação de versões é lexicográfica direta: o formato
-// MMDDYYYY em 1.0.0-09222026 ordena naturalmente como string.
-
-var GITHUB_REPO = 'vitaotek/Fedora-Only-Fans';
-var ULTIMA_VERIFICACAO_KEY = 'fof_ultima_verificacao';
-var VERSAO_REMOTA_KEY = 'fof_versao_remota';
-var TTL_VERIFICACAO_MS = 6 * 60 * 60 * 1000; // 6 horas
-
-/**
- * Retorna a versão mais recente do FOF publicada no GitHub, ou null
- * se não foi possível consultar. Usa cache de 6h.
- */
-async function verificarAtualizacoes() {
-    var agora = Date.now();
-    var ultima = 0;
-    try {
-        ultima = parseInt(localStorage.getItem(ULTIMA_VERIFICACAO_KEY) || '0', 10) || 0;
-    } catch (e) {
-        ultima = 0;
-    }
-
-    // Se consultou nas últimas 6h, usa o cache
-    if (agora - ultima < TTL_VERIFICACAO_MS) {
-        try {
-            var cache = localStorage.getItem(VERSAO_REMOTA_KEY);
-            if (cache) return cache;
-        } catch (e) { /* ignore */ }
-        return null;
-    }
-
-    try {
-        var resp = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest');
-        if (!resp.ok) {
-            console.warn('[Atualização] GitHub retornou HTTP', resp.status);
-            return null;
-        }
-        var data = await resp.json();
-        var tagRemota = data.tag_name || '';
-
-        try {
-            localStorage.setItem(ULTIMA_VERIFICACAO_KEY, String(agora));
-            localStorage.setItem(VERSAO_REMOTA_KEY, tagRemota);
-        } catch (e) { /* ignore */ }
-
-        return tagRemota;
-    } catch (e) {
-        console.warn('[Atualização] Não foi possível verificar:', e.message);
-        return null;
-    }
-}
-
-/**
- * Compara a versão local com a remota. Retorna true se a remota for
- * mais nova. A comparação lexicográfica funciona porque MMDDYYYY em
- * 1.0.0-09222026 ordena naturalmente como string.
- */
-function temAtualizacao(versaoLocal, versaoRemota) {
-    var local = (versaoLocal || '').replace(/^v/, '').trim();
-    var remota = (versaoRemota || '').replace(/^v/, '').trim();
-    if (!local || !remota) return false;
-    return remota > local;
-}
-
-/**
- * Verifica atualizações e, se houver, insere um badge "⬆️" ao lado
- * do span .fof-version. O badge é um link para manutencao.html,
- * onde o usuário pode atualizar.
- *
- * É idempotente: se o badge já existe, não duplica.
- */
-async function mostrarBadgeSeHouverAtualizacao() {
-    var versaoRemota = await verificarAtualizacoes();
-    if (!versaoRemota) return;
-
-    var versaoLocal = FOF_VERSION || '?';
-    if (!temAtualizacao(versaoLocal, versaoRemota)) return;
-
-    // Insere o badge ao lado de cada .fof-version na página
-    document.querySelectorAll('.fof-version').forEach(function(el) {
-        var parent = el.parentElement;
-        if (!parent) return;
-        if (parent.querySelector('.badge-atualizacao')) return;
-
-        var badge = document.createElement('a');
-        badge.className = 'badge-atualizacao';
-        badge.href = 'manutencao.html';
-        badge.setAttribute('data-i18n-title', 'comum.atualizacao_disponivel_titulo');
-        badge.setAttribute('data-i18n-aria-label', 'comum.atualizacao_disponivel_titulo');
-        badge.title = _t('comum.atualizacao_disponivel_titulo', 'Nova versão disponível! Clique para atualizar.');
-        badge.setAttribute('aria-label', badge.title);
-        badge.textContent = '⬆️';
-
-        parent.insertBefore(badge, el.nextSibling);
-    });
-
-    console.log('⬆️ Atualização disponível: ' + versaoLocal + ' → ' + versaoRemota);
 }
 
 // ============================================================
@@ -1399,6 +1409,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 50);
     }
 
+    // Verifica atualizações no GitHub (silencioso se falhar)
     mostrarBadgeSeHouverAtualizacao();
 });
 
