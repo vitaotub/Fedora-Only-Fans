@@ -19,7 +19,7 @@ set -o pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
 cd "$DIR"
 
-VERSION="1.0.0-09222026"
+VERSION="1.0.0-09232026"
 DEBUG=false
 NO_CLEAN=false
 LOG_FILE="/tmp/fof-$(date +%Y%m%d-%H%M%S).log"
