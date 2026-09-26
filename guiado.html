@@ -6,76 +6,86 @@
 <title>FOF - Configuração</title>
 <script>
 (function() {
-try {
-var t = localStorage.getItem('fof_tema') || 'escuro';
-document.documentElement.setAttribute('data-tema', t === 'claro' ? 'claro' : 'escuro');
-} catch (e) {
-document.documentElement.setAttribute('data-tema', 'escuro');
-}
+    try {
+        var t = localStorage.getItem('fof_tema') || 'escuro';
+        document.documentElement.setAttribute('data-tema', t === 'claro' ? 'claro' : 'escuro');
+    } catch (e) {
+        document.documentElement.setAttribute('data-tema', 'escuro');
+    }
 })();
 </script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container modo-guiado">
+
 <!-- ===== HEADER ===== -->
 <div class="header-guide">
-<div class="titulo">
-<img src="icone_app.png" alt="FOF" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain; flex-shrink: 0;" onerror="this.style.display='none'">
-<h1 data-i18n="guiado.titulo">Configuração do Fedora</h1>
-<span class="badge-modo" data-i18n="guiado.badge_modo">🧭 Passo a Passo</span>
-<span style="color: var(--text-muted); font-size: 0.8rem; white-space: nowrap;">v<span class="fof-version"></span></span>
+    <div class="titulo">
+        <img src="icone_app.png" alt="FOF" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain; flex-shrink: 0;" onerror="this.style.display='none'">
+        <h1 data-i18n="guiado.titulo">Configuração do Fedora</h1>
+        <span class="badge-modo" data-i18n="guiado.badge_modo">🧭 Passo a Passo</span>
+        <span class="progresso-global" id="progresso-global" title="—">0/0</span>
+        <span style="color: var(--text-muted); font-size: 0.8rem; white-space: nowrap;">v<span class="fof-version"></span></span>
+    </div>
+    <div class="header-direita">
+        <div class="header-controles">
+            <div class="i18n-seletor-container" id="i18n-seletor"></div>
+            <div class="tema-toggle-container"></div>
+            <a href="index.html"
+               class="btn-voltar-inicio"
+               data-i18n-title="comum.voltar_inicio"
+               data-i18n-aria-label="comum.voltar_inicio"
+               aria-label="← Voltar ao início"
+               title="← Voltar ao início">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+            </a>
+        </div>
+    </div>
 </div>
-<div class="header-direita">
-<div class="header-controles">
-<div class="i18n-seletor-container" id="i18n-seletor"></div>
-<div class="tema-toggle-container"></div>
-<a href="index.html"
-class="btn-voltar-inicio"
-data-i18n-title="comum.voltar_inicio"
-data-i18n-aria-label="comum.voltar_inicio"
-aria-label="← Voltar ao início"
-title="← Voltar ao início">
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-<polyline points="9 22 9 12 15 12 15 22"/>
-</svg>
-</a>
-</div>
-</div>
+
+<!-- ===== MENU DE SESSÕES FIXO ===== -->
+<!--
+    Substitui as bolinhas coloridas (.sessao-indicador).
+    Criado dinamicamente via JS (criarMenuSessoes).
+    Permanece visível durante a rolagem (position: sticky).
+-->
+<div class="session-menu-wrapper" id="session-menu-wrapper" style="display: none;">
+    <div class="session-menu" id="session-menu" role="tablist" aria-label="Sessões"></div>
 </div>
 
 <!-- ===== BARRA DE POSIÇÃO ===== -->
 <div class="progress-guide">
-<div class="barra">
-<div class="fill" id="progress-guia-fill"></div>
+    <div class="barra">
+        <div class="fill" id="progress-guia-fill"></div>
+    </div>
+    <div class="info">
+        <span class="sessao-atual" id="progress-guia-text">1 de 10</span>
+    </div>
 </div>
-<div class="info">
-<span class="sessao-atual" id="progress-guia-text">1 de 7</span>
-</div>
-</div>
-
-<!-- ===== INDICADORES DE SESSÃO ===== -->
-<div class="sessao-indicador" id="sessao-indicadores"></div>
 
 <!-- ===== CONTAINER DAS SESSÕES ===== -->
 <div id="sessao-container">
-<div class="loading-sessao">
-<div class="spinner"></div>
-<p id="loading-inicial-texto">Carregando sessão...</p>
-</div>
+    <div class="loading-sessao">
+        <div class="spinner"></div>
+        <p id="loading-inicial-texto">Carregando sessão...</p>
+    </div>
 </div>
 
 <!-- ===== NAVEGAÇÃO ===== -->
 <div class="nav-guide" id="nav-guide">
-<div class="info">
-<span id="info-sessao"><strong>1/7</strong> - Carregando...</span>
+    <div class="info">
+        <span id="info-sessao"><strong>1/10</strong> - Carregando...</span>
+    </div>
+    <div class="botoes">
+        <button class="btn-voltar" id="btn-anterior" onclick="sessaoAnterior()" data-i18n="comum.btn_anterior">◀ Anterior</button>
+        <button class="btn-proximo" id="btn-proximo" onclick="proximaSessao()" data-i18n="comum.btn_proximo">Próximo ▶</button>
+    </div>
 </div>
-<div class="botoes">
-<button class="btn-voltar" id="btn-anterior" onclick="sessaoAnterior()" data-i18n="comum.btn_anterior">◀ Anterior</button>
-<button class="btn-proximo" id="btn-proximo" onclick="proximaSessao()" data-i18n="comum.btn_proximo">Próximo ▶</button>
-</div>
-</div>
+
 </div>
 
 <script src="i18n.js"></script>
@@ -88,279 +98,385 @@ title="← Voltar ao início">
 var sessaoAtual = 0;
 var sessoesCarregadas = {};
 
-// Cores fixas para cada bolinha indicadora de sessão.
-// A ORDEM DESTE ARRAY CASA COM A ORDEM DE SESSOES_PRINCIPAIS
-// (script.js). Se uma sessão for reordenada ou inserida, ajustar
-// as cores aqui também.
-var CORES_SESSOES = [
-'#f59e0b', // Sessão 1  - Boas-vindas (laranja)
-'#8b5cf6', // Sessão 2  - Restauração (roxo)
-'#3c67e3', // Sessão 3  - Otimização (azul)
-'#10b981', // Sessão 4  - Repositórios (verde)
-'#3b82f6', // Sessão 5  - Fontes (azul claro)
-'#e11d48', // Sessão 6  - Hardware (rosa)
-'#22c55e', // Sessão 7  - Gaming (verde vibrante)
-'#357a38', // Sessão 8  - Produção Multimídia (verde escuro)
-'#06b6d4', // Sessão 9  - Waydroid (ciano)
-'#a855f7'  // Sessão 10 - Aplicativos Recomendados (púrpura)
-];
+// ------------------------------------------------------------
+// ÍCONES das sessões (emoji usado no menu fixo).
+// A ORDEM DESTE MAPA não importa — a ordem de exibição é
+// definida pela posição em SESSOES_PRINCIPAIS (script.js).
+//
+// Se você adicionar uma sessão nova em script.js, adicione
+// também uma entrada aqui com o mesmo id, senão ela aparece
+// sem ícone no menu (não quebra — só fica sem emoji).
+// ------------------------------------------------------------
+var ICONES_SESSOES = {
+    '00-boas-vindas': '👋',
+    '01-restauracao': '💾',
+    '02-otimizacao': '⚙️',
+    '03-repositorios': '📦',
+    '04-fontes': '🔤',
+    '05-hardware': '🖥️',
+    '06-gaming': '🎮',
+    '07-loja': '🎬',
+    '08-waydroid': '📱',
+    '09-softwares-uteis': '📦',
+    '10-casa-pronta': '🏠',
+    '11-diagnostico': '📊',
+    '12-central-fof': '📋',
+    '13-fedora': '🐧'
+};
 
 // ------------------------------------------------------------
 // i18n helpers locais (wrappers sobre tOr global)
-// tOr(chave, fallback) → string traduzida, ou fallback em PT-BR.
-// Como o fallback é o próprio texto PT-BR, a UI em pt-BR fica
-// idêntica ao original.
 // ------------------------------------------------------------
 function _t(chave, fallback) {
-return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
+    return (typeof tOr === 'function') ? tOr(chave, fallback) : fallback;
 }
 
 function _tVars(chave, fallback, vars) {
-return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
+    return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
 }
 
+// ------------------------------------------------------------
+// Carregar uma sessão específica no container
+// ------------------------------------------------------------
 async function carregarSessao(index) {
-var container = document.getElementById('sessao-container');
-if (!container) return;
+    var container = document.getElementById('sessao-container');
+    if (!container) return;
 
-var nomeSessao = SESSOES_PRINCIPAIS[index];
-var arquivo = nomeSessao + '.html';
-var nomeTraduzido = nomeDaSessao(nomeSessao);
+    var nomeSessao = SESSOES_PRINCIPAIS[index];
+    var arquivo = nomeSessao + '.html';
+    var nomeTraduzido = nomeDaSessao(nomeSessao);
 
-container.innerHTML = `
-<div class="loading-sessao">
-<div class="spinner"></div>
-<p>${_tVars('comum.loading_sessao', 'Carregando ' + nomeTraduzido + '...', { nome: nomeTraduzido })}</p>
-</div>
-`;
+    container.innerHTML = `
+        <div class="loading-sessao">
+            <div class="spinner"></div>
+            <p>${_tVars('comum.loading_sessao', 'Carregando ' + nomeTraduzido + '...', { nome: nomeTraduzido })}</p>
+        </div>
+    `;
 
-await getProgress();
+    await getProgress();
 
-try {
-var response = await fetch(arquivo);
-if (!response.ok) {
-throw new Error('Erro ao carregar ' + arquivo + ': ' + response.status);
-}
-
-var html = await response.text();
-var bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-var conteudo = bodyMatch ? bodyMatch[1] : html;
-var scriptMatch = conteudo.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
-var conteudoSemScripts = conteudo.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '');
-
-container.innerHTML = conteudoSemScripts;
-
-// FIX #1: capturar textos originais ANTES de rodar os scripts da sessão
-// e ANTES de restaurar estado. O HTML acabou de ser injetado do arquivo-
-// fonte, então os botões ainda têm o texto original.
-container.querySelectorAll('.btn-executar').forEach(function(btn) {
-if (!btn.hasAttribute('data-texto-original')) {
-btn.setAttribute('data-texto-original', btn.textContent);
-}
-});
-
-if (scriptMatch) {
-scriptMatch.forEach(function(script) {
-var scriptContent = script.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
-try {
-var win = window;
-eval.call(win, scriptContent);
-} catch (e) {
-console.error('Erro ao executar script:', e);
-}
-});
-}
-
-if (typeof restaurarEstadoSessao === 'function') {
     try {
-        restaurarEstadoSessao();
+        var response = await fetch(arquivo);
+        if (!response.ok) {
+            throw new Error('Erro ao carregar ' + arquivo + ': ' + response.status);
+        }
+
+        var html = await response.text();
+        var bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        var conteudo = bodyMatch ? bodyMatch[1] : html;
+        var scriptMatch = conteudo.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+        var conteudoSemScripts = conteudo.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '');
+
+        container.innerHTML = conteudoSemScripts;
+
+        // FIX #1: capturar textos originais ANTES de rodar os scripts da sessão
+        // e ANTES de restaurar estado. O HTML acabou de ser injetado do arquivo-
+        // fonte, então os botões ainda têm o texto original.
+        container.querySelectorAll('.btn-executar').forEach(function(btn) {
+            if (!btn.hasAttribute('data-texto-original')) {
+                btn.setAttribute('data-texto-original', btn.textContent);
+            }
+        });
+
+        if (scriptMatch) {
+            scriptMatch.forEach(function(script) {
+                var scriptContent = script.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
+                try {
+                    var win = window;
+                    eval.call(win, scriptContent);
+                } catch (e) {
+                    console.error('Erro ao executar script:', e);
+                }
+            });
+        }
+
+        if (typeof restaurarEstadoSessao === 'function') {
+            try {
+                restaurarEstadoSessao();
+            } catch (e) {
+                console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
+            }
+        }
+
+        if (typeof inicializarLogsDaSessao === 'function') {
+            try {
+                inicializarLogsDaSessao(container);
+            } catch (e) {
+                console.error('Erro ao inicializar logs da sessão ' + nomeSessao + ':', e);
+            }
+        }
+
+        numerarSessao(nomeSessao, container);
+
+        if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
+            I18N.aplicarTraducoes(container);
+        }
+
+        sessoesCarregadas[nomeSessao] = true;
+        var event = new CustomEvent('sessao-carregada', { detail: { sessao: nomeSessao } });
+        document.dispatchEvent(event);
+        console.log('✅ Sessão carregada: ' + nomeSessao);
+
     } catch (e) {
-        console.error('Erro ao restaurar estado da sessão ' + nomeSessao + ':', e);
+        console.error('Erro ao carregar sessão:', e);
+        var msgErro = _t('comum.erro_carregar_sessao', '❌ Erro ao carregar sessão');
+        var msgTentar = _t('comum.btn_tentar_novamente', '🔄 Tentar novamente');
+        container.innerHTML = `
+            <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444; border-radius: 12px;">
+                <h3>${msgErro}</h3>
+                <p style="color: var(--text-muted);">${e.message}</p>
+                <button onclick="carregarSessao(${index})" style="margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    ${msgTentar}
+                </button>
+            </div>
+        `;
     }
 }
 
-if (typeof inicializarLogsDaSessao === 'function') {
-    try {
-        inicializarLogsDaSessao(container);
-    } catch (e) {
-        console.error('Erro ao inicializar logs da sessão ' + nomeSessao + ':', e);
-    }
-}
-
-numerarSessao(nomeSessao, container);
-
-if (typeof I18N !== 'undefined' && typeof I18N.aplicarTraducoes === 'function') {
-I18N.aplicarTraducoes(container);
-}
-
-sessoesCarregadas[nomeSessao] = true;
-var event = new CustomEvent('sessao-carregada', { detail: { sessao: nomeSessao } });
-document.dispatchEvent(event);
-console.log('✅ Sessão carregada: ' + nomeSessao);
-
-} catch (e) {
-console.error('Erro ao carregar sessão:', e);
-var msgErro = _t('comum.erro_carregar_sessao', '❌ Erro ao carregar sessão');
-var msgTentar = _t('comum.btn_tentar_novamente', '🔄 Tentar novamente');
-container.innerHTML = `
-<div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444; border-radius: 12px;">
-<h3>${msgErro}</h3>
-<p style="color: var(--text-muted);">${e.message}</p>
-<button onclick="carregarSessao(${index})" style="margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer;">
-${msgTentar}
-</button>
-</div>
-`;
-}
-}
-
+// ------------------------------------------------------------
+// Navegar para uma sessão (usado pelo menu, botões e deep-link)
+// ------------------------------------------------------------
 function irParaSessao(index) {
-var total = SESSOES_PRINCIPAIS.length;
-if (index < 0 || index >= total) return;
-sessaoAtual = index;
+    var total = SESSOES_PRINCIPAIS.length;
+    if (index < 0 || index >= total) return;
 
-carregarSessao(index);
+    sessaoAtual = index;
 
-var btnAnterior = document.getElementById('btn-anterior');
-var btnProximo = document.getElementById('btn-proximo');
-var infoSessao = document.getElementById('info-sessao');
+    carregarSessao(index);
 
-if (btnAnterior) btnAnterior.disabled = (index === 0);
-if (btnProximo) btnProximo.disabled = (index === total - 1);
+    var btnAnterior = document.getElementById('btn-anterior');
+    var btnProximo = document.getElementById('btn-proximo');
+    var infoSessao = document.getElementById('info-sessao');
 
-if (infoSessao) {
-infoSessao.innerHTML = _tVars(
-'comum.sessao_info_nav',
-'<strong>' + (index + 1) + '/' + total + '</strong> - ' + nomeDaSessao(SESSOES_PRINCIPAIS[index]),
-{ n: index + 1, total: total, nome: nomeDaSessao(SESSOES_PRINCIPAIS[index]) }
-);
+    if (btnAnterior) btnAnterior.disabled = (index === 0);
+    if (btnProximo) btnProximo.disabled = (index === total - 1);
+
+    if (infoSessao) {
+        infoSessao.innerHTML = _tVars(
+            'comum.sessao_info_nav',
+            '<strong>' + (index + 1) + '/' + total + '</strong> - ' + nomeDaSessao(SESSOES_PRINCIPAIS[index]),
+            { n: index + 1, total: total, nome: nomeDaSessao(SESSOES_PRINCIPAIS[index]) }
+        );
+    }
+
+    atualizarBarraPosicao(index, total);
+    atualizarMenuSessoes();
+
+    setTimeout(carregarProgressoInicial, 300);
 }
 
-atualizarBarraPosicao(index, total);
-atualizarIndicadores();
-
-setTimeout(carregarProgressoInicial, 300);
-}
-
+// ------------------------------------------------------------
+// Atualiza a barra de posição (progresso do fluxo)
+// ------------------------------------------------------------
 function atualizarBarraPosicao(atual, total) {
-var fill = document.getElementById('progress-guia-fill');
-var text = document.getElementById('progress-guia-text');
-if (fill) {
-var percent = ((atual + 1) / total) * 100;
-fill.style.width = percent + '%';
-}
-if (text) {
-text.textContent = _tVars(
-'comum.sessao_posicao',
-(atual + 1) + ' de ' + total,
-{ atual: atual + 1, total: total }
-);
-}
+    var fill = document.getElementById('progress-guia-fill');
+    var text = document.getElementById('progress-guia-text');
+    if (fill) {
+        var percent = ((atual + 1) / total) * 100;
+        fill.style.width = percent + '%';
+    }
+    if (text) {
+        text.textContent = _tVars(
+            'comum.sessao_posicao',
+            (atual + 1) + ' de ' + total,
+            { atual: atual + 1, total: total }
+        );
+    }
 }
 
+// ------------------------------------------------------------
+// Navegação Anterior / Próximo
+// ------------------------------------------------------------
 function sessaoAnterior() {
-if (sessaoAtual > 0) irParaSessao(sessaoAtual - 1);
+    if (sessaoAtual > 0) irParaSessao(sessaoAtual - 1);
 }
 
 function proximaSessao() {
-var total = SESSOES_PRINCIPAIS.length;
-if (sessaoAtual < total - 1) {
-irParaSessao(sessaoAtual + 1);
-}
-}
-
-function criarIndicadores() {
-var container = document.getElementById('sessao-indicadores');
-if (!container) return;
-container.innerHTML = '';
-var total = SESSOES_PRINCIPAIS.length;
-for (var i = 0; i < total; i++) {
-var dot = document.createElement('div');
-dot.className = 'dot';
-dot.dataset.index = i;
-dot.title = nomeDaSessao(SESSOES_PRINCIPAIS[i]);
-dot.style.backgroundColor = CORES_SESSOES[i] || '#3c67e3';
-dot.style.borderColor = CORES_SESSOES[i] || '#3c67e3';
-dot.addEventListener('click', function() {
-var index = parseInt(this.dataset.index);
-if (index !== sessaoAtual) irParaSessao(index);
-});
-container.appendChild(dot);
-}
-atualizarIndicadores();
+    var total = SESSOES_PRINCIPAIS.length;
+    if (sessaoAtual < total - 1) {
+        irParaSessao(sessaoAtual + 1);
+    }
 }
 
-function atualizarIndicadores() {
-var dots = document.querySelectorAll('.sessao-indicador .dot');
-dots.forEach(function(dot, index) {
-dot.classList.remove('ativa');
-dot.style.backgroundColor = CORES_SESSOES[index] || '#3c67e3';
-dot.style.borderColor = CORES_SESSOES[index] || '#3c67e3';
-if (index === sessaoAtual) {
-dot.classList.add('ativa');
-}
-});
+// ============================================================
+// MENU DE SESSÕES FIXO (substitui as bolinhas coloridas)
+// ============================================================
+//
+// Cria um chip clicável para cada sessão principal, com:
+// - ícone (emoji de ICONES_SESSOES)
+// - número da sessão
+// - nome da sessão (traduzido)
+// - estado: ativa (sessão atual) / concluída (todas as tarefas feitas)
+//
+// O menu é criado uma única vez (em criarMenuSessoes) e atualizado
+// a cada troca de sessão (em atualizarMenuSessoes).
+
+function criarMenuSessoes() {
+    var wrapper = document.getElementById('session-menu-wrapper');
+    var menu = document.getElementById('session-menu');
+    if (!wrapper || !menu) return;
+
+    // Se já foi criado, não duplica
+    if (menu.children.length > 0) return;
+
+    var total = SESSOES_PRINCIPAIS.length;
+    for (var i = 0; i < total; i++) {
+        var sessaoId = SESSOES_PRINCIPAIS[i];
+        var nome = nomeDaSessao(sessaoId);
+        var icone = ICONES_SESSOES[sessaoId] || '•';
+
+        var item = document.createElement('div');
+        item.className = 'session-menu-item';
+        item.dataset.index = String(i);
+        item.dataset.sessao = sessaoId;
+        item.setAttribute('role', 'tab');
+        item.setAttribute('tabindex', '0');
+        item.title = nome;
+
+        item.innerHTML =
+            '<span class="session-icon">' + icone + '</span>' +
+            '<span class="session-numero">' + (i + 1) + '</span>' +
+            '<span class="session-label">' + nome + '</span>';
+
+        item.addEventListener('click', function() {
+            var idx = parseInt(this.dataset.index, 10);
+            if (idx !== sessaoAtual) irParaSessao(idx);
+        });
+
+        // Acessibilidade: Enter/Espaço também navegam
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                var idx = parseInt(this.dataset.index, 10);
+                if (idx !== sessaoAtual) irParaSessao(idx);
+            }
+        });
+
+        menu.appendChild(item);
+    }
+
+    // Mostra o wrapper agora que tem itens
+    wrapper.style.display = '';
+
+    atualizarMenuSessoes();
 }
 
-// ===== SOBRESCRITAS =====
+function atualizarMenuSessoes() {
+    var menu = document.getElementById('session-menu');
+    if (!menu) return;
+
+    var itens = menu.querySelectorAll('.session-menu-item');
+    itens.forEach(function(item, idx) {
+        var sessaoId = item.dataset.sessao;
+
+        // Estado "ativa"
+        if (idx === sessaoAtual) {
+            item.classList.add('ativa');
+            item.setAttribute('aria-selected', 'true');
+        } else {
+            item.classList.remove('ativa');
+            item.setAttribute('aria-selected', 'false');
+        }
+
+        // Estado "concluída" (todas as tarefas não-sempre-clicáveis feitas)
+        if (typeof getStatusSessao === 'function' && getStatusSessao(sessaoId) === 'executado') {
+            item.classList.add('concluida');
+        } else {
+            item.classList.remove('concluida');
+        }
+    });
+
+    // Scroll automático para o item ativo (importante quando há
+    // muitas sessões e o menu rola horizontalmente em telas pequenas)
+    var ativo = menu.querySelector('.session-menu-item.ativa');
+    if (ativo && typeof ativo.scrollIntoView === 'function') {
+        try {
+            ativo.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } catch (e) {
+            // Alguns WebKitGTK antigos não aceitam options; fallback
+            ativo.scrollIntoView(false);
+        }
+    }
+}
+
+// ============================================================
+// SOBRESCRITAS (marcadores que disparam atualização do menu)
+// ============================================================
+//
+// As funções marcarComoExecutado / desmarcarComoExecutado /
+// marcarComoPulado do script.js atualizam o progresso, mas não
+// sabem do menu. Sobrescrevemos aqui para também atualizar o
+// menu após a mudança de estado.
+
 var marcarComoExecutadoOriginal = marcarComoExecutado;
 var desmarcarComoExecutadoOriginal = desmarcarComoExecutado;
 var marcarComoPuladoOriginal = marcarComoPulado;
 
 marcarComoExecutado = async function(idComando) {
-await marcarComoExecutadoOriginal(idComando);
-setTimeout(function() {
-atualizarIndicadores();
-}, 100);
+    await marcarComoExecutadoOriginal(idComando);
+    setTimeout(function() {
+        atualizarMenuSessoes();
+    }, 100);
 };
 
 desmarcarComoExecutado = async function(idComando) {
-await desmarcarComoExecutadoOriginal(idComando);
-atualizarIndicadores();
+    await desmarcarComoExecutadoOriginal(idComando);
+    atualizarMenuSessoes();
 };
 
 marcarComoPulado = async function(idComando) {
-await marcarComoPuladoOriginal(idComando);
-atualizarIndicadores();
+    await marcarComoPuladoOriginal(idComando);
+    atualizarMenuSessoes();
 };
 
-// ===== INICIALIZAÇÃO =====
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+
 document.addEventListener('DOMContentLoaded', function() {
-if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
-I18N.criarSeletorIdioma();
-}
+    if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
+        I18N.criarSeletorIdioma();
+    }
 
-if (typeof criarBotaoTema === 'function') {
-criarBotaoTema();
-}
+    if (typeof criarBotaoTema === 'function') {
+        criarBotaoTema();
+    }
 
-var loadingTexto = document.getElementById('loading-inicial-texto');
-if (loadingTexto) {
-loadingTexto.textContent = _t('comum.spinner_carregando_sessao', 'Carregando sessão...');
-}
+    var loadingTexto = document.getElementById('loading-inicial-texto');
+    if (loadingTexto) {
+        loadingTexto.textContent = _t('comum.spinner_carregando_sessao', 'Carregando sessão...');
+    }
 
-if (typeof getProgress !== 'undefined') {
-criarIndicadores();
-irParaSessao(0);
-} else {
-console.warn('⏳ Aguardando script.js carregar...');
-setTimeout(function() {
-if (typeof getProgress !== 'undefined') {
-criarIndicadores();
-irParaSessao(0);
-} else {
-console.error('❌ script.js não foi carregado!');
-var msgErro = _t('comum.erro_script_js', '❌ Erro: script.js não foi carregado!');
-var msgDica = _t('comum.erro_script_js_msg', 'Recarregue a página ou verifique se o arquivo existe.');
-document.getElementById('sessao-container').innerHTML = `
-<div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444;">
-<h3>${msgErro}</h3>
-<p style="color: var(--text-muted);">${msgDica}</p>
-</div>
-`;
-}
-}, 200);
-}
+    if (typeof getProgress !== 'undefined' && typeof SESSOES_PRINCIPAIS !== 'undefined') {
+        criarMenuSessoes();
+        irParaSessao(0);
+    } else {
+        console.warn('⏳ Aguardando script.js carregar...');
+        setTimeout(function() {
+            if (typeof getProgress !== 'undefined' && typeof SESSOES_PRINCIPAIS !== 'undefined') {
+                criarMenuSessoes();
+                irParaSessao(0);
+            } else {
+                console.error('❌ script.js não foi carregado!');
+                var msgErro = _t('comum.erro_script_js', '❌ Erro: script.js não foi carregado!');
+                var msgDica = _t('comum.erro_script_js_msg', 'Recarregue a página ou verifique se o arquivo existe.');
+                document.getElementById('sessao-container').innerHTML = `
+                    <div class="sessao-container" style="text-align:center; padding: 3rem 1rem; color: #ef4444; border: 1px solid #ef4444;">
+                        <h3>${msgErro}</h3>
+                        <p style="color: var(--text-muted);">${msgDica}</p>
+                    </div>
+                `;
+            }
+        }, 200);
+    }
+});
+
+// A cada sessão carregada, atualiza o menu (para refletir
+// mudanças de estado) e reaplica traduções
+document.addEventListener('sessao-carregada', function() {
+    setTimeout(function() {
+        atualizarMenuSessoes();
+    }, 150);
 });
 </script>
 </body>

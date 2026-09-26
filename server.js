@@ -1,11 +1,31 @@
 const http = require('http');
-const { exec, spawn } = require('child_process');
+const { exec, spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const ARQUIVO_PROGRESSO = path.join(__dirname, '.progresso.json');
-const FOF_VERSION = '1.0.0-09232026';
+
+// ============================================================
+// VERSÃO DO FOF — fonte única: package.json
+// ============================================================
+//
+// A versão do FOF é definida em UM lugar só: o campo "version" do
+// package.json. O Node resolve `require('./package.json')` relativo
+// ao arquivo que faz o require, então funciona independente do CWD
+// do processo.
+//
+// Se por algum motivo o package.json estiver ausente ou corrompido,
+// caímos em 'unknown' — o endpoint /info continua respondendo, e o
+// botão "Atualizar FOF" mostra o badge de forma conservadora (com
+// 'unknown' em vez da versão local, `temAtualizacao()` retorna
+// false e nenhum badge aparece). Isso evita falsos positivos.
+let FOF_VERSION = 'unknown';
+try {
+    FOF_VERSION = require('./package.json').version || 'unknown';
+} catch (e) {
+    console.error('[FOF] Não foi possível ler a versão do package.json:', e.message);
+}
 
 const LANGS_SUPORTADOS = ['pt-BR', 'en', 'es'];
 const LOCALES_DIR = path.join(__dirname, 'locales');
@@ -17,61 +37,69 @@ const LOCALES_DIR = path.join(__dirname, 'locales');
 // Comandos que rodam sem pedir senha. Critérios:
 // - São read-only (consultas) ou abrem GUIs já instaladas.
 // - Não permitem escalação de privilégio nem execução arbitrária.
+// - NÃO fazem sentido rodando como root (Flatpak, por exemplo).
 //
 // NÃO INCLUIR:
 // - 'which' / 'test' — qualquer coisa depois do verbo passaria
 //   sem auth. Um comando como `which foo; rm -rf ~` seria aceito.
 // - 'waydroid' (prefixo puro) — cobriria `waydroid init`, que
 //   precisa de root. Só liberamos os subcomandos de leitura/abrir.
-// - 'bash <(curl' (prefixo puro) — cobriria QUALQUER URL. Só
-//   liberamos o repositório oficial do FOF.
+// - 'bash <(curl ...)' — executava qualquer URL. Update/uninstall
+//   agora exigem autenticação (pkexec/kdesu). O install.sh invoca
+//   sudo internamente e o usuário vê o comando na janela de senha
+//   antes de autorizar — comportamento correto.
 //
-// O `_cmdSemAutenticacao` aceita match exato ou match de prefixo
-// seguido de espaço/tab. Então `'rpm -q'` cobre `rpm -q pacote`,
-// mas não cobre `rpm -qa | grep foo` (que teria `|`, exigindo
-// revisão manual).
+// SOBRE O FLATPAK:
+// - Flatpak NUNCA deve rodar via kdesu/pkexec. Rodar como root
+//   quebra o session bus (D-BUS), porque o `sudo`/`pkexec` aponta
+//   DBUS_SESSION_BUS_ADDRESS para o bus do root, não do usuário.
+// - O Polkit do Fedora já resolve a autenticação automaticamente
+//   quando o usuário está no grupo wheel (o caso comum). Não há
+//   necessidade de o FOF intermediar.
+// - O tratamento especial em `executarComandoComStream` já seta
+//   XDG_RUNTIME_DIR e DBUS_SESSION_BUS_ADDRESS corretos.
 
 const COMANDOS_SEM_AUTENTICACAO = [
     'rpm -q',
-    'uname -r',
-    'ls /boot/vmlinuz-*',
-    'cat /etc/fedora-release',
-    'hostname',
-    'whoami',
-    'gtk-launch',
-    'rclone-manager',
-    'corectrl',
-    'lact',
-    'waydroid status',
-    'waydroid show-full-ui',
-    'bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/',
-    'echo "s" | bash <(curl -s https://raw.githubusercontent.com/vitaotek/Fedora-Only-Fans/'
+'uname -r',
+'ls /boot/vmlinuz-*',
+'cat /etc/fedora-release',
+'hostname',
+'whoami',
+'gtk-launch',
+'rclone-manager',
+'corectrl',
+'lact',
+'waydroid status',
+'waydroid show-full-ui',
+// Flatpak roda como usuário; a autenticação (quando necessária)
+// é resolvida pelo Polkit do sistema, não pelo FOF.
+'flatpak install',
+'flatpak uninstall',
+'flatpak update',
+'flatpak remote-add'
 ];
 
 function _cmdSemAutenticacao(comando) {
     const trimmed = (comando || '').trim();
     return COMANDOS_SEM_AUTENTICACAO.some(function(cmd) {
         return trimmed === cmd
-            || trimmed.startsWith(cmd + ' ')
-            || trimmed.startsWith(cmd + '\t');
+        || trimmed.startsWith(cmd + ' ')
+        || trimmed.startsWith(cmd + '\t');
     });
 }
 
 function _filtrarLog(mensagem) {
     if (!mensagem) return mensagem;
 
-    // Normalização de \r: barras de progresso usam \r sozinho para
-    // "sobrescrever" a linha. Como o WebKit não faz isso, convertemos
-    // tudo para \n — cada atualização vira uma linha nova no log.
     mensagem = mensagem.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-    // Filtro de ruído do portal KDE/Qt (kdesu sem sessão gráfica)
     if (mensagem.indexOf('qt.qpa') === -1 &&
         mensagem.indexOf('QDBusError') === -1 &&
         mensagem.indexOf('portal') === -1) {
         return mensagem;
-    }
-    const linhas = mensagem.split('\n');
+        }
+        const linhas = mensagem.split('\n');
     const filtradas = linhas.filter(function(line) {
         if (line.includes('qt.qpa.services: failed to register with host portal')) return false;
         if (line.includes('QDBusError("org.freedesktop.portal.Error.Failed"')) return false;
@@ -84,17 +112,13 @@ function _filtrarLog(mensagem) {
 const HOME_DIR_USUARIO = process.env.HOME || ('/home/' + (process.env.USER || 'user'));
 const USUARIO_REAL = process.env.USER || process.env.LOGNAME || 'user';
 
-// Substitui ~, $HOME, $USER, $SUDO_USER pelos valores reais do
-// usuário ANTES de escrever o script que roda como root. Sem isso,
-// `cd ~/.local/share/fof-waydroid/...` expandiria para /root e
-// quebraria os extras do Waydroid.
 function _substituirCaminhosUsuario(comando) {
     if (!comando) return comando;
     return comando
-        .replace(/~\//g, HOME_DIR_USUARIO + '/')
-        .replace(/\$HOME\b/g, HOME_DIR_USUARIO)
-        .replace(/\$SUDO_USER\b/g, USUARIO_REAL)
-        .replace(/\$USER\b/g, USUARIO_REAL);
+    .replace(/~\//g, HOME_DIR_USUARIO + '/')
+    .replace(/\$HOME\b/g, HOME_DIR_USUARIO)
+    .replace(/\$SUDO_USER\b/g, USUARIO_REAL)
+    .replace(/\$USER\b/g, USUARIO_REAL);
 }
 
 const sseClients = new Map();
@@ -102,18 +126,79 @@ const sseClients = new Map();
 // ============================================================
 // BUFFER DE REPLAY DO SSE
 // ============================================================
-//
-// O cliente abre o EventSource e dispara /executar quase juntos.
-// Como o SSE demora alguns ms pra estabelecer, as primeiras
-// mensagens que o servidor envia se perdem. Solução: manter um
-// buffer por idComando e, quando um SSE novo conecta, reenviar
-// todo o buffer de replay.
-//
-// 2000 mensagens é suficiente para cobrir um `dnf upgrade` verboso
-// sem ocupar memória relevante (cada linha ~100 bytes → ~200 KB).
+
 const sseBuffers = new Map();
 const SSE_BUFFER_MAX = 2000;
 const SSE_BUFFER_TTL_MS = 10000;
+
+// ============================================================
+// RATE LIMITING
+// ============================================================
+//
+// Impede que um script (XSS ou chamada manual) dispare centenas
+// de comandos em loop. Limite: 1 execução por idComando a cada
+// 1.5s. Após 60s de inatividade, entradas antigas são removidas
+// para não crescer indefinidamente.
+
+const _ultimaExecucao = new Map();
+const RATE_LIMIT_MS = 1500;
+
+function _podeExecutar(idComando) {
+    var agora = Date.now();
+    var ultimo = _ultimaExecucao.get(idComando) || 0;
+    if (agora - ultimo < RATE_LIMIT_MS) return false;
+    _ultimaExecucao.set(idComando, agora);
+    if (_ultimaExecucao.size > 500) {
+        for (var [k, v] of _ultimaExecucao) {
+            if (agora - v > 60000) _ultimaExecucao.delete(k);
+        }
+    }
+    return true;
+}
+
+// ============================================================
+// HELPERS DE EXECUÇÃO READ-ONLY
+// ============================================================
+//
+// Para os endpoints informativos (system-info, top-processes,
+// disk-usage, journal-errors), usamos este helper em vez de
+// abrir conexão SSE. Comandos são simples, curtos, read-only.
+
+function _execReadOnly(comando, timeoutMs) {
+    return new Promise(function(resolve) {
+        exec(comando, {
+            shell: '/bin/bash',
+            timeout: timeoutMs || 5000,
+            maxBuffer: 1024 * 1024 * 5,
+            env: process.env
+        }, function(error, stdout, stderr) {
+            if (error && !stdout) {
+                resolve('');
+            } else {
+                resolve((stdout || '').trim());
+            }
+        });
+    });
+}
+
+// Converte saída KEY=value (uma por linha) em objeto JS.
+// Usado pelos comandos que constroem a saída em bash.
+function _parseChaveValor(texto) {
+    var obj = {};
+    if (!texto) return obj;
+    texto.split('\n').forEach(function(linha) {
+        var idx = linha.indexOf('=');
+        if (idx === -1) return;
+        var chave = linha.substring(0, idx).trim();
+        var valor = linha.substring(idx + 1).trim();
+        if (chave) obj[chave] = valor;
+    });
+        return obj;
+}
+
+// ============================================================
+// PROGRESSO
+// ============================================================
 
 function lerProgresso() {
     try {
@@ -176,6 +261,43 @@ function resetarProgresso() {
     }
 }
 
+// ============================================================
+// LIMPEZA DE LOGS ANTIGOS
+// ============================================================
+//
+// O iniciar_fof.sh cria um /tmp/fof-YYYYMMDD-HHMMSS.log por
+// sessão. Sem limpeza, /tmp acumula centenas de arquivos ao
+// longo do tempo. Remove os com mais de 7 dias.
+
+function _limparLogsAntigos() {
+    try {
+        const agora = Date.now();
+        const TTL = 7 * 24 * 60 * 60 * 1000;
+        const arquivos = fs.readdirSync('/tmp');
+        let removidos = 0;
+        arquivos.forEach(function(nome) {
+            if (!nome.startsWith('fof-') || !nome.endsWith('.log')) return;
+            const caminho = path.join('/tmp', nome);
+            try {
+                const stat = fs.statSync(caminho);
+                if (agora - stat.mtimeMs > TTL) {
+                    fs.unlinkSync(caminho);
+                    removidos++;
+                }
+            } catch (e) { /* ignore */ }
+        });
+        if (removidos > 0) {
+            console.log(`[Cleanup] ${removidos} log(s) antigo(s) removido(s) de /tmp`);
+        }
+    } catch (e) {
+        console.warn('[Cleanup] Falha ao limpar logs antigos:', e.message);
+    }
+}
+
+// ============================================================
+// SSE — LOGS EM TEMPO REAL
+// ============================================================
+
 function enviarLog(idComando, mensagem, tipo = 'output', extra = {}) {
     const mensagemLimpa = _filtrarLog(mensagem);
 
@@ -185,20 +307,17 @@ function enviarLog(idComando, mensagem, tipo = 'output', extra = {}) {
 
     const dados = { tipo, mensagem: mensagemLimpa, ...extra };
 
-    // Guarda no buffer de replay
     if (!sseBuffers.has(idComando)) sseBuffers.set(idComando, []);
     const buffer = sseBuffers.get(idComando);
     buffer.push(dados);
     if (buffer.length > SSE_BUFFER_MAX) buffer.shift();
 
-    // Envia para os clientes conectados agora
     const clients = sseClients.get(idComando) || [];
     const json = JSON.stringify(dados);
     clients.forEach(client => {
         client.write(`data: ${json}\n\n`);
     });
 
-    // Limpa o buffer depois do 'end', dando tempo do cliente ler
     if (tipo === 'end') {
         setTimeout(function() {
             sseBuffers.delete(idComando);
@@ -207,7 +326,6 @@ function enviarLog(idComando, mensagem, tipo = 'output', extra = {}) {
 }
 
 function adicionarClienteSSE(idComando, res) {
-    // Replay: envia tudo que já foi acumulado antes do SSE conectar.
     const buffer = sseBuffers.get(idComando) || [];
     buffer.forEach(function(dados) {
         res.write(`data: ${JSON.stringify(dados)}\n\n`);
@@ -229,6 +347,10 @@ function adicionarClienteSSE(idComando, res) {
         }
     });
 }
+
+// ============================================================
+// DETECÇÃO DE DESKTOP E AUTENTICAÇÃO
+// ============================================================
 
 function detectarDesktop() {
     const desktop = (process.env.XDG_CURRENT_DESKTOP || '').toUpperCase();
@@ -287,12 +409,16 @@ function obterMetodoAutenticacao() {
 
 function commandExists(cmd) {
     try {
-        const result = require('child_process').execSync(`which ${cmd}`, { encoding: 'utf8', timeout: 1000 });
-        return result.trim().length > 0;
+        const result = spawnSync('which', [cmd], { encoding: 'utf8', timeout: 1000 });
+        return result.status === 0 && (result.stdout || '').trim().length > 0;
     } catch (e) {
         return false;
     }
 }
+
+// ============================================================
+// EXECUÇÃO DE COMANDOS (com ou sem autenticação)
+// ============================================================
 
 function executarComandoComStream(comandoFinal, idComando, isReversao, callback) {
     const precisaAutenticacao = !_cmdSemAutenticacao(comandoFinal);
@@ -358,10 +484,10 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
     enviarLog(idComando, '─'.repeat(50) + '\n', 'info');
 
     const isComplexo = comandoFinal.includes('|') ||
-        comandoFinal.includes('<(') ||
-        comandoFinal.includes('>') ||
-        comandoFinal.includes('&&') ||
-        comandoFinal.includes(';');
+    comandoFinal.includes('<(') ||
+    comandoFinal.includes('>') ||
+    comandoFinal.includes('&&') ||
+    comandoFinal.includes(';');
 
     if (isComplexo) {
         console.log(`[EXEC] Comando complexo: ${comandoFinal.substring(0, 50)}...`);
@@ -456,54 +582,47 @@ function executarComandoComStream(comandoFinal, idComando, isReversao, callback)
 }
 
 // ============================================================
-// CONSTRUÇÃO DO SCRIPT TEMPORÁRIO (kdesu / pkexec)
+// AUTENTICAÇÃO SEGURA (kdesu / pkexec / fallback)
 // ============================================================
-//
-// O kdesu/pkexec executa este script como root. O script:
-// 1. Configura DISPLAY, XAUTHORITY, DBUS_SESSION_BUS_ADDRESS
-// 2. Redireciona stdout+stderr para outputTemp
-// 3. Roda o comando do usuário
-//
-// O servidor lê outputTemp a cada 500ms e envia via SSE.
-//
-// NOTA SOBRE O REDIRECIONAMENTO: versões anteriores usavam um bloco
-// `{ ... } > out.log 2>&1` envolvendo o comando. Isso quebrava se o
-// comando contivesse um `}` no fim de linha (fechava o bloco cedo) ou
-// um heredoc (o redirecionamento externo interferia). Agora usamos
-// `exec > out.log 2>&1` no topo do script — equivalente, sem essa
-// fragilidade.
+
 function _construirScripts(timestamp, random, comandoCorrigido, descricao, outputTemp) {
     const scriptTemp = `/tmp/fof-cmd-${timestamp}-${random}.sh`;
     const homeDir = HOME_DIR_USUARIO;
 
-    // Normaliza line endings (evita CRLF vindo do editor)
-    const comandoLimpo = (comandoCorrigido || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    // Normaliza line endings ANTES de montar o script.
+    const comandoLimpo = (comandoCorrigido || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n');
 
-    const scriptContent = `#!/bin/bash
-# Fedora Only Fans - ${descricao}
-# Executado em: $(date '+%d/%m/%Y %H:%M:%S')
-export DISPLAY=${process.env.DISPLAY || ':0'}
-export XAUTHORITY=${process.env.XAUTHORITY || homeDir + '/.Xauthority'}
-export DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS || ''}
-exec > ${outputTemp} 2>&1
-${comandoLimpo}
-`.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    // IMPORTANTE: o template literal NÃO deve ter indentação nas
+    // linhas internas. Cada linha precisa começar na coluna 0,
+    // senão o script gerado sai com 4+ espaços de indentação em
+    // TODOS os comandos — o que quebra heredocs, `case`, e
+    // continuações com `\`.
+    const scriptContent = [
+        '#!/bin/bash',
+        '# Fedora Only Fans - ' + descricao,
+        '# Executado em: ' + new Date().toLocaleString('pt-BR'),
+        '',
+        '# Exports obrigatórios quando roda via pkexec/kdesu (root).',
+        '# Sem HOME/USER corretos, scripts como install.sh --uninstall',
+        '# procurariam o FOF em /root/.local/share em vez de',
+        '# /home/<user>/.local/share.',
+        'export DISPLAY=' + (process.env.DISPLAY || ':0'),
+        'export XAUTHORITY=' + (process.env.XAUTHORITY || homeDir + '/.Xauthority'),
+        'export DBUS_SESSION_BUS_ADDRESS=' + (process.env.DBUS_SESSION_BUS_ADDRESS || ''),
+        'export HOME=' + homeDir,
+        'export USER=' + USUARIO_REAL,
+        'export LOGNAME=' + USUARIO_REAL,
+        'exec > ' + outputTemp + ' 2>&1',
+        '',
+        comandoLimpo,
+        ''
+    ].join('\n');
 
     return { scriptTemp, scriptContent };
 }
 
-// ============================================================
-// LEITOR DO ARQUIVO DE SAÍDA (kdesu / pkexec)
-// ============================================================
-//
-// Cria o interval que lê outputTemp a cada 500ms e envia via SSE.
-// Retorna uma função de cleanup que também é responsável por remover
-// o outputTemp ao final.
-//
-// LIMITE DE DURAÇÃO: 30 minutos. Sem isso, se o kdesu/pkexec ficasse
-// pendurado indefinidamente (ex.: caixa de senha nunca respondida), o
-// interval rodaria para sempre. 30min é folgado para qualquer comando
-// do FOF (o maior é `dnf upgrade`, ~10min em máquinas lentas).
 const MAX_READER_DURATION_MS = 30 * 60 * 1000;
 
 function _criarReaderOutput(idComando, outputTemp) {
@@ -511,7 +630,6 @@ function _criarReaderOutput(idComando, outputTemp) {
     const inicioReader = Date.now();
 
     const readerInterval = setInterval(() => {
-        // Guarda contra loop infinito
         if (Date.now() - inicioReader > MAX_READER_DURATION_MS) {
             console.warn(`[READER] Timeout de ${MAX_READER_DURATION_MS/60000}min atingido para ${idComando}`);
             enviarLog(idComando, `\n⚠️ Leitor de saída atingiu o tempo máximo (30min). Abortando.\n`, 'warning');
@@ -572,14 +690,14 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         'grub2-mkconfig': 'Reconfigurar GRUB',
         'grubby': 'Configurar parâmetros do kernel',
         'sed -i': 'Modificar arquivo de configuração',
-        'flatpak install': 'Instalar aplicativo Flatpak',
-        'flatpak uninstall': 'Remover aplicativo Flatpak',
-        'flatpak update': 'Atualizar aplicativos Flatpak',
-        'flatpak remote-add': 'Adicionar repositório Flatpak',
         'usermod': 'Modificar grupos do usuário',
         'gpasswd': 'Modificar grupos do usuário',
         'systemctl': 'Gerenciar serviços do sistema',
-        'waydroid init': 'Inicializar container Android (Waydroid)'
+        'waydroid init': 'Inicializar container Android (Waydroid)',
+        'tc qdisc': 'Configurar QoS de rede',
+        'ip link': 'Configurar interface de rede',
+        'chown': 'Ajustar permissões de arquivo',
+        'tee': 'Escrever arquivo de configuração'
     };
 
     let descricao = 'Executar comando administrativo';
@@ -592,13 +710,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
 
     enviarLog(idComando, `🔐 Autenticando para: ${descricao}\n`, 'info');
 
-    // FIX: remove "sudo " apenas quando NÃO for seguido de uma flag (-).
-    //
-    // O regex antigo (/sudo\s+/g) também casava com "sudo -E ...", o que
-    // deixava "-E" órfão e quebrava o comando. Este regex preserva flags
-    // como -E, -u, -H, --login (o pkexec/kdesu já roda como root, então
-    // elas só importam se o comando por algum motivo for executado fora
-    // desse fluxo).
     const comandoSemSudo = comandoOriginal.replace(/sudo\s+(?!-)/g, '');
     const comandoCorrigido = _substituirCaminhosUsuario(comandoSemSudo);
 
@@ -626,12 +737,13 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
             return callback(err, "", "");
         }
 
-        const comandoFinal = `kdesu -c "${scriptTemp}" && rm -f ${scriptTemp}`;
+        // Usa && e || { ...; exit 1; } para propagar o código de saída
+        // do kdesu. O `{ rm -f ...; exit 1; }` limpa o script temporário
+        // mesmo quando o usuário cancela a autenticação, e propaga o
+        // retorno 1 para que o FOF não marque o botão como "concluído".
+        const comandoFinal = `kdesu -c "${scriptTemp}" && rm -f ${scriptTemp} || { rm -f ${scriptTemp}; exit 1; }`;
         const cleanupReader = _criarReaderOutput(idComando, outputTemp);
 
-        // Apaga apenas o scriptTemp. O outputTemp fica vivo até o
-        // cleanupReader() (chamado ao fim do processo) — comandos longos
-        // (>60s, ex.: dnf upgrade) ainda podem escrever no arquivo.
         setTimeout(() => {
             if (fs.existsSync(scriptTemp)) {
                 try { fs.unlinkSync(scriptTemp); } catch (e) {}
@@ -662,7 +774,10 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
             return callback(err, "", "");
         }
 
-        const comandoFinal = `pkexec --disable-internal-agent ${scriptTemp}; rm -f ${scriptTemp}`;
+        // Usa && e || { ...; exit 1; } para propagar o código de saída
+        // do pkexec (sem a flag --disable-internal-agent, que impedia
+        // o agente PolicyKit de mostrar o popup de senha).
+        const comandoFinal = `pkexec ${scriptTemp} && rm -f ${scriptTemp} || { rm -f ${scriptTemp}; exit 1; }`;
         const cleanupReader = _criarReaderOutput(idComando, outputTemp);
 
         setTimeout(() => {
@@ -679,12 +794,8 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         return;
     }
 
-    // ============================================================
-    // FALLBACK: kdialog/zenity pede a senha, e usamos spawn para
-    // passar via stdin. Isso evita o problema da senha exposta em
-    // `ps aux` (o `echo 'senha' | sudo -S` anterior colocava a senha
-    // no argv do `sh` que executava o pipeline).
-    // ============================================================
+    // Fallback: kdialog/zenity pede a senha, e usamos spawn para
+    // passar via stdin. Evita o problema da senha exposta em `ps aux`.
     enviarLog(idComando, '⚠️ Usando fallback com zenity/kdialog...\n', 'warning');
 
     let promptSenha;
@@ -704,9 +815,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
             return callback(new Error("Autenticação cancelada pelo usuário."), "", "");
         }
 
-        // IMPORTANTE: usamos spawn em vez de exec. A senha vai via stdin
-        // (não via argv), então não aparece em `ps aux`. O comando é
-        // passado como argumento de `sh -c`.
         enviarLog(idComando, `$ sudo -S sh -c '<comando>'\n`, 'info');
         enviarLog(idComando, '─'.repeat(50) + '\n', 'info');
 
@@ -715,7 +823,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
             stdio: ['pipe', 'pipe', 'pipe']
         });
 
-        // Envia a senha + newline imediatamente
         proc.stdin.write(senha.trim() + '\n');
         proc.stdin.end();
 
@@ -731,7 +838,6 @@ function executarComAutenticacaoSegura(comandoOriginal, idComando, isReversao, c
         proc.stderr.on('data', (data) => {
             const texto = data.toString();
             erros += texto;
-            // Filtra a mensagem de prompt do sudo que aparece no stderr
             const textoFiltrado = texto.replace(/\[sudo\] password for .+: /g, '');
             if (textoFiltrado.trim()) {
                 enviarLog(idComando, textoFiltrado, 'error');
@@ -795,6 +901,10 @@ function procederComExecucao(comando, idComando, isReversao, res) {
     });
 }
 
+// ============================================================
+// SERVIDORES DE ARQUIVOS ESTÁTICOS
+// ============================================================
+
 function servirArquivoEstatico(req, res, filePath) {
     const fullPath = path.join(__dirname, filePath);
 
@@ -837,11 +947,6 @@ function servirLocale(req, res, lang) {
 
     const arquivo = path.join(LOCALES_DIR, lang + '.json');
 
-    // Verificação robusta de path traversal. `path.relative` retorna
-    // um caminho relativo do diretório base; se o resultado começar
-    // com '..' ou for absoluto, o arquivo está fora do diretório
-    // permitido. Comparar prefixos de string (como antes) tem edge
-    // cases (LOCALES_DIR = /foo/bar e arquivo = /foo/bar-baz/file).
     const rel = path.relative(LOCALES_DIR, arquivo);
     if (rel.startsWith('..') || path.isAbsolute(rel)) {
         res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -862,19 +967,16 @@ function servirLocale(req, res, lang) {
     fs.createReadStream(arquivo).pipe(res);
 }
 
+// ============================================================
+// SERVIDOR HTTP
+// ============================================================
+
 const server = http.createServer((req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', `http://localhost:${PORT}`);
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-        res.writeHead(200);
-        res.end();
-        return;
-    }
-
     const url = req.url;
 
+    // ----------------------------------------------------------
+    // SSE — logs em tempo real
+    // ----------------------------------------------------------
     if (req.method === 'GET' && url.startsWith('/stream')) {
         const urlParams = new URL(url, `http://${req.headers.host}`);
         const idComando = urlParams.searchParams.get('id');
@@ -890,8 +992,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'Access-Control-Allow-Origin': `http://localhost:${PORT}`
+            'Connection': 'keep-alive'
         });
 
         const heartbeat = setInterval(() => {
@@ -908,6 +1009,9 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ----------------------------------------------------------
+    // LOCALES (JSON de tradução)
+    // ----------------------------------------------------------
     if (req.method === 'GET' && url.startsWith('/locales/')) {
         let resto = url.substring('/locales/'.length);
         const interroga = resto.indexOf('?');
@@ -930,6 +1034,9 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ----------------------------------------------------------
+    // PROGRESSO
+    // ----------------------------------------------------------
     if (req.method === 'GET' && url === '/progress') {
         const progresso = lerProgresso();
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -949,7 +1056,7 @@ const server = http.createServer((req, res) => {
                 if (Array.isArray(executados) || Array.isArray(pulados)) {
                     escreverProgresso({
                         executados: Array.isArray(executados) ? executados : [],
-                        pulados: Array.isArray(pulados) ? pulados : []
+                                      pulados: Array.isArray(pulados) ? pulados : []
                     });
                 }
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -974,6 +1081,9 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ----------------------------------------------------------
+    // PÁGINAS E ARQUIVOS ESTÁTICOS
+    // ----------------------------------------------------------
     if (req.method === 'GET' && (url === '/' || url === '/index.html')) {
         servirArquivoEstatico(req, res, 'index.html');
         return;
@@ -1017,12 +1127,27 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ----------------------------------------------------------
+    // /status — healthcheck + progresso
+    // ----------------------------------------------------------
     if (req.method === 'GET' && url === '/status') {
+        const progresso = lerProgresso();
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(lerProgresso()));
+        res.end(JSON.stringify({
+            ok: true,
+            executados: progresso.executados,
+            pulados: progresso.pulados,
+            uptime: Math.floor(process.uptime()),
+                               versao: FOF_VERSION,
+                               sseConexoes: sseClients.size,
+                               memoriaMB: Math.floor(process.memoryUsage().rss / 1024 / 1024)
+        }));
         return;
     }
 
+    // ----------------------------------------------------------
+    // /info — metadados do ambiente
+    // ----------------------------------------------------------
     if (req.method === 'GET' && url === '/info') {
         const desktop = detectarDesktop();
         const metodo = obterMetodoAutenticacao();
@@ -1041,6 +1166,218 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ----------------------------------------------------------
+    // /kernels — lista de kernels instalados
+    // ----------------------------------------------------------
+    if (req.method === 'GET' && url === '/kernels') {
+        exec('rpm -q kernel-core --queryformat "%{VERSION}-%{RELEASE}.%{ARCH}\\n" 2>/dev/null',
+             { shell: '/bin/bash', timeout: 5000 },
+             (error, stdout) => {
+                 const kernels = (stdout || '').trim().split('\n').filter(Boolean);
+                 exec('uname -r', (err2, stdout2) => {
+                     const atual = (stdout2 || '').trim();
+                     res.writeHead(200, {
+                         'Content-Type': 'application/json',
+                         'Cache-Control': 'no-cache, no-store, must-revalidate'
+                     });
+                     res.end(JSON.stringify({
+                         kernels: kernels,
+                         atual: atual
+                     }));
+                 });
+             });
+        return;
+    }
+
+    // ----------------------------------------------------------
+    // /system-info — painel de diagnóstico
+    // ----------------------------------------------------------
+    if (req.method === 'GET' && url === '/system-info') {
+        const script = `
+        FEDORA=$(cat /etc/fedora-release 2>/dev/null || echo "")
+        KERNEL=$(uname -r 2>/dev/null || echo "")
+        CPU=$(grep -m1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2 | sed 's/^ *//' | head -c 60)
+        CPU_USO=$(top -bn1 2>/dev/null | grep -m1 "Cpu(s)" | sed "s/.*, *\\([0-9.]*\\)%* id.*/\\1/" | awk '{printf "%d", 100 - $1}')
+        RAM_TOTAL=$(free -b 2>/dev/null | awk '/^Mem:/{print $2}')
+        RAM_USADO=$(free -b 2>/dev/null | awk '/^Mem:/{print $3}')
+        DISCO_INFO=$(df -B1 / 2>/dev/null | tail -1 | awk '{print $2" "$3}')
+        DISCO_TOTAL=$(echo "$DISCO_INFO" | awk '{print $1}')
+        DISCO_USADO=$(echo "$DISCO_INFO" | awk '{print $2}')
+        UPTIME=$(awk '{print int($1)}' /proc/uptime 2>/dev/null || echo 0)
+        BOOT_TIME=$(uptime -s 2>/dev/null || echo "")
+        FIREWALL=$(firewall-cmd --state 2>/dev/null || echo "inativo")
+        FIREWALL_ZONA=$(firewall-cmd --get-default-zone 2>/dev/null || echo "-")
+        SELINUX=$(getenforce 2>/dev/null || echo "Desconhecido")
+        SELINUX_MODO=$(grep '^SELINUX=' /etc/selinux/config 2>/dev/null | cut -d= -f2 || echo "-")
+        PROCESSOS=$(ps -e --no-headers 2>/dev/null | wc -l)
+
+        echo "fedora=$FEDORA"
+        echo "kernel=$KERNEL"
+        echo "cpu=$CPU"
+        echo "cpu_uso=$CPU_USO"
+        echo "ram_total=$RAM_TOTAL"
+        echo "ram_usado=$RAM_USADO"
+        echo "disco_total=$DISCO_TOTAL"
+        echo "disco_usado=$DISCO_USADO"
+        echo "uptime=$UPTIME"
+        echo "boot_time=$BOOT_TIME"
+        echo "firewall=$FIREWALL"
+        echo "firewall_zona=$FIREWALL_ZONA"
+        echo "selinux=$SELINUX"
+        echo "selinux_modo=$SELINUX_MODO"
+        echo "processos=$PROCESSOS"
+        `;
+
+        _execReadOnly(script, 8000).then(function(stdout) {
+            const raw = _parseChaveValor(stdout);
+            const obj = {
+                fedora: raw.fedora || '',
+                kernel: raw.kernel || '',
+                cpu: raw.cpu || '',
+                cpu_uso: raw.cpu_uso ? parseInt(raw.cpu_uso, 10) : null,
+                                         ram_total: raw.ram_total ? parseInt(raw.ram_total, 10) : null,
+                                         ram_usado: raw.ram_usado ? parseInt(raw.ram_usado, 10) : null,
+                                         disco_total: raw.disco_total ? parseInt(raw.disco_total, 10) : null,
+                                         disco_usado: raw.disco_usado ? parseInt(raw.disco_usado, 10) : null,
+                                         uptime: raw.uptime ? parseInt(raw.uptime, 10) : null,
+                                         boot_time: raw.boot_time || '',
+                                         firewall: raw.firewall || 'desconhecido',
+                                         firewall_zona: raw.firewall_zona || '-',
+                                         selinux: raw.selinux || 'desconhecido',
+                                         selinux_modo: raw.selinux_modo || '-',
+                                         processos: raw.processos ? parseInt(raw.processos, 10) : null
+            };
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+            });
+            res.end(JSON.stringify(obj));
+        }).catch(function() {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ erro: 'Falha ao coletar informações do sistema' }));
+        });
+        return;
+    }
+
+    // ----------------------------------------------------------
+    // /top-processes — top 5 por CPU e por RAM
+    // ----------------------------------------------------------
+    if (req.method === 'GET' && url === '/top-processes') {
+        const scriptCpu = `ps -eo pcpu,comm --sort=-pcpu --no-headers 2>/dev/null | head -5`;
+        const scriptRam = `ps -eo pmem,rss,comm --sort=-rss --no-headers 2>/dev/null | head -5`;
+
+        Promise.all([
+            _execReadOnly(scriptCpu, 4000),
+                    _execReadOnly(scriptRam, 4000)
+        ]).then(function(resultados) {
+            const cpuOut = resultados[0] || '';
+            const ramOut = resultados[1] || '';
+
+            const cpu = cpuOut.split('\n').filter(Boolean).map(function(linha) {
+                const partes = linha.trim().split(/\s+/);
+                const pct = parseFloat(partes[0]) || 0;
+                const nome = partes.slice(1).join(' ') || '?';
+                return { nome: nome, cpu: pct.toFixed(1) };
+            });
+
+            const ram = ramOut.split('\n').filter(Boolean).map(function(linha) {
+                const partes = linha.trim().split(/\s+/);
+                const rssKb = parseInt(partes[1], 10) || 0;
+                const nome = partes.slice(2).join(' ') || '?';
+                const mb = (rssKb / 1024).toFixed(0);
+                return { nome: nome, ram: mb + ' MB' };
+            });
+
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+            });
+            res.end(JSON.stringify({ cpu: cpu, ram: ram }));
+        }).catch(function() {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ cpu: [], ram: [] }));
+        });
+        return;
+    }
+
+    // ----------------------------------------------------------
+    // /disk-usage — partições montadas
+    // ----------------------------------------------------------
+    if (req.method === 'GET' && url === '/disk-usage') {
+        const script = `df -B1 --output=source,size,used,avail,pcent,target 2>/dev/null | tail -n +2 | grep -v -E "^(tmpfs|devtmpfs|efivarfs|squashfs|overlay)" | grep -v -E "\\s/(run|sys|proc|dev)(/|$)"`;
+
+        _execReadOnly(script, 5000).then(function(stdout) {
+            const particoes = stdout.split('\n').filter(Boolean).map(function(linha) {
+                const partes = linha.trim().split(/\s+/);
+                if (partes.length < 6) return null;
+                return {
+                    dispositivo: partes[0],
+                    total: parseInt(partes[1], 10) || 0,
+                                                                     usado: parseInt(partes[2], 10) || 0,
+                                                                     livre: parseInt(partes[3], 10) || 0,
+                                                                     percentual: partes[4],
+                                                                     montagem: partes.slice(5).join(' ')
+                };
+            }).filter(Boolean);
+
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+            });
+            res.end(JSON.stringify({ particoes: particoes }));
+        }).catch(function() {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ particoes: [] }));
+        });
+        return;
+    }
+
+    // ----------------------------------------------------------
+    // /journal-errors — erros agrupados das últimas 24h
+    // ----------------------------------------------------------
+    if (req.method === 'GET' && url === '/journal-errors') {
+        const script = `journalctl -p err -S "24 hours ago" -o short 2>/dev/null | grep -v "^-- " | tail -200`;
+
+        _execReadOnly(script, 10000).then(function(stdout) {
+            const grupos = {};
+            const linhas = stdout.split('\n').filter(function(l) {
+                return l.trim() && !l.startsWith('-- ');
+            });
+
+            linhas.forEach(function(linha) {
+                var match = linha.match(/^\w{3}\s+\d+\s+\d+:\d+:\d+\s+\S+\s+([^\[:\s]+)(?:\[\d+\])?:\s*(.*)$/);
+                if (!match) return;
+                var origem = match[1];
+                var mensagem = match[2] ? match[2].substring(0, 120) : '';
+
+                if (!grupos[origem]) {
+                    grupos[origem] = { origem: origem, contagem: 0, exemplo: '' };
+                }
+                grupos[origem].contagem++;
+                if (!grupos[origem].exemplo && mensagem) {
+                    grupos[origem].exemplo = mensagem;
+                }
+            });
+
+            var lista = Object.values(grupos).sort(function(a, b) {
+                return b.contagem - a.contagem;
+            }).slice(0, 15);
+
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+            });
+            res.end(JSON.stringify({ grupos: lista }));
+        }).catch(function() {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ grupos: [] }));
+        });
+        return;
+    }
+
+    // ----------------------------------------------------------
+    // /waydroid-status — status do container Android
+    // ----------------------------------------------------------
     if (req.method === 'GET' && url === '/waydroid-status') {
         exec('waydroid status 2>&1', { shell: '/bin/bash', timeout: 5000 }, (error, stdout, stderr) => {
             const output = ((stdout || '') + (stderr || '')).trim();
@@ -1073,6 +1410,9 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ----------------------------------------------------------
+    // /executar — executa comando (POST)
+    // ----------------------------------------------------------
     if (req.method === 'POST' && url === '/executar') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -1089,20 +1429,19 @@ const server = http.createServer((req, res) => {
                     }));
                 }
 
-                // Validação do idComando: aceita apenas caracteres
-                // seguros (alfanuméricos, hífen, underline). Isso
-                // previne:
-                // - Injeção em chaves de Map (idComando é chave de
-                //   sseClients e sseBuffers).
-                // - Nomes de arquivo maliciosos se no futuro o
-                //   idComando for usado para gerar paths.
-                // - Payload injection em campos que o frontend espera
-                //   serem slugs (ex.: 'abrir-waydroid-open').
                 if (!/^[a-zA-Z0-9_-]+$/.test(idComando)) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     return res.end(JSON.stringify({
                         success: false,
                         output: 'idComando inválido: use apenas letras, números, hífen e underline'
+                    }));
+                }
+
+                if (!_podeExecutar(idComando)) {
+                    res.writeHead(429, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({
+                        success: false,
+                        output: 'Aguarde um instante antes de executar novamente.'
                     }));
                 }
 
@@ -1120,9 +1459,16 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ----------------------------------------------------------
+    // 404
+    // ----------------------------------------------------------
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Página não encontrada');
 });
+
+// ============================================================
+// EVENTOS DO SERVIDOR
+// ============================================================
 
 server.on('error', (e) => {
     if (e.code === 'EADDRINUSE') {
@@ -1153,6 +1499,9 @@ const HOST = '127.0.0.1';
 server.listen(PORT, HOST, () => {
     const desktop = detectarDesktop();
     const metodo = obterMetodoAutenticacao();
+
+    _limparLogsAntigos();
+
     console.log(`====================================================`);
     console.log(` 🐧 Fedora Only Fans - Servidor de Automação v${FOF_VERSION}`);
     console.log(` 🌐 http://localhost:${PORT} (somente local — 127.0.0.1)`);
@@ -1163,11 +1512,17 @@ server.listen(PORT, HOST, () => {
     console.log(` 📡 SSE: Ativo (logs em tempo real, com buffer de replay)`);
     console.log(` 📁 Arquivos estáticos: Ativo (HTML, CSS, JS, ícone)`);
     console.log(` 🌐 i18n: Ativo (locales em /locales/<lang>.json)`);
-    console.log(` 📄 Páginas: index.html, guiado.html, manutencao.html, 00-*.html a 11-*.html`);
-    console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, gtk-launch, etc`);
+    console.log(` 📄 Páginas: index.html, guiado.html, manutencao.html, 00-*.html a 13-*.html`);
+    console.log(` 🔧 Comandos SEM autenticação: rpm -q, uname -r, gtk-launch, flatpak, etc`);
     console.log(` 📊 Progresso: .progresso.json (persistente no servidor)`);
-    console.log(` 📱 Waydroid status: /waydroid-status (consultado pela sessão 11)`);
+    console.log(` 📱 Waydroid status: /waydroid-status`);
+    console.log(` 🧠 Kernels: /kernels`);
+    console.log(` 🖥️ System info: /system-info`);
+    console.log(` 📈 Top processos: /top-processes`);
+    console.log(` 💾 Uso de disco: /disk-usage`);
+    console.log(` 📋 Erros do journal: /journal-errors`);
     console.log(` 🔁 Buffer SSE: ${SSE_BUFFER_MAX} mensagens por comando, TTL ${SSE_BUFFER_TTL_MS/1000}s`);
     console.log(` ⏱️ Timeout do reader de output: ${MAX_READER_DURATION_MS/60000}min`);
+    console.log(` 🚦 Rate limit: ${RATE_LIMIT_MS}ms por idComando`);
     console.log(`====================================================`);
 });

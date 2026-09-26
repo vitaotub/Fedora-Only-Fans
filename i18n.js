@@ -22,6 +22,13 @@
  *
  * Eventos:
  *   'i18n-pronto' - disparado após o JSON ser carregado e aplicado
+ *
+ * CORREÇÕES (v1.0.0-09232026+):
+ * - _chaveCache usa uma versão hardcoded como fallback em vez de 'dev'
+ *   (que criava uma chave órfã permanente) ou Date.now() (que criava
+ *   uma chave nova a cada boot, desperdiçando o cache).
+ * - _limparCachesAntigos() remove entradas de versões anteriores do FOF
+ *   do localStorage, evitando acúmulo indefinido.
  */
 
 (function() {
@@ -36,6 +43,24 @@
     var STORAGE_KEY = 'fof_lang';
     var CACHE_PREFIX = 'fof_lang_data_';
 
+    // Versão de fallback para a chave de cache.
+    //
+    // ATENÇÃO: este valor NÃO é lido do package.json por design. Ele é
+    // usado como cache-buster ANTES de qualquer requisição ao /info —
+    // ou seja, antes de o Node ter chance de responder qualquer coisa.
+    // Ler o package.json aqui exigiria um fetch, e o cache-buster
+    // perderia o sentido (o fetch já viria com cache, potencialmente).
+    //
+    // Por isso, esta é a ÚNICA exceção à regra "versão em um só lugar".
+    // Ao lançar uma release que altere strings dos locales, atualize
+    // este valor manualmente — junto com a mudança no package.json.
+    //
+    // Impacto de esquecer: o usuário pode ver strings antigas por até
+    // alguns segundos, até o /info responder e popular
+    // window.FOF_VERSION_UI18N (aí o _chaveCache() passa a usar a
+    // versão real e o cache é invalidado naturalmente).
+    var FALLBACK_VERSION = '1.0.0-09252026';
+
     // ============================================================
     // ESTADO
     // ============================================================
@@ -48,10 +73,6 @@
     };
 
     // Guard: impede que criarSeletorIdioma() rode múltiplas vezes.
-    // Era chamado por i18n.js (initI18n), script.js (DOMContentLoaded,
-    // sessao-carregada, todas-sessoes-carregadas) e pelos HTMLs das
-    // páginas. A função era idempotente por container, mas varria o
-    // DOM inteiro a cada chamada.
     var _seletorCriado = false;
 
     // ============================================================
@@ -100,8 +121,34 @@
         // antigo podia servir strings desatualizadas por tempo
         // indefinido (o cache-buster HTTP só atua na requisição, não
         // no localStorage).
-        var v = window.FOF_VERSION_UI18N || 'dev';
+        //
+        // Usa window.FOF_VERSION_UI18N se disponível; senão, cai na
+        // constante FALLBACK_VERSION deste módulo. Antes, o fallback
+        // era 'dev' — que criava uma chave órfã permanente (nunca
+        // mais usada depois que a versão real chegava).
+        var v = window.FOF_VERSION_UI18N || FALLBACK_VERSION;
         return CACHE_PREFIX + lang + '_' + v;
+    }
+
+    // Remove do localStorage todas as chaves de cache do idioma
+    // informado que NÃO sejam a chave atual (versões antigas do FOF).
+    // Chamado no boot, depois que _chaveCache() está estável.
+    function _limparCachesAntigos(lang) {
+        try {
+            var prefixo = CACHE_PREFIX + lang + '_';
+            var chaveAtual = _chaveCache(lang);
+            var paraRemover = [];
+            for (var i = 0; i < localStorage.length; i++) {
+                var k = localStorage.key(i);
+                if (k && k.indexOf(prefixo) === 0 && k !== chaveAtual) {
+                    paraRemover.push(k);
+                }
+            }
+            paraRemover.forEach(function(k) { localStorage.removeItem(k); });
+            if (paraRemover.length > 0) {
+                console.log('[i18n] Cache antigo removido:', paraRemover.length, 'chave(s)');
+            }
+        } catch (e) { /* localStorage indisponível ou cheio */ }
     }
 
     // ============================================================
@@ -221,8 +268,6 @@
      */
     function t(chave, vars) {
         if (estado.lang === LANG_PADRAO) {
-            // PT-BR: HTML já tem o texto. Retornar null para que
-            // funções chamadoras usem fallback explícito, se quiserem.
             return null;
         }
         var valor = buscarChave(estado.strings, chave);
@@ -267,8 +312,6 @@
             var chave = el.getAttribute('data-i18n');
             var valor = buscarChave(estado.strings, chave);
             if (typeof valor === 'string') {
-                // CORREÇÃO: precisa passar por interpolar() para resolver
-                // placeholders como {versao}, {nome}, etc.
                 el.textContent = interpolar(valor);
             }
         }
@@ -280,7 +323,6 @@
             var chaveH = elH.getAttribute('data-i18n-html');
             var valorH = buscarChave(estado.strings, chaveH);
             if (typeof valorH === 'string') {
-                // CORREÇÃO: idem — sem interpolar(), o {versao} ficava literal.
                 elH.innerHTML = interpolar(valorH);
             }
         }
@@ -314,9 +356,6 @@
      */
     function criarSeletorIdioma() {
         // Guard: se já criamos o seletor nesta sessão, retorna cedo.
-        // A função era chamada de 3-4 lugares diferentes; sem o guard,
-        // varria o DOM inteiro a cada chamada (inofensivo mas
-        // desnecessário).
         if (_seletorCriado) return;
 
         var containers = document.querySelectorAll('.i18n-seletor-container, #i18n-seletor');
@@ -389,6 +428,11 @@
 
     function initI18n() {
         estado.lang = detectarIdiomaInicial();
+
+        // Remove caches de versões anteriores do FOF assim que
+        // sabemos o idioma atual. Faz isso antes de qualquer load
+        // para não competir com o carregamento do JSON.
+        _limparCachesAntigos(estado.lang);
 
         // Sempre define lang no <html> imediatamente
         document.documentElement.setAttribute('lang', estado.lang);

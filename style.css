@@ -24,10 +24,7 @@
     --bg-comando: rgba(0, 0, 0, 0.2);
     --bg-input: #1a2236;
 
-    /* Cores temáticas de acento (progresso, badges, indicadores).
-       Estas variáveis permitem que cada tema defina sua própria
-       tonalidade com contraste adequado — evitando cores claras
-       hardcoded que ficam ilegíveis em fundo branco. */
+    /* Cores temáticas de acento */
     --accent-soft: #60a5fa;
     --warning-soft: #f59e0b;
     --success-soft: #34d399;
@@ -41,12 +38,7 @@
 
 /* ============================================================
  * TEMA CLARO
- * ============================================================
- * Sobrescreve o conjunto de variáveis do :root. O atributo data-tema
- * é colocado no <html> por script.js (IIFE anti-FOUC + alternarTema).
- * O tema Matrix (terminal) permanece escuro nos dois temas, para
- * preservar contraste e legibilidade.
- */
+ * ============================================================ */
 
 [data-tema="claro"] {
     --bg-primary: #f3f4f6;
@@ -69,12 +61,10 @@
     --bg-comando: rgba(0, 0, 0, 0.03);
     --bg-input: #ffffff;
 
-    /* Acentos com contraste adequado sobre fundo claro. */
     --accent-soft: #2563eb;
     --warning-soft: #b45309;
     --success-soft: #047857;
 
-    /* Terminal: permanece escuro por design */
     --matrix-green: #00ff41;
     --matrix-green-dim: #00cc33;
     --matrix-green-glow: rgba(0, 255, 65, 0.6);
@@ -369,11 +359,8 @@ body {
 }
 
 /* ============================================================
- * ACORDEÃO (usado em 00-boas-vindas, 05-hardware, 06-gaming e 08-waydroid)
- * ============================================================
- * Usa <details>/<summary> nativos. Zero JS adicional. O WebKitGTK
- * suporta há anos. O visual respeita o tema via variáveis.
- */
+ * ACORDEÃO
+ * ============================================================ */
 
 .acordeao {
     background-color: var(--bg-comando);
@@ -513,22 +500,7 @@ body {
 
 /* ============================================================
  * TERMINAL LOG — MATRIX THEME
- * ============================================================
- * O terminal é intencionalmente escuro nos DOIS temas (fundo preto,
- * texto verde-neon). Não usa variáveis temáticas — é um componente
- * com identidade visual própria.
- *
- * ESTADO PADRÃO: EXPANDIDO.
- * O script.js adiciona a classe 'expandido' logo após criar o
- * elemento (dentro de um requestAnimationFrame, para evitar o
- * flash de transição de altura). O CSS abaixo reflete isso: a
- * regra base já define o visual aberto; o colapso é feito via
- * `.terminal-log:not(.expandido)`.
- *
- * O usuário pode clicar no toggle para recolher — o clique
- * remove a classe 'expandido' (via classList.toggle em
- * toggleTerminalLog).
- */
+ * ============================================================ */
 
 .terminal-log-wrapper {
     position: relative;
@@ -562,8 +534,6 @@ body {
     color: var(--matrix-green);
 }
 
-/* A seta aponta para baixo quando expandido, para cima quando
-   colapsado. O estado base do toggle coincide com o do log. */
 .terminal-log-toggle.expandido .toggle-arrow {
     transform: rotate(180deg);
 }
@@ -576,7 +546,6 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Estado base: EXPANDIDO (o script.js adiciona a classe na criação) */
 .terminal-log {
     background-color: var(--matrix-bg);
     border: 1px solid rgba(0, 255, 65, 0.3);
@@ -599,10 +568,6 @@ body {
     box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.08);
 }
 
-/* Modificador: COLAPSADO.
-   Aplicado quando o usuário clica no toggle (removendo 'expandido'),
-   ou no primeiro frame antes do requestAnimationFrame do script.js
-   adicionar a classe — o que evita o flash de abertura. */
 .terminal-log:not(.expandido) {
     height: 0;
     min-height: 0;
@@ -672,7 +637,7 @@ body {
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-2px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .terminal-log::-webkit-scrollbar {
@@ -924,12 +889,7 @@ body {
 
 /* ============================================================
  * HEADER-DIREITA
- * ============================================================
- * Contém o .header-controles (seletor i18n + botão de tema +
- * botão "voltar ao início"). Deve ficar sempre na mesma linha
- * do título — por isso nowrap + flex-shrink: 0. O título é quem
- * cede espaço (com text-overflow: ellipsis em .titulo h1).
- */
+ * ============================================================ */
 
 .header-direita {
     display: flex;
@@ -940,7 +900,7 @@ body {
 }
 
 /* ============================================================
- * HEADER-CONTROLES (wrapper do seletor i18n + botão de tema + voltar)
+ * HEADER-CONTROLES
  * ============================================================ */
 
 .header-controles {
@@ -1041,11 +1001,7 @@ body {
 
 /* ============================================================
  * BOTÃO "VOLTAR AO INÍCIO"
- * ============================================================
- * Substitui o antigo link textual "<- Voltar ao início" por um
- * botão compacto com ícone SVG de casa. Mantém o mesmo visual
- * do botão de tema (.btn-tema) para consistência.
- */
+ * ============================================================ */
 
 .btn-voltar-inicio {
     background-color: var(--bg-input);
@@ -1089,10 +1045,7 @@ body {
 
 /* ============================================================
  * BADGE "ATUALIZAÇÃO DISPONÍVEL"
- * ============================================================
- * Ícone "⬆️" exibido ao lado da versão quando há uma nova release
- * publicada no GitHub. Clicável, leva para a página de manutenção.
- */
+ * ============================================================ */
 
 .badge-atualizacao {
     display: inline-flex;
@@ -1243,7 +1196,7 @@ body {
 }
 
 /* ============================================================
- * INDICADORES DE SESSÃO
+ * INDICADORES DE SESSÃO (legado — mantido para compatibilidade)
  * ============================================================ */
 
 .sessao-indicador {
@@ -1343,7 +1296,7 @@ body {
 
 @keyframes fadeInCard {
     from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================================
@@ -1393,4 +1346,560 @@ body {
     .grid-launchers {
         grid-template-columns: 1fr;
     }
+}
+
+/* ============================================================
+ * FEEDBACK TÁTIL
+ * ============================================================
+ * Dá uma resposta visual imediata ao clique, sem depender do
+ * JS. O :active dispara antes do :hover, então o efeito é
+ * sentido mesmo em cliques rápidos.
+ */
+
+.btn-executar:active:not(:disabled),
+.btn-reverter:active:not(:disabled),
+.btn-voltar:active:not(:disabled),
+.btn-proximo:active:not(:disabled),
+.btn-topo:active,
+.btn-tema:active,
+.btn-voltar-inicio:active,
+.session-menu-item:active {
+    transform: translateY(0) scale(0.97);
+    transition-duration: 0.05s;
+}
+
+/* ============================================================
+ * PROGRESSO GLOBAL
+ * ============================================================
+ * Mostrado no header de guiado.html e manutencao.html.
+ * "N/M" onde N é o número de sessões concluídas.
+ */
+
+.progresso-global {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 0.15rem 0.6rem;
+    background-color: var(--bg-secondary);
+    border-radius: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.progresso-global .numero {
+    color: var(--accent-soft);
+    font-weight: 600;
+}
+
+/* ============================================================
+ * TOASTS
+ * ============================================================
+ * Notificações leves para tarefas longas (>30s) que terminam.
+ * Aparecem no canto superior direito, com animação de slide.
+ */
+
+.fof-toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 9999;
+    pointer-events: none;
+    max-width: 360px;
+}
+
+.fof-toast {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--text-main);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    pointer-events: auto;
+    animation: slideInToast 0.3s ease-out;
+}
+
+.fof-toast.success {
+    border-left-color: var(--success);
+}
+
+.fof-toast.error {
+    border-left-color: var(--danger);
+}
+
+.fof-toast.removendo {
+    animation: slideOutToast 0.3s ease-in forwards;
+}
+
+@keyframes slideInToast {
+    from { transform: translateX(120%); opacity: 0; }
+    to   { transform: translateX(0);   opacity: 1; }
+}
+
+@keyframes slideOutToast {
+    from { transform: translateX(0);   opacity: 1; }
+    to   { transform: translateX(120%); opacity: 0; }
+}
+
+/* ============================================================
+ * MENU DE SESSÕES FIXO
+ * ============================================================
+ * Substitui as bolinhas coloridas (.sessao-indicador .dot) por
+ * um menu horizontal de "chips" clicáveis, fixo no topo da
+ * página, sempre visível durante a rolagem.
+ *
+ * A sessão ativa é destacada com borda + fundo colorido.
+ *
+ * O menu tem scroll horizontal automático quando há mais
+ * sessões que espaço disponível. Em telas pequenas, quebra em
+ * múltiplas linhas via flex-wrap.
+ */
+
+.session-menu-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    margin: -2rem -2rem 1.5rem -2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.session-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    max-width: 900px;
+    margin: 0 auto;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+}
+
+.session-menu-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    background-color: var(--bg-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    white-space: nowrap;
+    text-decoration: none;
+    line-height: 1.2;
+}
+
+.session-menu-item:hover {
+    border-color: var(--accent);
+    color: var(--text-main);
+    transform: translateY(-1px);
+}
+
+.session-menu-item.ativa {
+    background-color: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(60, 103, 227, 0.25);
+    font-weight: 600;
+}
+
+.session-menu-item .session-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.session-menu-item .session-label {
+    font-size: 0.78rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.session-menu-item .session-numero {
+    font-size: 0.65rem;
+    opacity: 0.7;
+    font-weight: 600;
+    padding: 0 0.25rem;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.session-menu-item.ativa .session-numero {
+    background-color: rgba(255, 255, 255, 0.2);
+    opacity: 1;
+}
+
+/* Sessões concluídas ganham um pequeno check visual */
+.session-menu-item.concluida::after {
+    content: '✓';
+    font-size: 0.7rem;
+    color: var(--success);
+    margin-left: 0.1rem;
+    font-weight: 700;
+}
+
+.session-menu-item.ativa.concluida::after {
+    color: #fff;
+}
+
+/* Em telas médias, o menu quebra em mais linhas */
+@media (max-width: 900px) {
+    .session-menu-wrapper {
+        margin: -1rem -1rem 1rem -1rem;
+        padding: 0.6rem 0.75rem;
+    }
+
+    .session-menu {
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        padding-bottom: 0.25rem;
+    }
+
+    .session-menu::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .session-menu::-webkit-scrollbar-thumb {
+        background-color: var(--border);
+        border-radius: 2px;
+    }
+
+    .session-menu::-webkit-scrollbar-thumb:hover {
+        background-color: var(--accent);
+    }
+
+    .session-menu-item {
+        flex-shrink: 0;
+    }
+}
+
+/* ============================================================
+ * BUSCA GLOBAL (Ctrl+K)
+ * ============================================================
+ * Overlay modal que abre com Ctrl+K. Contém um input e uma
+ * lista de resultados. Fecha com Escape, clique fora ou ao
+ * selecionar um resultado.
+ */
+
+.busca-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10vh;
+    animation: fadeInBusca 0.15s ease-out;
+}
+
+.busca-overlay.aberto {
+    display: flex;
+}
+
+@keyframes fadeInBusca {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.busca-modal {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 1rem;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    animation: slideDownBusca 0.2s ease-out;
+}
+
+@keyframes slideDownBusca {
+    from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.busca-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    font-family: inherit;
+    background-color: transparent;
+    color: var(--text-main);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    outline: none;
+}
+
+.busca-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.busca-resultados {
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+}
+
+.busca-vazio {
+    padding: 1.5rem 1.25rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.busca-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-left: 3px solid transparent;
+}
+
+.busca-item:hover {
+    background-color: var(--bg-secondary);
+    border-left-color: var(--accent);
+}
+
+.busca-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.busca-badge.sessao {
+    background-color: rgba(60, 103, 227, 0.2);
+    color: var(--accent-soft);
+    border: 1px solid var(--accent);
+}
+
+.busca-badge.botao {
+    background-color: rgba(52, 211, 153, 0.15);
+    color: var(--success-soft);
+    border: 1px solid var(--success-soft);
+}
+
+.busca-texto {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.busca-item:hover .busca-texto {
+    color: var(--accent-soft);
+}
+
+/* Mobile: modal ocupa quase toda a tela */
+@media (max-width: 600px) {
+    .busca-overlay {
+        padding-top: 5vh;
+    }
+
+    .busca-modal {
+        margin: 0 0.5rem;
+    }
+
+    .busca-input {
+        font-size: 0.95rem;
+        padding: 0.85rem 1rem;
+    }
+
+    .busca-item {
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* ============================================================
+ * DASHBOARD
+ * ============================================================
+ * Grid de cards usada pela sessão 12-central-fof.html.
+ * Mostra métricas de sistema, progresso, tema e idioma.
+ */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.dashboard-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.dashboard-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(60, 103, 227, 0.15);
+}
+
+.dashboard-card .dashboard-titulo {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.dashboard-card .dashboard-valor {
+    font-size: 1.3rem;
+    color: var(--text-main);
+    font-weight: 600;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.dashboard-card .dashboard-subtexto {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.dashboard-card.destaque-card {
+    border-left: 3px solid var(--accent);
+}
+
+.dashboard-card.sucesso-card {
+    border-left: 3px solid var(--success);
+}
+
+.dashboard-card .dashboard-valor.ok {
+    color: var(--success-soft);
+}
+
+.dashboard-card .dashboard-valor.alerta {
+    color: var(--warning-soft);
+}
+
+.dashboard-card .dashboard-valor.erro {
+    color: var(--danger);
+}
+
+/* Dashboard — responsividade */
+@media (max-width: 600px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-card .dashboard-valor {
+        font-size: 1.15rem;
+    }
+}
+
+/* ============================================================
+ * ESTILOS ESPECÍFICOS DAS NOVAS SESSÕES
+ * ============================================================
+ * As novas sessões (10-casa-pronta, 11-diagnostico,
+ * 12-central-fof, 13-fedora) usam os mesmos componentes
+ * (bloco-comando, acordeao, progress-container, terminal-log)
+ * que as existentes — nenhum estilo extra é necessário.
+ *
+ * Este bloco é reservado para estilos adicionais que possam
+ * surgir (ex.: listas de informações, badges especiais, etc).
+ */
+
+/* Lista de informações (usada em diagnóstico) */
+.lista-info {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+}
+
+.lista-info li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.lista-info li:last-child {
+    border-bottom: none;
+}
+
+.lista-info li .label {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.lista-info li .valor {
+    color: var(--text-main);
+    font-weight: 500;
+    text-align: right;
+    word-break: break-word;
+}
+
+/* Bloco informativo (para anti-cheat awareness, SELinux, etc) */
+.bloco-info {
+    background-color: var(--bg-secondary);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.bloco-info strong {
+    color: var(--text-main);
+}
+
+/* ============================================================
+ * ACORDEÃO ANINHADO
+ * ============================================================
+ * Corrige a rotação da seta (::after) quando um acordeão está
+ * dentro de outro. A regra padrão gira 180deg em [open], mas
+ * dentro de um acordeão pai o navegador pode herdar o estado
+ * do pai. Forçamos o estado baseado no atributo [open] do
+ * próprio elemento, sem herança.
+ */
+
+.acordeao .acordeao summary::after {
+    transform: rotate(0deg);
+}
+
+.acordeao .acordeao[open] summary::after {
+    transform: rotate(180deg);
 }

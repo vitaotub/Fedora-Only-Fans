@@ -12,9 +12,43 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-VERSION="1.0.0-09232026"
 INSTALL_DIR="$HOME/.local/share/fedora-only-fans"
 BIN_DIR="$HOME/.local/bin"
+
+# ============================================================
+# VERSÃO DO FOF — fonte única: package.json
+# ============================================================
+#
+# Procura o package.json em ordem de preferência:
+#   1. No diretório de instalação (caso comum: --update em install
+#      existente, ou execução de um clone já instalado)
+#   2. No diretório atual (caso de ./install.sh rodado de um clone)
+#
+# NÃO usa `node -p`: no primeiro uso, o próprio install.sh instala
+# o Node antes de qualquer coisa — então não dá para confiar que
+# ele já esteja disponível. `grep -oP` (GNU grep, presente em todo
+# Fedora) faz a leitura sem dependências.
+#
+# Se nada for encontrado, cai em "desconhecida" — o banner mostra
+# isso, mas o script continua funcionando normalmente. Esta versão
+# é apenas cosmética (o badge do FOF é alimentado pelo /info do
+# server.js, que lê o package.json em runtime).
+_ler_versao_package() {
+    local arquivo
+    for arquivo in "$INSTALL_DIR/package.json" "$PWD/package.json"; do
+        if [ -f "$arquivo" ]; then
+            local v
+            v="$(grep -oP '"version"\s*:\s*"\K[^"]+' "$arquivo" 2>/dev/null | head -1)"
+            if [ -n "$v" ]; then
+                echo "$v"
+                return 0
+            fi
+        fi
+    done
+    echo "desconhecida"
+}
+
+VERSION="$(_ler_versao_package)"
 
 # ============================================================
 # CORREÇÃO ÍCONE (KDE/Wayland): os nomes dos arquivos .desktop
@@ -34,6 +68,19 @@ DESKTOP_FILE_COMPAT_OLD="$HOME/.local/share/applications/fedora-only-fans-compat
 REPO_URL="https://github.com/vitaotek/Fedora-Only-Fans.git"
 LOG_FILE="/tmp/fof-install-$(date +%Y%m%d-%H%M%S).log"
 
+# ============================================================
+# ARQUIVOS DE SESSÃO
+# ============================================================
+#
+# A partir da reestruturação:
+# - 90-manutencao.html e 91-fof-manutencao.html foram REMOVIDOS
+#   (conteúdo consolidado em manutencao.html).
+# - As sessões 10 a 13 (Casa Pronta, Diagnóstico, Central FOF,
+#   Fedora) foram ADICIONADAS.
+#
+# manutencao.html está em ARQUIVOS_PRINCIPAIS (é página standalone,
+# não uma sessão carregada dinamicamente).
+
 SESSAO_ARQUIVOS=(
 "00-boas-vindas.html"
 "01-restauracao.html"
@@ -45,8 +92,9 @@ SESSAO_ARQUIVOS=(
 "07-loja.html"
 "08-waydroid.html"
 "09-softwares-uteis.html"
-"90-manutencao.html"
-"91-fof-manutencao.html"
+"10-casa-pronta.html"
+"11-diagnostico.html"
+"12-fedora.html"
 )
 
 ARQUIVOS_PRINCIPAIS=(
@@ -565,25 +613,31 @@ print_success "Logs temporários removidos"
 # ─── 7. Limpeza de PATH nos rc files ────────────────────────
 remover_linha_path() {
 local arquivo="$1"
-local backup="${arquivo}.fof-backup"
 local linha_a_remover='export PATH="$HOME/.local/bin:$PATH"'
 
-if [ -f "$arquivo" ]; then
+if [ ! -f "$arquivo" ]; then
+return 0
+fi
+
+# Só faz backup se o arquivo realmente contém a linha a remover.
+# Se não contém, não mexe — evita criar backup de arquivo que
+# não foi alterado.
+if ! grep -qF "$linha_a_remover" "$arquivo"; then
+return 0
+fi
+
+# Backup atômico com timestamp, mantido por segurança caso o
+# usuário queira restaurar manualmente.
+local backup="${arquivo}.fof-backup-$(date +%Y%m%d-%H%M%S)"
 cp "$arquivo" "$backup"
 grep -vF "$linha_a_remover" "$arquivo" > "${arquivo}.tmp"
 mv "${arquivo}.tmp" "$arquivo"
-print_success "Linha removida de: $arquivo"
-fi
+print_success "Linha removida de: $arquivo (backup: $backup)"
 }
 
 remover_linha_path "$HOME/.bashrc"
 remover_linha_path "$HOME/.zshrc"
 remover_linha_path "$HOME/.profile"
-
-rm -f "$HOME/.bashrc.fof-backup" \
-"$HOME/.zshrc.fof-backup" \
-"$HOME/.profile.fof-backup"
-print_success "Backups de PATH removidos"
 
 # ─── 8. Reindexação do menu ─────────────────────────────────
 update-desktop-database ~/.local/share/applications/ 2>/dev/null || true
@@ -623,8 +677,8 @@ print_warning "Falha ao atualizar dependências, continuando..."
 fi
 
 # Recompila o container nativo. O install.sh --update é chamado pelo
-# botão "Atualizar FOF" na sessão 91, então essa recompilação roda
-# automaticamente em cada atualização.
+# botão "Atualizar FOF" na sessão manutencao, então essa recompilação
+# roda automaticamente em cada atualização.
 compilar_container_install || true
 
 print_step "Recriando symlinks dos comandos..."

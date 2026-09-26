@@ -12,6 +12,11 @@ CC = gcc
 CFLAGS = -Wall -O2
 LDFLAGS = -lm
 
+# Macro com a versão — passada ao gcc como string literal.
+# A sintaxe '"..."' (single quote fora, double dentro) é
+# necessária para o Make passar as aspas literais ao gcc.
+CPPFLAGS += -DFOF_VERSION='"$(FOF_VERSION)"'
+
 # Detecção de WebKitGTK 4.1 (base GTK3). Este é o único pacote
 # válido em qualquer Fedora suportado por este projeto (40+).
 # O pacote 4.0 (API antiga, webkit2gtk2.0) foi removido da
@@ -19,6 +24,18 @@ LDFLAGS = -lm
 # segue a mesma decisão, para manter os dois caminhos de build
 # consistentes.
 WEBKIT_PKG := $(shell pkg-config --exists webkit2gtk-4.1 && echo webkit2gtk-4.1)
+
+# ============================================================
+# VERSÃO DO FOF — fonte única: package.json
+# ============================================================
+#
+# Mesmo `grep -oP` dos outros arquivos. `$(shell ...)` executa o
+# comando no parse do Makefile. Fallback "unknown" garante que o
+# build continua mesmo sem o package.json.
+FOF_VERSION := $(shell grep -oP '"version"\s*:\s*"\K[^"]+' package.json 2>/dev/null | head -1)
+ifeq ($(FOF_VERSION),)
+FOF_VERSION := unknown
+endif
 
 ifeq ($(WEBKIT_PKG),)
 $(error WebKitGTK 4.1 não encontrado. Instale: sudo dnf install webkit2gtk4.1-devel gtk3-devel)
@@ -35,7 +52,7 @@ SRC = src/fof-container.c
 all: $(TARGET)
 
 $(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $(PKG_CFLAGS) -o $(TARGET) $(SRC) $(PKG_LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(PKG_CFLAGS) -o $(TARGET) $(SRC) $(PKG_LIBS) $(LDFLAGS)
 
 clean:
 	rm -f $(TARGET)
@@ -53,3 +70,6 @@ uninstall:
 
 run: $(TARGET)
 	./$(TARGET) --url http://localhost:3000 --icon icone_app.png
+
+version:
+	@echo "FOF version: $(FOF_VERSION)"

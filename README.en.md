@@ -3,7 +3,7 @@
 **🌐 Language:** [Português (BR)](README.md) | English | [Español](README.es.md)
 
 ![Author](https://img.shields.io/badge/Creator-Vit%C3%A3oTub-blue?style=flat-square)
-![Version](https://img.shields.io/badge/Version-v1.0.0--09232026-orange?style=flat-square)
+![Version](https://img.shields.io/badge/Version-v1.0.0--09252026-orange?style=flat-square)
 ![Fedora](https://img.shields.io/badge/Fedora-44+-294172?style=flat-square&logo=fedora)
 ![License](https://img.shields.io/badge/License-GPL--3.0-green?style=flat-square)
 ![Languages](https://img.shields.io/badge/Languages-PT--BR%20%7C%20EN%20%7C%20ES-3c67e3?style=flat-square)
@@ -66,9 +66,9 @@ The goal is to transform a clean Fedora installation into a complete operating s
 
 FOF has two entry points, with different purposes:
 
-🧭 Start Setup: step by step, one session at a time, with intuitive navigation (Previous/Next). The order matters for the final result, so this is the only way to go through the Fedora configuration sessions.
+🧭 Start Setup: step by step, one session at a time, with intuitive navigation (Previous/Next) and a fixed menu at the top showing all available sessions. The order matters for the final result, so this is the only way to go through the Fedora configuration sessions.
 
-🛠️ Maintenance: kernels, temporary file cleanup, GRUB, updating/uninstalling FOF — tasks that don't depend on order between themselves or with the rest of the configuration, so they live on a separate page, accessible at any time.
+🛠️ Maintenance: standalone tasks that don't depend on order between themselves or with the rest of the configuration. They live on a separate page, accessible at any time, organized into two accordions: Fedora Maintenance (cleanup, kernels, GRUB) and FOF Maintenance (update, uninstall).
 
 Each button remembers its own state (executed or pending), so closing and reopening FOF (or restarting the computer) always shows exactly where you stopped.
 
@@ -97,21 +97,64 @@ Setup Sessions (in order)
         GPU-specific drivers and tools (AMD and NVIDIA), fan control (CoreCtrl, LACT, CoolerControl) and controller support (input group). Includes full Vulkan, Mesa 3D/RADV and VA-API/VDPAU for AMD, proprietary driver + NVENC/NVDEC + modesetting for NVIDIA, and overclocking adjustment (amdgpu.ppfeaturemask)
         
     7	🎮 Gaming
-        Session dedicated to games: launchers (Steam, Heroic, Lutris), compatibility tools (Wine, Winetricks, Bottles, NTSYNC), performance and monitoring (GameMode, MangoHud, Goverlay, Gamescope) and ready-to-use tips to optimize the gaming experience
+        Session dedicated to games, organized into several collapsible blocks:
+        • Launchers (Steam, Heroic, Lutris)
+        • Compatibility (Wine, Winetricks, Bottles, NTSYNC)
+        • Performance and Monitoring (GameMode, MangoHud, Goverlay, Gamescope)
+        • Advanced Gaming (ProtonUp-Qt, vkBasalt, GameMode+MangoHud presets, Gamescope Session, controller test)
+        • Emulators (RetroArch + recommended cores, Dolphin, PCSX2, RPCS3, Duckstation — no Nintendo Switch emulator for legal reasons)
+        • Network for Online Gaming (Cake QoS anti-bufferbloat, MTU adjustment, bufferbloat test)
+        • Anti-cheat Awareness (informational panel about which anti-cheats work on Linux)
+        • Tips and Tricks
         
     8	🎬 Media Production
-        OBS Studio (Flatpak) installation, virtual camera activation and EasyEffects (audio processor for PipeWire)
+        Tools to record, edit, stream and produce content:
+        • OBS Studio + Virtual Camera
+        • EasyEffects (audio effects processor for PipeWire)
+        • Streaming Ready (OBS scene templates, Streamdeck UI, NDI Tools)
+        • Audio Routing (qpwgraph for PipeWire)
+        • Video Presets (HandBrake + presets, Kdenlive project templates)
+        • Screen Capture (wf-recorder on Wayland, SimpleScreenRecorder on X11)
         
     9	📱 Waydroid
         Waydroid installation (Android on Linux) via COPR yanqiyu/waydroid, with GApps (Google Play Store), ARM translation (libndk/libhoudini), Magisk, Widevine DRM, Logitech SmartDock and waydroid-helper (via the official COPR cuteneko/waydroid-helper). Requires AMD or Intel GPU — does not work with NVIDIA
         
     10	📦 Recommended Apps
         Curated selection of useful everyday software, all via Flatpak: productivity (OnlyOffice, LibreOffice, Obsidian, Thunderbird, Okular, Joplin, Foliate), entertainment (Haruna, VLC, MPV, Spotify, Plex, Stremio), graphics tools (Krita, Inkscape, Pinta, GIMP, Darktable, FreeCAD, LibreCAD, Cura, Upscayl, XnView MP and the Affinity Suite), internet (Opera, Brave, Zen Browser, Edge, Chromium, Zoom, Vivaldi, Discord, Telegram, Signal), video editing and 3D modeling (Kdenlive, Shotcut, Pitivi, OpenShot, Avidemux, Lightworks, Drift, Blender), audio editing and creation (Ardour, LMMS, Audacity) and cloud sync (Rclone, Rclone Manager)
+        
+    11	🏠 Home Ready
+        Settings to get Fedora ready for home use, in independent blocks:
+        • Printer and Scanner (CUPS + Avahi + system-config-printer)
+        • File Sharing (Samba for Windows, LocalSend for phone, Warpinator for Linux network)
+        • Password Manager (KeePassXC offline)
+        • PDF and OCR (Okular + Tesseract + PT/EN language packs)
+        
+    12	📊 Diagnostics
+        Visual panel of system state, all in collapsible blocks:
+        • System Panel (CPU, RAM, disk, uptime, firewall, SELinux, processes, boot)
+        • Top 5 Processes (by CPU and by RAM)
+        • Partitions (usage, free, mount point)
+        • Visual Disk Analysis (Baobab)
+        • Hardware Health: SMART (smartmontools) and temperatures (lm_sensors)
+        • Logs and Recent Errors (journal grouped by origin from the last 24h)
+        
+    13	📋 FOF Central
+        Central panel of FOF itself:
+        • Status Dashboard (version, progress, uptime, theme, language, Fedora, CPU, RAM, disk, firewall, SELinux)
+        • Global Search (Ctrl+K) — finds any session, button or term
+        • Profile Wizard — suggests relevant sessions based on your usage
+        • Changelog — version history with links to GitHub releases
+        
+    14	🐧 Fedora
+        Fedora-specific information and tools:
+        • Fedora Version (compatibility check)
+        • Fedora Atomic / Silverblue (immutable system detection)
+        • SELinux (status, recent AVC warnings, setroubleshoot in plain language)
 
 
 Maintenance Sessions (no order — separate page)
 
-        🛠️ Maintenance
+        🛠️ Fedora Maintenance
         Cache cleanup, kernel management (list/remove, with blocking of the kernel in use) and GRUB configuration (timeout and menu visibility)
         
         🔧 FOF Maintenance
@@ -127,6 +170,9 @@ Maintenance Sessions (no order — separate page)
     📋 Single log per session - Each session shares a unified log, in chronological order, with separators between executions
     🔓 Log expanded by default - Each session's log starts expanded; the user can collapse it by clicking the header
     📏 Uniform log height - All sessions use the same log height, keeping the interface consistent
+    🔍 Global search (Ctrl+K) - Finds any session, button or term on any FOF page
+    📊 Status dashboard - Central panel with FOF and system information
+    🧭 Profile wizard - Suggests relevant sessions based on your usage (without hiding any session)
     🔔 Automatic update check - FOF queries GitHub Releases on startup and shows a ⬆️ badge when a new version is available
     ✅ Post-update popup - After updating FOF, an alert tells the user to restart the app and apply the changes
     🔒 Session lock - During an installation, other buttons in the same session are disabled to prevent simultaneous executions
@@ -138,6 +184,7 @@ Maintenance Sessions (no order — separate page)
     💾 Persistence - State of each action saved automatically (local server + browser), without relying on any aggregate report
     📦 Native container - Application runs in WebKitGTK (no browser needed)
     🗂️ Native accordions - Uses <details>/<summary> to organize large blocks without cluttering the interface
+    🏷️ Centralized version - The FOF version lives in a single place (package.json) and is read at runtime by all components
 
 
 🖥️ Supported Desktops
@@ -178,6 +225,10 @@ With FOF you:
     Follow progress in real time with logs and progress bar.
     
     Receive automatic notification when a new version of FOF is available.
+    
+    Use Global Search (Ctrl+K) to quickly find any session, button or term.
+    
+    Check the Status Dashboard to see the current system state without opening the terminal.
 
 
 💻 How to run FOF locally?
@@ -247,7 +298,7 @@ firefox http://localhost:3000
     Responsive and modern interface
 
     JavaScript
-    Logic for requests to the local API + internationalization (PT-BR, EN, ES) + update check via GitHub Releases API
+    Logic for requests to the local API + internationalization (PT-BR, EN, ES) + update check via GitHub Releases API + global search + dashboard
 
     Node.js
     Local backend server for secure process execution
@@ -271,9 +322,9 @@ firefox http://localhost:3000
 Fedora-Only-Fans/
 ├── 📄 index.html              # Landing page (choose between setup/maintenance)
 ├── 📄 guiado.html             # Step-by-step setup (main sessions, in order)
-├── 📄 manutencao.html         # Maintenance (kernels, cleanup, GRUB, FOF — no order)
+├── 📄 manutencao.html         # Maintenance (Fedora + FOF in 2 accordions, no order)
 ├── 📄 style.css               # Shared CSS (global)
-├── 📄 script.js               # Shared JS (global functions + update check)
+├── 📄 script.js               # Shared JS (global functions + updates + search + dashboard)
 ├── 📄 i18n.js                 # Internationalization module (PT-BR/EN/ES)
 ├── 📂 locales/                # Translation files
 │   ├── 📄 pt-BR.json          # Portuguese (default)
@@ -285,19 +336,21 @@ Fedora-Only-Fans/
 ├── 📄 03-repositorios.html    # Session 4 — Repositories, codecs and graphics acceleration
 ├── 📄 04-fontes.html          # Session 5 — Fonts for compatibility
 ├── 📄 05-hardware.html        # Session 6 — Hardware (AMD, NVIDIA and Controllers)
-├── 📄 06-gaming.html          # Session 7 — Gaming (launchers, Wine/Proton, performance)
-├── 📄 07-loja.html            # Session 8 — Media Production
+├── 📄 06-gaming.html          # Session 7 — Gaming (launchers, Wine/Proton, emulators, network, anti-cheat)
+├── 📄 07-loja.html            # Session 8 — Media Production (OBS, streaming, audio)
 ├── 📄 08-waydroid.html        # Session 9 — Waydroid (Android on Linux)
 ├── 📄 09-softwares-uteis.html # Session 10 — Recommended Apps
-├── 📄 90-manutencao.html      # Maintenance — kernels, cleanup, GRUB (no order)
-├── 📄 91-fof-manutencao.html  # FOF Maintenance — update/uninstall (no order)
+├── 📄 10-casa-pronta.html     # Session 11 — Home Ready (printer, files, passwords, PDF+OCR)
+├── 📄 11-diagnostico.html     # Session 12 — Diagnostics (system panel, hardware, logs)
+├── 📄 12-central-fof.html     # Session 13 — FOF Central (dashboard, search, wizard, changelog)
+├── 📄 13-fedora.html          # Session 14 — Fedora (version, atomic, SELinux)
 ├── 📄 template-sessao.html    # Template for creating a new session
 ├── 📄 iniciar_fof.sh          # Startup script
 ├── 📄 iniciar_fof_compat.sh   # Compatibility mode (older GPUs)
 ├── 📄 install.sh              # System installer
 ├── 📄 server.js               # Node.js server
 ├── 📄 icone_app.png           # Application icon
-├── 📄 package.json            # Node.js dependencies
+├── 📄 package.json            # Node.js dependencies + FOF version (single source)
 ├── 📄 README.md               # Documentation (PT-BR)
 ├── 📄 README.en.md            # Documentation (English)
 ├── 📄 README.es.md            # Documentación (Español)
@@ -316,6 +369,8 @@ Fedora-Only-Fans/
     ✅ Input sanitization - Protection against command injection
     ✅ Detailed logs - Record of all operations
     ✅ Version validation - Checks that the Fedora version exists before upgrade
+    ✅ Rate limiting - 1.5s limit per idComando (prevents accidental loops)
+    ✅ idComando validation - Accepts only letters, numbers, hyphen and underscore
 
 
 📋 Logs
@@ -326,6 +381,8 @@ Logs are saved automatically at:
 /tmp/fof-YYYYMMDD-HHMMSS.log
 ```
 
+Logs older than 7 days are removed automatically on server startup.
+
 To view logs in real time:
 
 ```bash
@@ -334,23 +391,41 @@ tail -f /tmp/fof-*.log
 
 🎯 Roadmap
 
-v1.0.0-09232026 (Current) 🚧
+v1.0.0-09252026 (Current) 🚧
+
+    ✅ Centralized version in package.json (single source of truth)
+    ✅ New session 11 — Home Ready (printer, files, passwords, PDF+OCR)
+    ✅ New session 12 — Diagnostics (system panel, hardware, logs)
+    ✅ New session 13 — FOF Central (dashboard, Ctrl+K search, wizard, changelog)
+    ✅ New session 14 — Fedora (version, atomic, SELinux)
+    ✅ Expanded Gaming: Advanced Gaming, Emulators, Network for Online Gaming, Anti-cheat Awareness
+    ✅ Expanded Media Production: Streaming Ready, PipeWire routing, video presets, screen capture
+    ✅ Maintenance consolidated into 2 accordions (Fedora + FOF) in manutencao.html
+    ✅ Fixed session menu at the top (replaces colored dots)
+    ✅ Global Ctrl+K search on any page
+    ✅ Centralized status dashboard
+    ✅ New server.js endpoints: /system-info, /top-processes, /disk-usage, /journal-errors
+    ✅ Automatic log rotation (7 days)
+    ✅ Rate limiting (1.5s per idComando)
+
+v1.0.0-09232026 ✅
 
     ✅ Automatic update check via GitHub Releases API (⬆️ badge in the header)
     ✅ Post-update confirmation popup (warns to restart FOF)
     ✅ Session 00 reformulated into 2 accordions (Welcome + System Updates)
-    ✅ Session 00 clearly explains: what FOF is, why it was created, what you get and what it does not do
-    ✅ Gaming session with detailed NTSYNC notice (what it is, what it's for, if it's safe, how to enable)
-    ✅ Session logs expanded by default (no prior click required)
+    ✅ Gaming session with detailed NTSYNC notice
+    ✅ Session logs expanded by default
     ✅ Uniform log height across all sessions (120–200px)
     ✅ Header with inline controls next to title (language, theme, back-to-home on same line)
     ✅ "Back to home" button with SVG house icon
-    ✅ Layout adjustments and CSS cleanup (orphan rules removed, duplicates merged)
+    ✅ Layout adjustments and CSS cleanup
 
 v1.0.0 (Future) 🔮
 
-    □ EasyEffects profile with presets
-    □ ?
+    □ Automatic Btrfs snapshots before critical sessions
+    □ Command preview before executing
+    □ Config export/import (migrate to another computer)
+    □ Report problem with attached logs (generates zip + opens pre-filled issue)
 
 
 ➕ How to add a new session
@@ -359,11 +434,11 @@ FOF has a central session registry (SESSOES, at the top of script.js) — it's t
 
     Copy template-sessao.html to NN-session-name.html (two digits + hyphen + lowercase name).
     Fill in the placeholders with the real content (title, buttons, commands).
-    Add an entry to the SESSOES array in script.js, with the same id as the file (without .html) and the data-comando of your buttons. If the session is a task without order dependency with the rest (like maintenance ones), mark it with manutencao: true — it will appear in manutencao.html instead of the sequential flow in guiado.html.
+    Add an entry to the SESSOES array in script.js, with the same id as the file (without .html) and the data-comando of your buttons.
 
 Done — no need to edit guiado.html, manutencao.html, index.html or server.js. The position of your entry in the SESSOES array already defines the display order and the "Session N" number (calculated automatically) of the main sessions, and the server route accepts any session named in that pattern.
 
-The template-sessao.html has comments pointing to existing sessions that serve as examples for more specific patterns (always-clickable button, multiple side-by-side buttons, dropdown, double confirmation flow, etc.). Important: FOF has no generic "undo" buttons — if an action has a meaningful "undo", model it as a second independent button, also always clickable (see grub-aplicar-recomendado/grub-restaurar-padrao in 90-manutencao.html and the amdgpu-overclock pair in 05-hardware.html).
+The template-sessao.html has comments pointing to existing sessions that serve as examples for more specific patterns (always-clickable button, multiple side-by-side buttons, dropdown, double confirmation flow, etc.). Important: FOF has no generic "undo" buttons — if an action has a meaningful "undo", model it as a second independent button, also always clickable (see grub-aplicar-recomendado/grub-restaurar-padrao in manutencao.html and the amdgpu-overclock pair in 05-hardware.html).
 
 🌐 How to add a new language
 
@@ -371,6 +446,22 @@ The template-sessao.html has comments pointing to existing sessions that serve a
     Translate all values (keep the keys identical).
     Add the language code to LANGS_DISPONIVEIS in i18n.js and to LANGS_SUPORTADOS in server.js.
     Add an <option> to the `opcoes` array inside criarSeletorIdioma() in i18n.js.
+
+🏷️ How to release a new FOF version
+
+The FOF version lives in a single file: package.json. When releasing:
+
+    Edit package.json → "version": "1.0.0-<NEW_VERSION>"
+    Edit i18n.js → var FALLBACK_VERSION = '1.0.0-<NEW_VERSION>' (the only exception, used as cache-buster before /info responds)
+    Create the tag/release on GitHub with the same name (e.g.: v1.0.0-<NEW_VERSION>)
+
+Everything else is automatic:
+
+    server.js reads the version from package.json at runtime (endpoint /info)
+    install.sh and iniciar_fof.sh read the banner version from package.json
+    Makefile and build-container.sh pass the version to gcc via -DFOF_VERSION
+    The C container (fof-container) shows the injected version in --help
+    The FOF's ⬆️ badge compares with the GitHub Releases tag automatically
 
 🤝 How to contribute
 

@@ -433,9 +433,15 @@ await executarComandoGenerico(idComando, comando, nomeAcao, mostrarBotaoDesinsta
 }
 
 async function instalarLightworks() {
-var comando = 'sudo dnf install --setopt=localpkg_gpgcheck=0 -y https://cdn.lwks.com/releases/latest/lightworks_linux_rpm.rpm';
-var nomeAcao = _t('sessoes.09-softwares-uteis.btn_lightworks', '🎞️ Lightworks');
-await executarComandoGenerico('instalar-lightworks', comando, nomeAcao, mostrarBotaoDesinstalar);
+    // Tenta com verificação GPG ligada primeiro; se o RPM do
+    // Lightworks não for assinado (é o caso), cai no fallback
+    // com a checagem desabilitada. O usuário vê a URL do CDN
+    // oficial no log antes de autorizar.
+    var comando =
+        'sudo dnf install -y https://cdn.lwks.com/releases/latest/lightworks_linux_rpm.rpm ' +
+        '|| sudo dnf install --setopt=localpkg_gpgcheck=0 -y https://cdn.lwks.com/releases/latest/lightworks_linux_rpm.rpm';
+    var nomeAcao = _t('sessoes.09-softwares-uteis.btn_lightworks', '🎞️ Lightworks');
+    await executarComandoGenerico('instalar-lightworks', comando, nomeAcao, mostrarBotaoDesinstalar);
 }
 
 async function instalarRclone() {
@@ -462,7 +468,7 @@ var comando =
 'exit 1; ' +
 'fi && ' +
 'echo "URL do RPM: $RPM_URL" && ' +
-'sudo dnf install --setopt=localpkg_gpgcheck=0 -y "$RPM_URL"';
+'sudo dnf install -y "$RPM_URL" || sudo dnf install --setopt=localpkg_gpgcheck=0 -y "$RPM_URL"';
 
 var nomeAcao = _t('sessoes.09-softwares-uteis.btn_rclone_manager', '🎛️ Instalar Rclone Manager');
 await executarComandoGenerico('instalar-rclone-manager', comando, nomeAcao, function() {

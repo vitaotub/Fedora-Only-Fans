@@ -36,7 +36,18 @@ else
 fi
 cd "$DIR"
 
-VERSION="1.0.0-09232026"
+# ============================================================
+# VERSÃO DO FOF — fonte única: package.json
+# ============================================================
+#
+# Aqui o $DIR já foi resolvido e o script já fez `cd "$DIR"`, então
+# o package.json está sempre ao lado. `grep -oP` em vez de `node -p`
+# pela mesma razão do install.sh: o Node pode não estar instalado
+# ainda (este script o instala mais adiante, se necessário). O
+# fallback "desconhecida" não impede nada — só afeta o banner.
+VERSION="$(grep -oP '"version"\s*:\s*"\K[^"]+' "$DIR/package.json" 2>/dev/null | head -1)"
+[ -z "$VERSION" ] && VERSION="desconhecida"
+
 DEBUG=false
 NO_CLEAN=false
 
@@ -188,7 +199,7 @@ abrir_no_terminal_nativo() {
 PRECISA_REINVOCAR=true
 for arg in "$@"; do
     case "$arg" in
-        --no-fork|--debug|-d|--no-clean|--help|-h)
+        --no-fork|--debug|-d|--help|-h)
             PRECISA_REINVOCAR=false
             ;;
     esac
@@ -283,6 +294,17 @@ verificar_arquivos() {
         log_warning "Arquivo i18n.js não encontrado!"
     fi
 
+    # ============================================================
+    # ARQUIVOS DE SESSÃO
+    # ============================================================
+    #
+    # A partir da reestruturação:
+    # - 90-manutencao.html e 91-fof-manutencao.html foram REMOVIDOS
+    #   (conteúdo consolidado em manutencao.html).
+    # - As sessões 10 a 13 foram ADICIONADAS.
+    #
+    # manutencao.html é verificado acima (junto com index/guiado),
+    # por ser página standalone e não sessão carregada via fetch.
     local sessoes=(
         "00-boas-vindas.html"
         "01-restauracao.html"
@@ -294,8 +316,9 @@ verificar_arquivos() {
         "07-loja.html"
         "08-waydroid.html"
         "09-softwares-uteis.html"
-        "90-manutencao.html"
-        "91-fof-manutencao.html"
+        "10-casa-pronta.html"
+        "11-diagnostico.html"
+        "12-fedora.html"
     )
 
     local missing=0

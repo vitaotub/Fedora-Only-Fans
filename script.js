@@ -14,33 +14,31 @@
  *
  * LOG EXPANDIDO POR PADRÃO: ao contrário de versões anteriores, o log de
  * cada sessão já nasce expandido. O usuário pode clicar no toggle para
- * recolher (o clique remove a classe 'expandido'). A transição de altura
- * é adiada um frame via requestAnimationFrame para evitar o flash de
- * abertura na primeira renderização.
+ * recolher (o clique remove a classe 'expandido').
  *
  * VERIFICAÇÃO DE ATUALIZAÇÕES: no boot, o FOF consulta a API do GitHub
  * para saber se há uma versão mais recente publicada. Se houver, um
- * badge "⬆️" aparece ao lado do número da versão em todas as páginas
- * (index.html, guiado.html, manutencao.html), linkando para a página
- * de manutenção. A consulta é cacheada por 6h em localStorage para não
- * estourar o rate limit da API. Antes de exibir o badge, uma segunda
- * consulta fresca confirma que a release realmente existe (evita badge
- * fantasma por cache obsoleto).
+ * badge "⬆️" aparece ao lado do número da versão. Cache de 12h.
  *
  * TEMA: claro/escuro alternável via botão na UI. Persistência em localStorage
- * sob a chave 'fof_tema'. O atributo `data-tema` no <html> controla qual
- * conjunto de variáveis CSS é aplicado (ver style.css).
+ * sob a chave 'fof_tema'.
+ *
+ * NOVIDADES (v1.0.0-09252026):
+ * - Sessão 12-central-fof removida (conteúdo consolidado/movido)
+ * - Sessão 13-fedora renomeada para 12-fedora
+ * - QoS Cake e ajuste de MTU removidos (não funcionavam sem TTY)
+ * - SMART via GSmartControl (GUI) e temperaturas via Psensor (GUI)
+ * - Botões "Abrir X" para ProtonUp-Qt, RetroArch, Dolphin, PCSX2,
+ *   RPCS3, Duckstation, GSmartControl, Psensor e Gerenciador SELinux
+ * - Busca global Ctrl+K
+ * - Toasts + notificações nativas ao concluir tarefas longas (>30s)
+ * - Barra de progresso global (N/M sessões concluídas) no header
  */
 
 // ============================================================
 // CONSTANTES E CONFIGURAÇÕES
 // ============================================================
 
-// API_URL derivado do origin atual, com fallback. Isso permite que
-// o FOF funcione mesmo se a PORT for mudada por env var: o frontend
-// carrega de http://localhost:<porta>, e usa essa mesma origem para
-// as chamadas de API. Em cenários exóticos (file://, origin vazio),
-// cai no fallback padrão.
 var API_URL = (function() {
     try {
         var origin = window.location && window.location.origin;
@@ -85,27 +83,12 @@ async function carregarVersaoServidor() {
 // ============================================================
 // VERIFICAÇÃO DE ATUALIZAÇÕES (GitHub Releases API)
 // ============================================================
-//
-// Consulta o endpoint /releases/latest do GitHub para saber se há
-// versão mais recente publicada. Cacheia o resultado em localStorage
-// por 6h, para não estourar o rate limit da API do GitHub (60
-// requisições/hora sem autenticação).
-//
-// Se a consulta falhar (offline, GitHub fora do ar, rate limit),
-// falha silenciosamente — o FOF continua funcionando normalmente.
-//
-// A comparação de versões é lexicográfica direta: o formato
-// MMDDYYYY em 1.0.0-09232026 ordena naturalmente como string.
 
 var GITHUB_REPO = 'vitaotek/Fedora-Only-Fans';
 var ULTIMA_VERIFICACAO_KEY = 'fof_ultima_verificacao';
 var VERSAO_REMOTA_KEY = 'fof_versao_remota';
-var TTL_VERIFICACAO_MS = 6 * 60 * 60 * 1000; // 6 horas
+var TTL_VERIFICACAO_MS = 12 * 60 * 60 * 1000; // 12 horas
 
-/**
- * Retorna a versão mais recente do FOF publicada no GitHub, ou null
- * se não foi possível consultar. Usa cache de 6h.
- */
 async function verificarAtualizacoes() {
     var agora = Date.now();
     var ultima = 0;
@@ -115,7 +98,6 @@ async function verificarAtualizacoes() {
         ultima = 0;
     }
 
-    // Se consultou nas últimas 6h, usa o cache
     if (agora - ultima < TTL_VERIFICACAO_MS) {
         try {
             var cache = localStorage.getItem(VERSAO_REMOTA_KEY);
@@ -145,22 +127,10 @@ async function verificarAtualizacoes() {
     }
 }
 
-/**
- * Consulta fresca à API do GitHub, ignorando o cache. Usa duas
- * camadas de proteção:
- *  1. `cache: 'no-store'` — instrui o WebKit a não usar cache HTTP.
- *  2. Query param `?_=<timestamp>` — força URL única, contornando
- *     qualquer cache heurístico residual.
- *
- * Se a consulta falhar (offline, 404, rate limit), retorna null.
- */
 async function verificarAtualizacoesForcado() {
     try {
-        // Query param `?_=<timestamp>` força URL única, driblando
-        // qualquer cache HTTP residual do WebKitGTK. Combinado com
-        // `cache: 'no-store'`, é à prova de cache.
         var url = 'https://api.github.com/repos/' + GITHUB_REPO +
-                  '/releases/latest?_=' + Date.now();
+        '/releases/latest?_=' + Date.now();
         var resp = await fetch(url, { cache: 'no-store' });
         if (!resp.ok) return null;
         var data = await resp.json();
@@ -175,38 +145,14 @@ async function verificarAtualizacoesForcado() {
     }
 }
 
-/**
- * Compara a versão local com a remota. Retorna true se a remota for
- * mais nova. A comparação lexicográfica funciona porque MMDDYYYY em
- * 1.0.0-09232026 ordena naturalmente como string.
- *
- * Aceita prefixo 'v' ou 'V' (a API do GitHub pode retornar qualquer
- * um dos dois, dependendo da tag publicada).
- */
 function temAtualizacao(versaoLocal, versaoRemota) {
     var local = (versaoLocal || '').replace(/^[vV]/, '').trim();
     var remota = (versaoRemota || '').replace(/^[vV]/, '').trim();
     if (!local || !remota) return false;
-    // Se a versão local for o fallback '?', significa que carregarVersaoServidor()
-    // ainda não terminou (ou falhou). Não dá para comparar com segurança.
     if (local === '?' || remota === '?') return false;
     return remota > local;
 }
 
-/**
- * Verifica atualizações e, se houver, insere um badge "⬆️" ao lado
- * do span .fof-version. O badge é um link para manutencao.html,
- * onde o usuário pode atualizar.
- *
- * É idempotente: se o badge já existe, não duplica.
- *
- * Fluxo:
- *  1. Consulta via cache (rápida, mas pode estar obsoleta).
- *  2. Se o cache indica atualização, reconfirma com uma consulta
- *     fresca à API. Só mostra o badge se a API confirmar AGORA.
- *  3. Se o cache estava obsoleto (release deletada, tag renomeada),
- *     limpa o cache e não mostra o badge.
- */
 async function mostrarBadgeSeHouverAtualizacao() {
     var versaoRemota = await verificarAtualizacoes();
     if (!versaoRemota) return;
@@ -214,9 +160,6 @@ async function mostrarBadgeSeHouverAtualizacao() {
     var versaoLocal = FOF_VERSION || '?';
     if (!temAtualizacao(versaoLocal, versaoRemota)) return;
 
-    // Reconfirma com uma consulta fresca à API, ignorando o cache.
-    // Se o cache estava obsoleto (ex.: release deletada), a consulta
-    // fresca retorna 404 e não mostramos o badge.
     var versaoRemotaFresca = await verificarAtualizacoesForcado();
     if (!versaoRemotaFresca || !temAtualizacao(versaoLocal, versaoRemotaFresca)) {
         try {
@@ -227,7 +170,6 @@ async function mostrarBadgeSeHouverAtualizacao() {
         return;
     }
 
-    // Insere o badge ao lado de cada .fof-version na página
     document.querySelectorAll('.fof-version').forEach(function(el) {
         var parent = el.parentElement;
         if (!parent) return;
@@ -258,18 +200,6 @@ function _tVars(chave, fallback, vars) {
     return (typeof tOr === 'function') ? tOr(chave, fallback, vars) : fallback;
 }
 
-/**
- * Retorna o texto "original" (não-executado) de um botão, priorizando
- * a tradução atual.
- *
- * Motivo: o `data-texto-original` é capturado pela IIFE (ou pelo
- * guiado.html/manutencao.html) ANTES de o i18n rodar — então ele
- * sempre contém o texto PT-BR bruto. Restaurar a partir dele em EN/ES
- * faria o botão voltar para PT-BR após a execução.
- *
- * Preferimos `data-i18n` (chave de tradução), quando presente. Se o
- * botão não tiver `data-i18n`, caímos no `data-texto-original`.
- */
 function _textoOriginalTraduzido(btn) {
     if (!btn) return '';
     const chave = btn.getAttribute('data-i18n');
@@ -338,26 +268,85 @@ function criarBotaoTema() {
 }
 
 // ============================================================
+// TOASTS + NOTIFICAÇÕES NATIVAS
+// ============================================================
+
+function _garantirContainerToast() {
+    var c = document.getElementById('fof-toast-container');
+    if (!c) {
+        c = document.createElement('div');
+        c.id = 'fof-toast-container';
+        c.className = 'fof-toast-container';
+        document.body.appendChild(c);
+    }
+    return c;
+}
+
+function mostrarToast(mensagem, tipo, duracaoMs) {
+    var c = _garantirContainerToast();
+    var t = document.createElement('div');
+    t.className = 'fof-toast ' + (tipo || 'info');
+    t.textContent = mensagem;
+    c.appendChild(t);
+    setTimeout(function() {
+        t.classList.add('removendo');
+        setTimeout(function() { t.remove(); }, 300);
+    }, duracaoMs || 5000);
+}
+
+function notificarNativo(titulo, corpo) {
+    if (typeof Notification === 'undefined') return;
+    var opts = { body: corpo };
+    try {
+        if (Notification.permission === 'granted') {
+            new Notification(titulo, opts);
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(function(p) {
+                if (p === 'granted') {
+                    try { new Notification(titulo, opts); } catch (e) {}
+                }
+            });
+        }
+    } catch (e) { /* WebKitGTK pode não suportar; ignora */ }
+}
+
+// ============================================================
+// BARRA DE PROGRESSO GLOBAL
+// ============================================================
+
+function _atualizarProgressoGlobal() {
+    var el = document.getElementById('progresso-global');
+    if (!el) return;
+    var total = SESSOES_PRINCIPAIS.length;
+    var concluidas = 0;
+    for (var i = 0; i < SESSOES_PRINCIPAIS.length; i++) {
+        if (getStatusSessao(SESSOES_PRINCIPAIS[i]) === 'executado') concluidas++;
+    }
+    el.innerHTML = '<span class="numero">' + concluidas + '</span>/' + total;
+    el.title = concluidas + ' de ' + total + ' sessões concluídas';
+}
+
+// ============================================================
 // REGISTRO CENTRAL DE SESSÕES
 // ============================================================
 //
 // A ORDEM DAS ENTRADAS NESTE ARRAY DEFINE:
 // - a ordem de exibição das sessões principais (guiado.html)
 // - o número "Sessão N" mostrado na UI (numerarSessao)
-// - a cor do indicador no topo (guiado.html CORES_SESSOES casa com posição)
+// - a cor do indicador no topo
 //
 // Sessões de manutenção (manutencao: true) são filtradas separadamente
 // e aparecem em manutencao.html, sem numeração.
 
 var SESSOES = [
-{
-    id: '00-boas-vindas',
-    nome: 'Boas-vindas',
-    nomeKey: 'sessoes.00-boas-vindas.nome',
-    comandos: {
-        'atualizacao-inicial': { sempreClicavel: true }
-    }
-},
+    {
+        id: '00-boas-vindas',
+        nome: 'Boas-vindas',
+        nomeKey: 'sessoes.00-boas-vindas.nome',
+        comandos: {
+            'atualizacao-inicial': { sempreClicavel: true }
+        }
+    },
 {
     id: '01-restauracao',
     nome: 'Restauração',
@@ -422,17 +411,37 @@ var SESSOES = [
     nome: 'Gaming',
     nomeKey: 'sessoes.06-gaming.nome',
     comandos: {
+        // --- Launchers ---
         'steam-install': { textoConcluido: '✅ Steam instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_steam' },
         'heroic-install': { textoConcluido: '✅ Heroic instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_heroic' },
         'lutris-install': { textoConcluido: '✅ Lutris instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_lutris' },
+        // --- Compatibilidade ---
         'wine-install': { textoConcluido: '✅ Wine instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_wine' },
         'winetricks-install': { textoConcluido: '✅ Winetricks instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_winetricks' },
         'bottles-install': { textoConcluido: '✅ Bottles instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_bottles' },
         'ntsync-install': { textoConcluido: '✅ NTSYNC instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_ntsync' },
+        // --- Performance ---
         'gamemode-install': { textoConcluido: '✅ GameMode ativado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_gamemode' },
         'mangohud-install': { textoConcluido: '✅ MangoHud instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_mangohud' },
         'goverlay-install': { textoConcluido: '✅ Goverlay instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_goverlay' },
-        'gamescope-install': { textoConcluido: '✅ Gamescope instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_gamescope' }
+        'gamescope-install': { textoConcluido: '✅ Gamescope instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_gamescope' },
+        // --- Gaming Avançado ---
+        'protonup-qt-install': { textoConcluido: '✅ ProtonUp-Qt instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_protonup' },
+        'vkbasalt-install': { textoConcluido: '✅ vkBasalt instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_vkbasalt' },
+        'gamemode-presets-apply': { sempreClicavel: true, textoConcluido: '✅ Presets aplicados' },
+        'gamescope-session-install': { textoConcluido: '✅ Gamescope session instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_gamescope_session' },
+        'controller-test-install': { textoConcluido: '✅ Ferramenta instalada', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_controller_test' },
+        // --- Emuladores ---
+        'retroarch-install': { textoConcluido: '✅ RetroArch instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_retroarch' },
+        'dolphin-install': { textoConcluido: '✅ Dolphin instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_dolphin' },
+        'pcsx2-install': { textoConcluido: '✅ PCSX2 instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_pcsx2' },
+        'rpcs3-install': { textoConcluido: '✅ RPCS3 instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_rpcs3' },
+        'duckstation-install': { textoConcluido: '✅ Duckstation instalado', textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_duckstation' },
+        // --- Rede ---
+        'bufferbloat-test': {
+            textoConcluido: '✅ Ferramenta instalada',
+            textoConcluidoKey: 'sessoes.06-gaming.texto_concluido_bufferbloat'
+        }
     }
 },
 {
@@ -442,7 +451,18 @@ var SESSOES = [
     comandos: {
         'instalar-obs-studio': { textoConcluido: '✅ OBS Studio instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_obs' },
         'obs-cam': { textoConcluido: '✅ Câmera Virtual ativada', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_cam' },
-        'instalar-easyeffects': { textoConcluido: '✅ EasyEffects instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_easyeffects' }
+        'instalar-easyeffects': { textoConcluido: '✅ EasyEffects instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_easyeffects' },
+        // --- Streaming Ready ---
+        'obs-scene-templates': { sempreClicavel: true, textoConcluido: '✅ Templates aplicados' },
+        'streamdeck-ui-install': { textoConcluido: '✅ Streamdeck-ui instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_streamdeck' },
+        'ndi-tools-install': { textoConcluido: '✅ NDI Tools instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_ndi' },
+        // --- PipeWire routing ---
+        'qpwgraph-install': { textoConcluido: '✅ qpwgraph instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_qpwgraph' },
+        // --- Presets de vídeo ---
+        'handbrake-install': { textoConcluido: '✅ HandBrake instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_handbrake' },
+        'kdenlive-templates-install': { sempreClicavel: true, textoConcluido: '✅ Templates instalados' },
+        // --- Captura ---
+        'screen-recorder-install': { textoConcluido: '✅ Gravador instalado', textoConcluidoKey: 'sessoes.07-loja.texto_concluido_screen_recorder' }
     }
 },
 {
@@ -520,26 +540,80 @@ var SESSOES = [
     }
 },
 {
-    id: '90-manutencao',
-    nome: 'Manutenção',
-    nomeKey: 'sessoes.90-manutencao.nome',
-    manutencao: true,
+    id: '10-casa-pronta',
+    nome: 'Casa Pronta',
+    nomeKey: 'sessoes.10-casa-pronta.nome',
     comandos: {
-        'limpeza-sistema': { sempreClicavel: true, textoConcluido: '✅ Limpeza concluída', textoConcluidoKey: 'sessoes.90-manutencao.texto_concluido_limpeza' },
-        'listar-kernels': { sempreClicavel: true },
-        'remover-kernel': { sempreClicavel: true },
-        'grub-aplicar-recomendado': { sempreClicavel: true, textoConcluido: '✅ Configuração aplicada' },
-        'grub-restaurar-padrao': { sempreClicavel: true, textoConcluido: '✅ Padrão restaurado' }
+        'cups-install': { textoConcluido: '✅ Impressora configurada', textoConcluidoKey: 'sessoes.10-casa-pronta.texto_concluido_cups' },
+        'samba-install': { textoConcluido: '✅ Samba instalado', textoConcluidoKey: 'sessoes.10-casa-pronta.texto_concluido_samba' },
+        'localsend-install': { textoConcluido: '✅ LocalSend instalado', textoConcluidoKey: 'sessoes.10-casa-pronta.texto_concluido_localsend' },
+        'warpinator-install': { textoConcluido: '✅ Warpinator instalado', textoConcluidoKey: 'sessoes.10-casa-pronta.texto_concluido_warpinator' },
+        'keepassxc-install': { textoConcluido: '✅ KeePassXC instalado', textoConcluidoKey: 'sessoes.10-casa-pronta.texto_concluido_keepassxc' },
+        'okular-tesseract-install': { textoConcluido: '✅ PDF+OCR instalado', textoConcluidoKey: 'sessoes.10-casa-pronta.texto_concluido_okular_tesseract' }
     }
 },
 {
-    id: '91-fof-manutencao',
-    nome: 'Manutenção FOF',
-    nomeKey: 'sessoes.91-fof-manutencao.nome',
+    id: '11-diagnostico',
+    nome: 'Diagnóstico',
+    nomeKey: 'sessoes.11-diagnostico.nome',
+    comandos: {
+        'diag-refresh': { sempreClicavel: true },
+        'baobab-install': { textoConcluido: '✅ Baobab instalado', textoConcluidoKey: 'sessoes.11-diagnostico.texto_concluido_baobab' },
+        'gsmartcontrol-install': { textoConcluido: '✅ GSmartControl instalado', textoConcluidoKey: 'sessoes.11-diagnostico.texto_concluido_gsmartcontrol' },
+        'coolercontrol-install': { textoConcluido: '✅ CoolerControl instalado', textoConcluidoKey: 'sessoes.11-diagnostico.texto_concluido_coolercontrol' },
+        'journal-errors-check': { sempreClicavel: true }
+    }
+},
+{
+    id: '12-fedora',
+    nome: 'Fedora',
+    nomeKey: 'sessoes.12-fedora.nome',
+    comandos: {
+        'fedora-version-check': { sempreClicavel: true },
+        'atomic-check': { sempreClicavel: true },
+        'selinux-status-check': { sempreClicavel: true },
+        'selinux-troubleshoot': { sempreClicavel: true },
+        'selinux-setroubleshoot-install': { textoConcluido: '✅ setroubleshoot instalado', textoConcluidoKey: 'sessoes.12-fedora.texto_concluido_setroubleshoot' },
+        'selinux-gui-install': { textoConcluido: '✅ Gerenciador SELinux instalado', textoConcluidoKey: 'sessoes.12-fedora.texto_concluido_selinux_gui' }
+    }
+},
+// ============================================================
+// MANUTENÇÃO (não é sessão sequencial — é a página manutencao.html)
+// ============================================================
+{
+    id: 'manutencao',
+    nome: 'Manutenção',
+    nomeKey: 'sessoes.manutencao.nome',
     manutencao: true,
     comandos: {
-        'atualizar-fof': { sempreClicavel: true, textoConcluido: '✅ FOF atualizado' },
-        'desinstalar-fof': { textoConcluido: '✅ FOF desinstalado' }
+        // --- Manutenção do Fedora ---
+        'limpeza-sistema': {
+            sempreClicavel: true,
+            textoConcluido: '✅ Limpeza concluída',
+            textoConcluidoKey: 'sessoes.manutencao.texto_concluido_limpeza'
+        },
+        'listar-kernels': { sempreClicavel: true },
+        'remover-kernel': { sempreClicavel: true },
+        'grub-aplicar-recomendado': {
+            sempreClicavel: true,
+            textoConcluido: '✅ Configuração aplicada',
+            textoConcluidoKey: 'sessoes.manutencao.texto_concluido_grub_aplicar'
+        },
+        'grub-restaurar-padrao': {
+            sempreClicavel: true,
+            textoConcluido: '✅ Padrão restaurado',
+            textoConcluidoKey: 'sessoes.manutencao.texto_concluido_grub_restaurar'
+        },
+        // --- Manutenção do FOF ---
+        'atualizar-fof': {
+            sempreClicavel: true,
+            textoConcluido: '✅ FOF atualizado',
+            textoConcluidoKey: 'sessoes.manutencao.texto_concluido_fof_atualizar'
+        },
+        'desinstalar-fof': {
+            textoConcluido: '✅ FOF desinstalado',
+            textoConcluidoKey: 'sessoes.manutencao.texto_concluido_fof_desinstalar'
+        }
     }
 }
 ];
@@ -560,7 +634,7 @@ var SEMPRE_CLICAVEIS = SESSOES.reduce(function(lista, sessao) {
     Object.keys(sessao.comandos || {}).forEach(function(id) {
         if (sessao.comandos[id].sempreClicavel) lista.push(id);
     });
-    return lista;
+        return lista;
 }, []);
 
 function numerarSessao(sessaoId, container) {
@@ -617,11 +691,6 @@ function _bloquearSessao(idComando) {
     var sessaoContainer = btn.closest('.sessao-container');
     if (!sessaoContainer) return;
 
-    // Bloqueia .btn-executar E .btn-reverter. Os .btn-reverter também
-    // disparam comandos (desinstalação) — não devem estar clicáveis
-    // enquanto um comando da mesma sessão está rodando, senão o
-    // usuário pode disparar operações concorrentes (ex.: instalar
-    // driver enquanto tenta desinstalar o antigo).
     var botoes = sessaoContainer.querySelectorAll('.btn-executar, .btn-reverter');
     botoes.forEach(function(b) {
         if (b.id === 'btn-' + idComando) return;
@@ -640,9 +709,6 @@ function _liberarSessao(idComando) {
     var sessaoContainer = btn.closest('.sessao-container');
     if (!sessaoContainer) return;
 
-    // Recupera todos os botões que foram bloqueados (independente do
-    // tipo). O seletor por atributo já cobre .btn-executar e
-    // .btn-reverter de uma vez.
     var botoes = sessaoContainer.querySelectorAll('[data-sessao-bloqueado="1"]');
     botoes.forEach(function(b) {
         var wasDisabled = b.getAttribute('data-was-disabled') === '1';
@@ -746,6 +812,7 @@ function getProgressSync() {
 async function carregarProgressoInicial() {
     const progress = await getProgress();
     console.log('📊 Progresso carregado:', progress.executados.length + ' itens');
+    _atualizarProgressoGlobal();
 }
 
 function isExecutado(idComando) {
@@ -780,6 +847,7 @@ async function marcarComoExecutado(idComando) {
     if (!progress.executados.includes(idComando)) {
         progress.executados.push(idComando);
         await saveProgress(progress);
+        _atualizarProgressoGlobal();
     }
 }
 
@@ -788,6 +856,7 @@ async function marcarComoPulado(idComando) {
     if (!progress.pulados.includes(idComando)) {
         progress.pulados.push(idComando);
         await saveProgress(progress);
+        _atualizarProgressoGlobal();
     }
 }
 
@@ -795,12 +864,14 @@ async function desmarcarComoExecutado(idComando) {
     const progress = await getProgress();
     progress.executados = progress.executados.filter(id => id !== idComando);
     await saveProgress(progress);
+    _atualizarProgressoGlobal();
 }
 
 async function desmarcarComoPulado(idComando) {
     const progress = await getProgress();
     progress.pulados = progress.pulados.filter(id => id !== idComando);
     await saveProgress(progress);
+    _atualizarProgressoGlobal();
 }
 
 // ============================================================
@@ -809,6 +880,7 @@ async function desmarcarComoPulado(idComando) {
 
 var progressIntervals = {};
 var progressTimeouts = {};
+var _inicioExecucao = {};
 
 function iniciarProgresso(idComando) {
     const container = document.getElementById('progress-' + idComando);
@@ -820,6 +892,8 @@ function iniciarProgresso(idComando) {
     const status = document.getElementById('progress-status-' + idComando);
 
     if (!fill || !percent || !status) return;
+
+    _inicioExecucao[idComando] = Date.now();
 
     fill.style.width = '0%';
     fill.className = 'progress-fill';
@@ -869,19 +943,32 @@ var _aguardandoConclusao = {};
 function aguardarConclusaoReal(idComando, timeoutMs) {
     return new Promise(function(resolve) {
         if (!_aguardandoConclusao[idComando]) _aguardandoConclusao[idComando] = [];
-        _aguardandoConclusao[idComando].push(resolve);
-        setTimeout(function() {
-            resolve(null);
-        }, timeoutMs || 60000);
+
+        var resolvido = false;
+        var wrappedResolve = function(value) {
+            if (resolvido) return;
+            resolvido = true;
+            resolve(value);
+            var esperando = _aguardandoConclusao[idComando];
+            if (esperando) {
+                var idx = esperando.indexOf(wrappedResolve);
+                if (idx !== -1) esperando.splice(idx, 1);
+                if (esperando.length === 0) {
+                    delete _aguardandoConclusao[idComando];
+                }
+            }
+        };
+
+        _aguardandoConclusao[idComando].push(wrappedResolve);
+        setTimeout(function() { wrappedResolve(null); }, timeoutMs || 60000);
     });
 }
 
 function _notificarConclusaoReal(idComando, sucesso) {
     const esperando = _aguardandoConclusao[idComando];
-    if (esperando) {
-        delete _aguardandoConclusao[idComando];
-        esperando.forEach(function(resolve) { resolve(sucesso); });
-    }
+    if (!esperando) return;
+    const copia = esperando.slice();
+    copia.forEach(function(resolve) { resolve(sucesso); });
 }
 
 function completarProgresso(idComando, sucesso) {
@@ -921,6 +1008,20 @@ function completarProgresso(idComando, sucesso) {
                 }, 5000);
             }
         }
+
+        var inicio = _inicioExecucao[idComando];
+        if (inicio && (Date.now() - inicio) > 30000) {
+            var msg = sucesso
+            ? _t('comum.status_concluido', '✅ Tarefa concluída!')
+            : _t('comum.status_falha', '❌ Falha na execução');
+            mostrarToast(msg, sucesso ? 'success' : 'error', 6000);
+            if (sucesso) {
+                var tituloNotif = _t('comum.notif_tarefa_concluida_titulo', 'FOF — Tarefa concluída');
+                var corpoNotif = _t('comum.notif_tarefa_concluida_corpo', 'A tarefa terminou. Veja o log para detalhes.');
+                notificarNativo(tituloNotif, corpoNotif);
+            }
+        }
+        delete _inicioExecucao[idComando];
 
         restaurarBotaoAposExecucao(idComando, sucesso);
         _notificarConclusaoReal(idComando, sucesso);
@@ -978,10 +1079,6 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
     const corOriginal = _corOriginalDoBotao(btnExecutar);
 
     if (SEMPRE_CLICAVEIS.includes(idComando)) {
-        // Botão sempre-clicável: restaura texto + visual de "pronto
-        // para clicar de novo". Usa _textoOriginalTraduzido para que,
-        // em EN/ES, o texto volte no idioma certo (e não no PT-BR
-        // capturado pela IIFE antes do i18n rodar).
         btnExecutar.textContent = _textoOriginalTraduzido(btnExecutar);
         btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
@@ -1005,7 +1102,6 @@ function restaurarBotaoAposExecucao(idComando, sucesso) {
 
         marcarComoExecutado(idComando);
     } else {
-        // Em falha, restauramos também via _textoOriginalTraduzido.
         btnExecutar.textContent = _textoOriginalTraduzido(btnExecutar);
         btnExecutar.style.backgroundColor = corOriginal || 'var(--accent, #3c67e3)';
         btnExecutar.style.cursor = 'pointer';
@@ -1063,19 +1159,6 @@ function criarToggleParaLog(logBox, labelKey) {
     });
 }
 
-/**
- * Varre todos os .terminal-log dentro de um subtree (root) e garante
- * que cada um tenha o wrapper + toggle criados, com a classe 'expandido'
- * aplicada por padrão.
- *
- * Essa função resolve o bug de "log de sessão só aparece após o primeiro
- * clique": antes, o toggle só era criado dentro de conectarSSE(), que só
- * rodava quando um botão era clicado. Agora, guiado.html e manutencao.html
- * chamam esta função logo após o eval e restaurarEstadoSessao(), fazendo
- * com que todos os logs nasçam expandidos.
- *
- * É idempotente: se o toggle já existe, criarToggleParaLog() retorna cedo.
- */
 function inicializarLogsDaSessao(root) {
     if (!root) root = document;
 
@@ -1083,8 +1166,8 @@ function inicializarLogsDaSessao(root) {
 
     logs.forEach(function(logBox) {
         var labelKey = (logBox.id && logBox.id.indexOf('log-sessao-') === 0)
-            ? 'comum.log_sessao'
-            : 'comum.log_execucao';
+        ? 'comum.log_sessao'
+        : 'comum.log_execucao';
 
         criarToggleParaLog(logBox, labelKey);
     });
@@ -1283,7 +1366,7 @@ async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) 
 
             if (btn) {
                 btn.disabled = false;
-                btn.textContent = btn.getAttribute('data-texto-original') || nomeAcao;
+                btn.textContent = _textoOriginalTraduzido(btn) || nomeAcao;
                 btn.style.opacity = '1';
             }
             return;
@@ -1302,7 +1385,7 @@ async function executarComandoGenerico(idComando, comando, nomeAcao, onSucesso) 
 
         if (btn) {
             btn.disabled = false;
-            btn.textContent = btn.getAttribute('data-texto-original') || nomeAcao;
+            btn.textContent = _textoOriginalTraduzido(btn) || nomeAcao;
             btn.style.opacity = '1';
         }
     }
@@ -1500,6 +1583,194 @@ function initCustomSelects() {
 }
 
 // ============================================================
+// BUSCA GLOBAL (Ctrl+K)
+// ============================================================
+//
+// Overlay de busca que procura em:
+// - nomes de sessão
+// - texto de botões (.btn-executar)
+// - descrições de acordeões (summary)
+//
+// Funciona em qualquer página (index, guiado, manutencao).
+// Ao selecionar um resultado, navega para a sessão correspondente
+// e faz scroll até o botão.
+
+var _buscaOverlay = null;
+
+function _garantirOverlayBusca() {
+    if (_buscaOverlay) return _buscaOverlay;
+
+    var overlay = document.createElement('div');
+    overlay.className = 'busca-overlay';
+    overlay.id = 'busca-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML =
+    '<div class="busca-modal">' +
+    '<input type="text" class="busca-input" id="busca-input" ' +
+    'placeholder="' + _t('comum.busca_placeholder', '🔍 Buscar sessão, botão ou termo...') + '" ' +
+    'autocomplete="off" spellcheck="false">' +
+    '<div class="busca-resultados" id="busca-resultados">' +
+    '<div class="busca-vazio">' + _t('comum.busca_dica', 'Digite para buscar...') + '</div>' +
+    '</div>' +
+    '</div>';
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) fecharBusca();
+    });
+
+        document.body.appendChild(overlay);
+
+        var input = overlay.querySelector('#busca-input');
+        input.addEventListener('input', function() {
+            _renderResultadosBusca(this.value);
+        });
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                fecharBusca();
+            }
+        });
+
+        _buscaOverlay = overlay;
+        return overlay;
+}
+
+function abrirBusca() {
+    var overlay = _garantirOverlayBusca();
+    overlay.classList.add('aberto');
+    overlay.setAttribute('aria-hidden', 'false');
+    var input = overlay.querySelector('#busca-input');
+    if (input) {
+        input.value = '';
+        input.focus();
+        _renderResultadosBusca('');
+    }
+}
+
+function fecharBusca() {
+    if (!_buscaOverlay) return;
+    _buscaOverlay.classList.remove('aberto');
+    _buscaOverlay.setAttribute('aria-hidden', 'true');
+}
+
+function _coletarItensBuscaveis() {
+    var itens = [];
+    document.querySelectorAll('.btn-executar[data-comando]').forEach(function(btn) {
+        var texto = (btn.textContent || '').trim();
+        var idComando = btn.getAttribute('data-comando');
+        var sessao = btn.closest('.sessao-container');
+        var sessaoId = sessao ? (sessao.id || '').replace(/^sessao-/, '') : '';
+        itens.push({
+            tipo: 'botao',
+            texto: texto,
+            idComando: idComando,
+            sessaoId: sessaoId,
+            elemento: btn
+        });
+    });
+    document.querySelectorAll('.sessao-titulo').forEach(function(el) {
+        var container = el.closest('.sessao-container');
+        if (!container) return;
+        var sessaoId = (container.id || '').replace(/^sessao-/, '');
+        itens.push({
+            tipo: 'sessao',
+            texto: el.textContent.trim(),
+                   sessaoId: sessaoId,
+                   elemento: container
+        });
+    });
+    return itens;
+}
+
+function _renderResultadosBusca(termo) {
+    var container = document.getElementById('busca-resultados');
+    if (!container) return;
+
+    var t = (termo || '').toLowerCase().trim();
+    if (!t) {
+        container.innerHTML = '<div class="busca-vazio">' +
+        _t('comum.busca_dica', 'Digite para buscar...') + '</div>';
+        return;
+    }
+
+    var itens = _coletarItensBuscaveis();
+    var matches = itens.filter(function(it) {
+        return it.texto.toLowerCase().indexOf(t) !== -1;
+    }).slice(0, 20);
+
+    if (matches.length === 0) {
+        container.innerHTML = '<div class="busca-vazio">' +
+        _t('comum.busca_sem_resultados', 'Nenhum resultado encontrado.') + '</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+    matches.forEach(function(it) {
+        var item = document.createElement('div');
+        item.className = 'busca-item';
+        var badge = it.tipo === 'sessao'
+        ? '<span class="busca-badge sessao">' + _t('comum.busca_badge_sessao', 'Sessão') + '</span>'
+        : '<span class="busca-badge botao">' + _t('comum.busca_badge_botao', 'Botão') + '</span>';
+        item.innerHTML = badge + '<span class="busca-texto">' + it.texto + '</span>';
+        item.addEventListener('click', function() {
+            _navegarParaResultadoBusca(it);
+        });
+        container.appendChild(item);
+    });
+}
+
+function _navegarParaResultadoBusca(item) {
+    fecharBusca();
+    if (item.elemento && document.body.contains(item.elemento)) {
+        item.elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (item.tipo === 'botao') {
+            item.elemento.focus({ preventScroll: true });
+        }
+        return;
+    }
+    if (item.sessaoId) {
+        var url = 'guiado.html?session=' + encodeURIComponent(item.sessaoId);
+        window.location.href = url;
+    }
+}
+
+// ============================================================
+// ATALHOS DE TECLADO
+// ============================================================
+
+// Ctrl+Enter: dispara o primeiro botão .btn-executar visível e habilitado
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        var foco = document.activeElement;
+        if (foco && foco.classList && foco.classList.contains('btn-executar') && !foco.disabled) {
+            e.preventDefault();
+            foco.click();
+            return;
+        }
+        var botoes = document.querySelectorAll('.btn-executar:not(:disabled)');
+        for (var i = 0; i < botoes.length; i++) {
+            var r = botoes[i].getBoundingClientRect();
+            if (r.top >= 0 && r.bottom <= window.innerHeight && r.width > 0) {
+                e.preventDefault();
+                botoes[i].click();
+                return;
+            }
+        }
+    }
+});
+
+// Ctrl+K: abre a busca global
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        abrirBusca();
+    }
+    if (e.key === 'Escape' && _buscaOverlay && _buscaOverlay.classList.contains('aberto')) {
+        fecharBusca();
+    }
+});
+
+// ============================================================
 // INICIALIZAÇÃO GLOBAL
 // ============================================================
 
@@ -1507,14 +1778,27 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarProgressoInicial();
     setTimeout(initCustomSelects, 300);
     criarBotaoTema();
+    _atualizarProgressoGlobal();
+
+    // Suporte a deep-link via ?session=ID
+    try {
+        var params = new URLSearchParams(window.location.search);
+        var sessaoAlvo = params.get('session');
+        if (sessaoAlvo && typeof SESSOES_PRINCIPAIS !== 'undefined' &&
+            SESSOES_PRINCIPAIS.indexOf(sessaoAlvo) !== -1) {
+            setTimeout(function() {
+                if (typeof irParaSessao === 'function') {
+                    var idx = SESSOES_PRINCIPAIS.indexOf(sessaoAlvo);
+                    if (idx !== -1) irParaSessao(idx);
+                }
+            }, 500);
+            }
+    } catch (e) { /* ignore */ }
 
     if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 50);
     }
 
-    // Aguarda carregarVersaoServidor() terminar ANTES de verificar
-    // atualizações, senão FOF_VERSION ainda está vazio e o badge
-    // apareceria sempre.
     carregarVersaoServidor().then(function() {
         mostrarBadgeSeHouverAtualizacao();
     });
@@ -1524,6 +1808,7 @@ document.addEventListener('sessao-carregada', function() {
     setTimeout(initCustomSelects, 200);
     setTimeout(carregarProgressoInicial, 300);
     criarBotaoTema();
+    _atualizarProgressoGlobal();
 
     if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 100);
@@ -1534,6 +1819,7 @@ document.addEventListener('todas-sessoes-carregadas', function() {
     setTimeout(initCustomSelects, 300);
     setTimeout(carregarProgressoInicial, 400);
     criarBotaoTema();
+    _atualizarProgressoGlobal();
 
     if (typeof I18N !== 'undefined' && typeof I18N.criarSeletorIdioma === 'function') {
         setTimeout(function() { I18N.criarSeletorIdioma(); }, 100);
