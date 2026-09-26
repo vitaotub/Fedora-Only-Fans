@@ -10,6 +10,18 @@
 #include <unistd.h>
 #include <errno.h>
 
+// ============================================================
+// VERSÃO DO FOF
+// ============================================================
+//
+// Definida pelo build via -DFOF_VERSION="..." (ver Makefile e
+// build-container.sh). O #ifndef garante que uma compilação manual
+// com gcc puro (sem a macro) ainda compile — o binário só mostra
+// "unknown" na versão.
+#ifndef FOF_VERSION
+#define FOF_VERSION "unknown"
+#endif
+
 #define WINDOW_WIDTH 980
 #define WINDOW_HEIGHT 880
 #define APP_NAME "Fedora Only Fans"
@@ -309,7 +321,7 @@ window_height = atoi(argv[++i]);
 } else if (strcmp(argv[i], "--debug") == 0) {
 debug_mode = 1;
 } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-printf("🐧 Fedora Only Fans - Container WebKitGTK v1.0.0-09232026\n");
+printf("🐧 Fedora Only Fans - Container WebKitGTK v%s\n", FOF_VERSION);
 printf("\nUso: %s [opções]\n", argv[0]);
 printf("\nOpções:\n");
 printf(" --url URL URL do servidor (padrão: http://localhost:3000)\n");
@@ -424,7 +436,7 @@ sigaction(SIGINT, &sa, NULL);
 sigaction(SIGTERM, &sa, NULL);
 
 g_print("============================================================\n");
-g_print(" 🐧 Fedora Only Fans - Container WebKitGTK 1.0.0-09232026\n");
+g_print(" 🐧 Fedora Only Fans - Container WebKitGTK %s\n", FOF_VERSION);
 g_print("============================================================\n");
 g_print(" 🌐 URL: %s\n", url);
 g_print(" 📐 Janela: %dx%d\n", window_width, window_height);
